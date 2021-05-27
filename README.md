@@ -1,1 +1,0 @@
-ARO Proj Initial README
