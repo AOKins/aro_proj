@@ -2,7 +2,7 @@
 #define MAIN_DIALOG_
 
 // [DESCRIPTION]
-// BlinkPCIeSDKDlg.h : header file for the main dialog of the program
+// MainDialog.h : header file for the main dialog of the program
 
 
 // [FORWARD DEFINITIONS]

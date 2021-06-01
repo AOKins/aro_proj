@@ -1,206 +1,196 @@
+////////////////////
+// Base class to encapsulate a population in a genetic algorithm and some of the micro-genetic behaviors
+// Last edited: 06/01/2021 by Andrew O'Kins
+////////////////////
 #ifndef POPULATION_H_
 #define POPULATION_H_
 #include "Individual.h"
-#include "RandomInt.h"
+#include "BetterRandom.h"
+#include "Utility.h" // For printLine
 #include <vector>
-#include <fstream>
+
+////
+// TODOs:	Consider sortIndividuals and DeepCopyIndividuals to be outside of Population class
+//			Update sortIndividuals to use more efficient algorithm (currently using insertion sort!)
+//			Consider how to handle possible case of elite_size exceeding pop_size (necessarry?)
+////
 
 template <class T>
-class Population{
+class Population {
 private:
-	//the array of individuals in the population
+	// The array of individuals in the population.
 	Individual<T>* individuals_;
-	//counter to track what individual is being tested
-	int counter_;
-	//number of individuals in the population
-	int size_;
+	
+	// Number of individuals in the population.
+	int pop_size_;
+	// Number of individuals in the population that are to be kept as elite.
+	int elite_size_;
 
+	// Percentage of genome that must be shared for images to be counted as similar
 	double accepted_similarity_;
-	int image_height_;
-	int image_width_;
-	int image_density_;
-	T* saved_peak_image_;
-	double saved_peak_value_;
-	int warning_;
-	int trust_counter_;
-	int gen_;
 
-	std::ofstream tfile;
-
+	// genome length for individual images
+	int genome_length_;
+	
 public:
-	//constructor
-	//@param size -> the number of individuals in the population
-	Population(int image_height, int image_width, int image_density, double accepted_similarity = .9, int size = 5){
-		size_ = size;
-		image_density_ = image_density;
-		image_height_ = image_height;
-		image_width_ = image_width;
-		accepted_similarity_ = accepted_similarity;
-		trust_counter_ = 0;
-		warning_ = 0;
-		counter_ = 0;
-		saved_peak_image_ = new T[image_density*image_height*image_width];
-		for (int i = 0; i < image_density*image_height*image_width; i++){
-			saved_peak_image_[i] = 1;
+	// Constructor
+	// Input:
+	//	genome_length:	the image size (genome) for an individual
+	//	population_size: the number of individuals for the population
+	//	elite_size:		 the number of individuals for the population that are kept as elite
+	//	accepted_similarity: precentage of similarity to be counted as same between individuals (default 90%)
+	Population(int genome_length, int population_size, int elite_size, double accepted_similarity = .9){
+		this->genome_length_ = genome_length;
+		this->accepted_similarity_ = accepted_similarity;
+		this->pop_size_ = population_size;
+		this->elite_size_ = elite_size;
+
+		// Check to see if elite size exceeds the population size, currently just gives warning
+		if (this->elite_size_ > this->pop_size_) {
+			Utility::printLine("WARNING: Elite size (" + std::to_string(this->elite_size_) + ") of population exceeds population size (" + std::to_string(this->pop_size_) + ")!");
 		}
-		individuals_ = new Individual<T>[size_];
 
-		//initialize images
-		for (int i = 0; i < size_; i++){
-			individuals_[i].SetImage(RandomImage());
-		}//for each individual
+		this->individuals_ = new Individual<T>[pop_size_];
 
-		tfile.open("test.txt", std::ios::app);
+		//initialize images for each individual
+		for (int i = 0; i < this->pop_size_; i++){
+			this->individuals_[i].set_genome(RandomImage());
+		}
 	}
 
-	//destructor
-	~Population(){
-		tfile.close();
-		remove("test.txt");
-		delete[] individuals_;
+	//Destructor - delete individuals
+	~Population() {
+		delete[] this->individuals_;
 	}
 
-	int GetSize(){
-		return size_;
+	// Get number of individuals in population
+	int getSize() {
+		return this->pop_size_;
 	}
 
-	//char random image
-	T* RandomImage(){
-		static RandomInt ran(256);
-		T* image = new T[image_height_*image_width_*image_density_];
-		for (int j = 0; j < (image_density_*image_height_*image_width_); j++){
-			image[j] = (T)ran();
-		}//for each pixel in image
+	// Generates a random image using BetterRandom
+	// Output: a randomly generated image that has size of genome_length for Population
+	std::shared_ptr<std::vector<T>> GenerateRandomImage() {
+		static BetterRandom ran(256);
+		std::shared_ptr<std::vector<T>> image = std::make_shared<std::vector<T>>(this->genome_length_, 0);
+		for (int j = 0; j < this->genome_length_; j++) {
+			(*image)[j] = (T)ran();
+		} // ... for each pixel in image
 		return image;
 	}
 
-	//gets the next image to be evaluated
-	T* GetImage(){
-		return individuals_[counter_].GetImage();
+	// Getter for image of individual at inputted index
+	// Input: i - individual at given index (population not guranteed sorted)
+	// Output: the image for the individual
+	T* getImage(int i){
+		return this->individuals_[i].genome();
 	}
 
-	//sets the fitness of the last individual called by GetImage
-	void SetFitness(double fitness){
-		individuals_[counter_].SetFitness(fitness);
-		tfile << counter_ << " " << fitness << std::endl;
-		counter_ = (counter_ + 1) % size_;
+	// Setter for the fitness of the individual at given index
+	// Input:
+	//	i - individual at given index (population not guranteed sorted)
+	//	fitness - the fitness value to set to individual
+	// Output: individual at index i has its set_fitness() called with fitness as input
+	void setFitness(int i, double fitness) {
+		this->individuals_[i].set_fitness(fitness);
 	}
 
-	//starts next generation using fitness of individuals
-	bool NextGeneration(int gennum){
-		gen_ = gennum;
-		int first = 0;
-		int second = 1;
-		int third = 2;
+	// Crosses over information between individuals.
+	// Input:
+	//	a - First individual to be crossed over.
+	//	b - Second individual to be crossed over.
+	//	same_check - Boolean will be turned to false if the arrays are different.
+	// Output: returns new individual as result of crossover algorithm
+	std::shared_ptr<std::vector<T>> Crossover(std::shared_ptr<std::vector<T>> a, std::shared_ptr<std::vector<T>> b, bool& same_check) {
+		std::shared_ptr<std::vector<T>> temp = std::make_shared<std::vector<T>>(genome_length_, 0);
+		double same_counter = 0; // counter keeping track of how many indices in the genomes are the same
+		static BetterRandom ran(100);
+		static BetterRandom mut(200);
+		static BetterRandom mutatedValue(256);
 
-		//tournament
-		for (int i = 1; i < size_; i++){
-			if (individuals_[i].GetFitness() > individuals_[first].GetFitness() && i > 1){
-				third = second;
-				second = first;
-				first = i;
+		// For each index in the genome
+		for (int i = 0; i < genome_length_; i++) {
+			// 50% chance of coming from either parent
+			if (ran() < 50) {
+				(*temp)[i] = (*a)[i];
 			}
-			else if (individuals_[i].GetFitness() > individuals_[first].GetFitness() && i == 1){
-				int temp = first;
-				first = second;
-				second = temp;
+			else {
+				(*temp)[i] = (*b)[i];
 			}
-			else if (individuals_[i].GetFitness() > individuals_[second].GetFitness() && i != first){
-				third = second;
-				second = i;
+			// if the values at an index are the same, increment the same counter
+			if ((*a)[i] == (*b)[i])	{
+				same_counter += 1;
 			}
-			else if (individuals_[i].GetFitness() > individuals_[third].GetFitness() && i != first && i != second){
-				third = i;
-			}
-		}
-
-		if (individuals_[0].GetFitness() < (saved_peak_value_ * .75)){
-			warning_++;
-		}
-		else {
-			warning_ = 0;
-		}
-
-		if (first == 0 && individuals_[0].GetFitness() >= saved_peak_value_){
-			trust_counter_++;
-		}
-		else {
-			trust_counter_ = 0;
-		}
-
-		if (trust_counter_ == 2){
-			T* tmpptr = individuals_[0].GetImage();
-			for (int i = 0; i < image_density_*image_height_*image_width_; i++){
-				saved_peak_image_[i] = tmpptr[i];
-			}
-			saved_peak_value_ = individuals_[0].GetFitness();
-		}
-
-		///////////////////test
-		ofstream efile("elites.txt", std::ios::app);
-		efile << "Gen: " << gennum << " Elite: " << first << std::endl;
-		efile.close();
-		///////////////////
-
-		//crossover
-		Individual<T>* temp = new Individual<T>[size_];
-		bool sameCheck = true;
-		temp[0].SetImage(Crossover(individuals_[first].GetImage(), individuals_[first].GetImage(), sameCheck));
-		temp[1].SetImage(Crossover(individuals_[second].GetImage(), individuals_[first].GetImage(), sameCheck));
-		temp[2].SetImage(Crossover(individuals_[third].GetImage(), individuals_[first].GetImage(), sameCheck));
-		temp[3].SetImage(Crossover(individuals_[third].GetImage(), individuals_[second].GetImage(), sameCheck));
-		temp[4].SetImage(Crossover(individuals_[second].GetImage(), individuals_[third].GetImage(), sameCheck));
-
-		if (sameCheck){
-			for (int i = 1; i < size_; i++){
-				temp[i].SetImage(RandomImage());
+			// mutation
+			if (mut() == 0)	{
+				(*temp)[i] = (T)mutatedValue();
 			}
 		}
+		// ... End image creation
 
-		if (warning_ > 1){
-			///////////////////////test
-			ofstream tfile("reload.txt", std::ios::app);
-			tfile << "Elite reloaded in gen: " << gen_ << " Peak: " << saved_peak_value_ << std::endl;
-			tfile.close();
-			///////////////////////
-			T* tmpptr = new T[image_density_*image_height_*image_width_];
-			for (int i = 0; i < image_density_*image_height_*image_width_; i++){
-				tmpptr[i] = saved_peak_image_[i];
-			}
-			temp[1].SetImage(tmpptr);
-		}
-		delete[] individuals_;
-		individuals_ = temp;
-		counter_ = 0;
-		return true;
-	}// ... function NextGeneration
-
-	//Crosses over information between individuals
-	//@param a -> first individual to be crossed over
-	//@param b -> second individual to be crossed over
-	//@param sameCheck -> boolian will be turned to false if the arrays are different
-	T* Crossover(T* a, T* b, bool &same_check){
-		T* temp = new T[image_density_*image_height_*image_width_];
-		double sameCounter = 0;
-		RandomInt ran(100);
-		for (int i = 0; i < image_density_*image_height_*image_width_; i++){
-			if (ran() < 50){
-				temp[i] = a[i];
-			}
-			else{
-				temp[i] = b[i];
-			}
-			if (a[i] == b[i]) sameCounter += 1;
-		}
-		// ... end image creation
-		
-		sameCounter /= image_density_*image_height_*image_width_;
-
-		if (sameCounter < accepted_similarity_){
+		// if the percentage of indices that are the same is less than the accepted similarity, label the two genomes as not the same (same_check = false)
+		same_counter /= genome_length_;
+		if (same_counter < accepted_similarity_) {
 			same_check = false;
 		}
 		return temp;
 	}
+
+	// Sorts an array of individuals
+	// Input:
+	//	to_sort - the individuals to be sorted
+	//	size - the size of the array to_sort
+	// Output: returns sorted pointer array of individuals
+	Individual<T> *SortIndividuals(Individual<T> *to_sort, int size) {
+		bool found = false;
+		Individual<T> *temp = new Individual<T>[size];
+		DeepCopyIndividual(temp[0], to_sort[0]);
+		for (int i = 1; i < size; i++) {
+			for (int j = 0; j < i; j++)	{
+				if (to_sort[i].fitness() < temp[j].fitness()) {
+					found = true;
+					// insert individual
+					Individual<T> holder1;
+					DeepCopyIndividual(holder1, to_sort[i]);
+					Individual<T> holder2;
+					for (int k = j; k < i; k++)	{
+						DeepCopyIndividual(holder2, temp[k]);
+						DeepCopyIndividual(temp[k], holder1);
+						DeepCopyIndividual(holder1, holder2);
+					}
+					DeepCopyIndividual(temp[i], holder1);
+					break;
+				}
+			}
+			if (!found) {
+				DeepCopyIndividual(temp[i], to_sort[i]);
+			}
+			else {
+				found = false;
+			}
+		}
+		return temp;
+	}
+
+	// Deep copies the image from one individual to another
+	// Input:
+	//	to - the individual to be copied to
+	//	from - the individual copied
+	// Output: to is contains deep copy of from
+	void DeepCopyIndividual(Individual<T> &to, Individual<T> &from) {
+		to.set_fitness(from.fitness());
+		std::shared_ptr<std::vector<T>> temp_image1 = std::make_shared<std::vector<T>>(genome_length_, 0);
+		std::shared_ptr<std::vector<T>> temp_image2 = from.genome();
+		for (int i = 0; i < genome_length_; i++) {
+			(*temp_image1)[i] = (*temp_image2)[i];
+		}
+		to.set_genome(temp_image1);
+	}
+	
+	// Perform the genetic algorithm to create new individuals for next gneeration
+	// virtual method to have child classes define this behavior
+	// Output: False if error occurs, otherwise True
+	virtual bool nextGeneration() = 0;
 }; // ... class Population
 
 #endif

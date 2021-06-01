@@ -21,8 +21,7 @@ using std::ostringstream;
 using namespace cv;
 
 
-bool BruteForce_Optimization::runOptimization()
-{
+bool BruteForce_Optimization::runOptimization() {
 	Utility::printLine("OPT 5 BUTTON CLICKED!");
 
 	//Setup before optimization (see base class for implementation)
@@ -30,7 +29,7 @@ bool BruteForce_Optimization::runOptimization()
 		Utility::printLine("ERROR: Failed to prepare software or/and hardware for Brute Force Optimization");
 
 	//Declare variables
-	//TODO: Thursday - which of these can be combined which acn be deeleted or implified ALSO make them understandable!
+	//TODO: which of these can be combined which can be deeleted or implified ALSO make them understandable!
 	double exptime, PC, crop, dexptime, dblN;
 	int ii, jj, nn, mm, iMax, jMax, ll, lMax, kk;
 	int bin, dphi;
@@ -52,8 +51,7 @@ bool BruteForce_Optimization::runOptimization()
 
 	//Find genome length
 	int genomeLength = sc->getBoardWidth(0) * sc->getBoardHeight(0) * 1;
-	if (genomeLength == -1)
-	{
+	if (genomeLength == -1)	{
 		Utility::printLine("ERRROR: Genome Length Cannot Be -1");
 		return false;
 	}
@@ -67,10 +65,8 @@ bool BruteForce_Optimization::runOptimization()
 	double exposureTimesRatio = 1.0;
 
 	//Initialize "2D" array
-	for (ii = 0; ii < iMax; ii++)
-	{
-		for (jj = 0; jj < jMax; jj++)
-		{
+	for (ii = 0; ii < iMax; ii++) {
+		for (jj = 0; jj < jMax; jj++) {
 			kk = ii * 512 + jj;
 			aryptr[kk] = 0;
 		}
@@ -82,7 +78,6 @@ bool BruteForce_Optimization::runOptimization()
 	bool shortenExposureFlag = false;
 	bool stopConditionsMetFlag = false;
 
-
 	// Setup image displays for camera and SLM
 	bool displayCamImage = true;
 	bool displaySLMImage = false; //TODO: only first SLM right now - add functionality to display any or all boards
@@ -92,28 +87,22 @@ bool BruteForce_Optimization::runOptimization()
 		camDisplay->OpenDisplay();
 	if (displaySLMImage)
 		slmDisplay->OpenDisplay();
-
-
-	try
-	{
+	
+	try	{
 		time_t start = time(0);
 		cc->startCamera();
 
-		for (ii = 0; ii < iMax; ii += bin) // Iterate over bins
-		{
-			for (jj = 0; jj < jMax; jj += bin)
-			{
+		// Iterate over bins
+		for (ii = 0; ii < iMax; ii += bin) {
+			for (jj = 0; jj < jMax; jj += bin)	{
 				lMax = 0;
 				rMax = 0;
 				const clock_t begin = clock();
 				//find max phase for bin
-				for (ll = 0; ll < 256; ll += dphi)
-				{
+				for (ll = 0; ll < 256; ll += dphi)	{
 					//bin phase
-					for (nn = 0; nn < bin; nn++)
-					{
-						for (mm = 0; mm < bin; mm++)
-						{
+					for (nn = 0; nn < bin; nn++) {
+						for (mm = 0; mm < bin; mm++) {
 							kk = (ii + nn) * iMax + (mm + jj);
 							aryptr[kk] = ll;
 						}
@@ -126,8 +115,7 @@ bool BruteForce_Optimization::runOptimization()
 					//Acquire and display camera image
 					cc->AcquireImages(curImage, convImage);
 					camImg = static_cast<unsigned char*>(convImage->GetData());
-					if (camImg == NULL)
-					{
+					if (camImg == NULL)	{
 						Utility::printLine("ERROR: Image Acquisition has failed!");
 						continue;
 					}
@@ -143,8 +131,7 @@ bool BruteForce_Optimization::runOptimization()
 					tfile << ms << " " << fitness * cc->GetExposureRatio() << " " << cc->GetExposureRatio() << std::endl;
 
 					// Keep record of the best fitness value and 
-					if (fitness * exposureTimesRatio > rMax)
-					{
+					if (fitness * exposureTimesRatio > rMax) {
 						lMax = ll;
 						rMax = fitness * exposureTimesRatio;	
 					}
@@ -156,17 +143,14 @@ bool BruteForce_Optimization::runOptimization()
 				}
 
 				//Print current optimization progress to conosle
-				if (rMax > allTimeBestFitness)
-				{
+				if (rMax > allTimeBestFitness)	{
 					allTimeBestFitness = rMax;
 					Utility::printLine("INFO: Current best fitness value updated to - " + std::to_string(allTimeBestFitness));
 				}
 
 				//set maximal phase
-				for (nn = 0; nn < bin; nn++)
-				{
-					for (mm = 0; mm < bin; mm++)
-					{
+				for (nn = 0; nn < bin; nn++) {
+					for (mm = 0; mm < bin; mm++) {
 						kk = (ii + nn) * iMax + (mm + jj);
 						aryptr[kk] = lMax;
 					}
@@ -231,8 +215,7 @@ bool BruteForce_Optimization::runOptimization()
 		std::rename("logs/Opt_rtime.txt", ("logs/" + curTime + "_OPT5_rtime.txt").c_str());
 		saveParameters(curTime, "OPT5");
 	}
-	catch (Spinnaker::Exception &e)
-	{
+	catch (Spinnaker::Exception &e) {
 		Utility::printLine("ERROR: " + string(e.what()));
 	}
 

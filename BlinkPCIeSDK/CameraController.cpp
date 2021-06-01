@@ -10,18 +10,15 @@ using std::ostringstream;
 
 
 // [CONSTRUCTOR(S)]
-CameraController::CameraController(MainDialog& dlg_) : dlg(dlg_)
-{
+CameraController::CameraController(MainDialog& dlg_) : dlg(dlg_) {
 	//Camera access
 	UpdateConnectedCameraInfo();
 }
 
 //[DESTRUCTOR]
-CameraController::~CameraController()
-{
+CameraController::~CameraController() {
 	Utility::printLine("INFO: Beginning to shutdown camera!");
-	if (isCamCreated)
-	{
+	if (isCamCreated) {
 		stopCamera();
 		shutdownCamera();
 	}
@@ -29,11 +26,10 @@ CameraController::~CameraController()
 }
 
 // [CAMERA CONTROL]
-bool CameraController::setupCamera()
-{
+bool CameraController::setupCamera() {
 	Utility::printLine();
 
-	//Quit if don't have a reference to UI (latest parameters)
+	// Quit if don't have a reference to UI (latest parameters)
 	if (!dlg)
 		return false;
 	Utility::printLine("INFO: dlg reference checked!");
@@ -42,8 +38,7 @@ bool CameraController::setupCamera()
 		return false;
 	Utility::printLine("INFO: updated image parameters!");
 
-	if (!cam->IsValid() || !cam->IsInitialized())
-	{
+	if (!cam->IsValid() || !cam->IsInitialized()) {
 		shutdownCamera();
 		if (!UpdateConnectedCameraInfo())
 			return false;
@@ -62,24 +57,20 @@ bool CameraController::setupCamera()
 	return true;
 }
 
-bool CameraController::startCamera()
-{
-	try
-	{
+bool CameraController::startCamera() {
+	try	{
 		INodeMap &nodeMap = cam->GetNodeMap();
 
 		// Set acquisition mode to singleframe
 		// - retrieve enumerationg node to set
 		CEnumerationPtr ptrAcquisitionMode = nodeMap.GetNode("AcquisitionMode");
-		if (!IsAvailable(ptrAcquisitionMode) || !IsWritable(ptrAcquisitionMode))
-		{
+		if (!IsAvailable(ptrAcquisitionMode) || !IsWritable(ptrAcquisitionMode)) {
 			Utility::printLine("Unable to set acquisition mode (enum retrieval).");
 			return false;
 		}
 		// - retrieve "continuous" entry node from enumeration node
 		CEnumEntryPtr ptrAcquisitionModeType = ptrAcquisitionMode->GetEntryByName("Continuous");
-		if (!IsAvailable(ptrAcquisitionModeType) || !IsReadable(ptrAcquisitionModeType))
-		{
+		if (!IsAvailable(ptrAcquisitionModeType) || !IsReadable(ptrAcquisitionModeType)) {
 			Utility::printLine("Unable to set acquisition mode (entry retrieval).");
 			return false;
 		}
@@ -88,13 +79,11 @@ bool CameraController::startCamera()
 		// - set the retrieved integer as the correct node value
 		ptrAcquisitionMode->SetIntValue(acquisitionModeTypeValue);
 
-
 		//Begin Aquisition
 		cam->BeginAcquisition();
 		Utility::printLine("INFO: Successfully began acquiring images!");
 	}
-	catch (Spinnaker::Exception &e)
-	{
+	catch (Spinnaker::Exception &e)	{
 		Utility::printLine("ERROR: Camera could not start - /n" + std::string(e.what()));
 		return false;
 	}
@@ -102,8 +91,7 @@ bool CameraController::startCamera()
 	return true;
 }
 
-bool CameraController::stopCamera()
-{
+bool CameraController::stopCamera() {
 	//TODO: release any image(s) that are currently used
 
 	cam->EndAcquisition();
@@ -150,27 +138,19 @@ bool CameraController::saveImage(ImagePtr curImage, int curGen)
 }
 
 //AcquireImages: get one image from the camera
-void CameraController::AcquireImages(ImagePtr& curImage, ImagePtr& convertedImage)
-{
-
-
+void CameraController::AcquireImages(ImagePtr& curImage, ImagePtr& convertedImage) {
 	Utility::printLine("Aquire Images _ 2", true);
 
 	convertedImage = Image::Create();
 	Utility::printLine("Aquire Images _ 3", true);
 
-	try
-	{
-
+	try {
 		Utility::printLine("Aquire Images _ 5", true);
-
-
 		// Retrieve next received image
 		curImage = cam->GetNextImage();
 
 		// Ensure image completion
-		if (curImage->IsIncomplete())
-		{
+		if (curImage->IsIncomplete()) {
 			//TODO: implement proper handling of inclomplete images (retake of image)
 			Utility::printLine("ERROR: Image incomplete: " + std::string(Image::GetImageStatusDescription(curImage->GetImageStatus())));
 		}
@@ -185,66 +165,56 @@ void CameraController::AcquireImages(ImagePtr& curImage, ImagePtr& convertedImag
 
 		Utility::printLine("Aquire Images _ 8", true);
 	}
-	catch (Spinnaker::Exception &e)
-	{
+	catch (Spinnaker::Exception &e) {
 		Utility::printLine("ERROR: " + std::string(e.what()));
 	}
 
 	Utility::printLine("#####################################################", true);
-
 }
 
 // [CAMERA SETUP]
-bool CameraController::UpdateImageParameters()
-{
+bool CameraController::UpdateImageParameters() {
 	bool result = true;
 
 	//Frames per second
-	try
-	{
+	try	{
 		CString path("");
 		dlg.m_cameraControlDlg.m_FramesPerSecond.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
 		fps = _tstof(path);
 		frameRateMS = 1000 / fps;
 	}
-	catch (...)
-	{
+	catch (...)	{
 		Utility::printLine("ERROR: Was unable to parse the frames per second time input feild!");
 		result = false;
 	}
 
 	//Gamma value
-	try
-	{
+	try	{
 		CString path("");
 		dlg.m_cameraControlDlg.m_gammaValue.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
 		gamma = _tstof(path);
 	}
-	catch (...)
-	{
+	catch (...)	{
 		Utility::printLine("ERROR: Was unable to parse the frames per second time input feild!");
 		result = false;
 	}
 
 	//Initial exposure time
-	try
-	{
+	try	{
 		CString path("");
 		dlg.m_cameraControlDlg.m_initialExposureTimeInput.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
 		initialExposureTime = _tstof(path);
 	}
-	catch (...)
-	{
+	catch (...)	{
 		Utility::printLine("ERROR: Was unnable to parse the initial exposure time input feild!");
 		result = false;
 	}
 
 	//Get all AOI settings
-	try
-	{
+	try	{
 		CString path("");
 		dlg.m_aoiControlDlg.m_leftInput.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
@@ -262,52 +232,45 @@ bool CameraController::UpdateImageParameters()
 		if (path.IsEmpty()) throw new std::exception();
 		cameraImageHeight = _tstoi(path);
 	}
-	catch (...)
-	{
+	catch (...)	{
 		Utility::printLine("ERROR: Was unnable to parse AOI settings!");
 		result = false;
 	}
 
 	//Number of image bins X and Y (ASK: if actually need to be thesame)
-	try
-	{
+	try	{
 		CString path("");
 		dlg.m_optimizationControlDlg.m_numberBins.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
 		numberOfBinsX = _tstof(path);
 	}
-	catch (...)
-	{
+	catch (...)	{
 		Utility::printLine("ERROR: Was unable to parse the number of bins input feild!");
 		result = false;
 	}
 	numberOfBinsY = numberOfBinsX;
 
 	//Size of bins X and Y (ASK: if actually thesame xy? and isn't stating the # of bins already determine size?)
-	try
-	{
+	try	{
 		CString path("");
 		dlg.m_optimizationControlDlg.m_binSize.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
 		binSizeX = _tstof(path);
 	}
-	catch (...)
-	{
+	catch (...)	{
 		Utility::printLine("ERROR: Was unable to parse bin size input feild!");
 		result = false;
 	}
 	binSizeY = binSizeX;
 
 	//Integration/target radius (ASK: what is this for?)
-	try
-	{
+	try	{
 		CString path("");
 		dlg.m_optimizationControlDlg.m_targetRadius.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
 		targetRadius = _tstof(path);
 	}
-	catch (...)
-	{
+	catch (...)	{
 		Utility::printLine("ERROR: Was unable to parse integration radius input feild!");
 		result = false;
 	}
@@ -321,21 +284,17 @@ bool CameraController::UpdateImageParameters()
 }
 
 //GetConnectedCameraInfo: used to proccess/store data about all currentlyconnected cameras
-bool CameraController::UpdateConnectedCameraInfo()
-{
-	try
-	{
+bool CameraController::UpdateConnectedCameraInfo() {
+	try	{
 		//Spinaker system object w/ camera list
 		system = System::GetInstance();
 		camList = system->GetCameras();
 
-		if (system == NULL)
-		{
+		if (system == NULL)	{
 			Utility::printLine("ERROR: Camera system not avaliable!");
 			return false;
 		}
-		if (camList.GetSize() == 0)
-		{
+		if (camList.GetSize() == 0)	{
 			Utility::printLine("ERROR: No cameras avaliable!");
 			return false;
 		}
@@ -344,8 +303,7 @@ bool CameraController::UpdateConnectedCameraInfo()
 
 		//Check if only one camera
 		int camAmount = camList.GetSize();
-		if (camAmount != 1)
-		{
+		if (camAmount != 1)	{
 			//clear camera list before releasing system
 			camList.Clear();
 			system->ReleaseInstance();
@@ -355,8 +313,7 @@ bool CameraController::UpdateConnectedCameraInfo()
 
 		//Get camera reference
 		cam = camList.GetByIndex(0);
-		if (!cam.IsValid())
-		{
+		if (!cam.IsValid())	{
 			Utility::printLine("ERROR: Retrieved Camera not Valid!");
 			return false;
 		}
@@ -365,8 +322,7 @@ bool CameraController::UpdateConnectedCameraInfo()
 
 		//Initialize camera
 		cam->Init();
-		if (!cam->IsInitialized())
-		{
+		if (!cam->IsInitialized())	{
 			Utility::printLine("ERROR: Retrieved Camera could not be initialized!");
 			return false;
 		}
@@ -377,8 +333,7 @@ bool CameraController::UpdateConnectedCameraInfo()
 		//nodeMap = cam->GetNodeMap();
 		//nodeMapTLDevice = cam->GetTLDeviceNodeMap();
 	}
-	catch (Spinnaker::Exception &e)
-	{
+	catch (Spinnaker::Exception &e)	{
 		Utility::printLine("ERROR: " + std::string(e.what()));
 		return false;
 	}
@@ -388,18 +343,14 @@ bool CameraController::UpdateConnectedCameraInfo()
 
 /* ConfigureCustomImageSettings()
  * @return - TRUE if succesful, FALSE if failed */
-bool CameraController::ConfigureCustomImageSettings()
-{
+bool CameraController::ConfigureCustomImageSettings() {
 	// REFERENCES: try to look through these if current implementation one malfunctions:
 	// 1) http://perk-software.cs.queensu.ca/plus/doc/nightly/dev/vtkPlusSpinnakerVideoSource_8cxx_source.html
 	// 2) Useful for getting node info: https://www.flir.com/support-center/iis/machine-vision/application-note/spinnaker-nodes/
 	// 3) Use SpinView program to find correct node names and value types 
-
-
-
+	
 	//Check current camera is valid
-	if (!cam->IsValid() || !cam->IsInitialized())
-	{
+	if (!cam->IsValid() || !cam->IsInitialized()) {
 		Utility::printLine("ERROR: trying to configure invalid or nonexistant camera");
 		return false;
 	}
@@ -424,8 +375,7 @@ bool CameraController::ConfigureCustomImageSettings()
 	if (y0 % 2 != 0)
 		y0 -= y0 % 2;
 
-	try
-	{
+	try	{
 		//Apply mono 8 pixel format
 		if (cam->PixelFormat != NULL && cam->PixelFormat.GetAccessMode() == RW)
 			cam->PixelFormat.SetValue(PixelFormat_Mono8);
@@ -473,21 +423,18 @@ bool CameraController::ConfigureCustomImageSettings()
 		//Enable Manual Frame Rate Setting
 		bool setFrameRate = true;
 		Spinnaker::GenApi::CBooleanPtr FrameRateEnablePtr = cam->GetNodeMap().GetNode("AcquisitionFrameRateEnabled");
-		if (Spinnaker::GenApi::IsAvailable(FrameRateEnablePtr) && Spinnaker::GenApi::IsWritable(FrameRateEnablePtr))
-		{
+		if (Spinnaker::GenApi::IsAvailable(FrameRateEnablePtr) && Spinnaker::GenApi::IsWritable(FrameRateEnablePtr)) {
 			FrameRateEnablePtr->SetValue(true);
 			Utility::printLine("INFO: Set Framerate Manual Enble to True!");
 		}
-		else
-		{
+		else {
 			Utility::printLine("ERROR: Unable to set Frame Rate Enable to True!");
 			setFrameRate = false;
 		}
 
 
 		// Disable Auto Frame Rate Control
-		if (setFrameRate)
-		{
+		if (setFrameRate) {
 			// Enumeration node
 			CEnumerationPtr ptrFrameAuto = cam->GetNodeMap().GetNode("AcquisitionFrameRateAuto");
 			if (Spinnaker::GenApi::IsAvailable(ptrFrameAuto) && Spinnaker::GenApi::IsWritable(ptrFrameAuto))
@@ -496,52 +443,43 @@ bool CameraController::ConfigureCustomImageSettings()
 				CEnumEntryPtr ptrFrameAutoOff = ptrFrameAuto->GetEntryByName("Off");
 				//Turn off Auto Gain
 				ptrFrameAuto->SetIntValue(ptrFrameAutoOff->GetValue());
-				if (ptrFrameAuto->GetIntValue() == ptrFrameAutoOff->GetValue())
-				{
+				if (ptrFrameAuto->GetIntValue() == ptrFrameAutoOff->GetValue())	{
 					Utility::printLine("INFO: Set auto acquisition framerate mode to off!");
-
 				}
-				else
-				{
+				else {
 					Utility::printLine("WARNING: Auto acquistion framerate mode was not set to 'off'!");
 					setFrameRate = false;
 				}
 			}
-			else
-			{
+			else {
 				Utility::printLine("ERROR: Unable to set auto acquisition framerate mode to 'off'!");
 				setFrameRate = false;
 			}
 		}
 
 		//Set the correct framerate given by the user thrugh the UI
-		if (setFrameRate)
-		{
+		if (setFrameRate) {
 			CFloatPtr ptrFrameRateSetting = cam->GetNodeMap().GetNode("AcquisitionFrameRate");
-			if (Spinnaker::GenApi::IsAvailable(ptrFrameRateSetting) && Spinnaker::GenApi::IsWritable(ptrFrameRateSetting))
-			{
+			if (Spinnaker::GenApi::IsAvailable(ptrFrameRateSetting) && Spinnaker::GenApi::IsWritable(ptrFrameRateSetting))	{
 				ptrFrameRateSetting->SetValue(fps);
 				if (ptrFrameRateSetting->GetValue() == fps)
 					Utility::printLine("INFO: Set FPS of camera to " + std::to_string(fps) + "!");
 				else
 					Utility::printLine("WARNING: Was unable to set the FPS of camera to " + std::to_string(fps) + " it is actually " + std::to_string(ptrFrameRateSetting->GetValue()) + "!");
 			}
-			else
-			{
+			else {
 				Utility::printLine("ERROR: Unable to set fps node not avaliable!");
 			}
 		}
 
 		//Enable manual gamma adjustment:
 		Spinnaker::GenApi::CBooleanPtr GammaEnablePtr = cam->GetNodeMap().GetNode("GammaEnabled");
-		if (Spinnaker::GenApi::IsAvailable(GammaEnablePtr) && Spinnaker::GenApi::IsWritable(GammaEnablePtr))
-		{
+		if (Spinnaker::GenApi::IsAvailable(GammaEnablePtr) && Spinnaker::GenApi::IsWritable(GammaEnablePtr)) {
 			GammaEnablePtr->SetValue(true);
 			Utility::printLine("INFO: Set manual gamma enable to true");
 
 			CFloatPtr ptrGammaSetting = cam->GetNodeMap().GetNode("Gamma");
-			if (Spinnaker::GenApi::IsAvailable(ptrGammaSetting) && Spinnaker::GenApi::IsWritable(ptrGammaSetting))
-			{
+			if (Spinnaker::GenApi::IsAvailable(ptrGammaSetting) && Spinnaker::GenApi::IsWritable(ptrGammaSetting))	{
 				ptrGammaSetting->SetValue(gamma);
 				if (ptrGammaSetting->GetValue() == gamma)
 					Utility::printLine("INFO: Set Gamma of camera to " + std::to_string(gamma) + "!");
@@ -549,13 +487,11 @@ bool CameraController::ConfigureCustomImageSettings()
 					Utility::printLine("WARNING: Was unable to set the Gamma of camera to " + std::to_string(gamma) + " it is actually " + std::to_string(ptrGammaSetting->GetValue()) + "!");
 			}
 		}
-		else
-		{
+		else {
 			Utility::printLine("ERROR: Unable to set manual gamma enable to true");
 		}
 	}
-	catch (Spinnaker::Exception &e)
-	{
+	catch (Spinnaker::Exception &e)	{
 		Utility::printLine("ERROR: Exception while setting camera options \n" + std::string(e.what()));
 		return false;
 	}
@@ -567,27 +503,22 @@ bool CameraController::ConfigureCustomImageSettings()
 // This function prints the device information of the camera from the transport
 // layer; please see NodeMapInfo example for more in-depth comments on printing
 // device information from the nodemap.
-int CameraController::PrintDeviceInfo(INodeMap & nodeMap)
-{
+int CameraController::PrintDeviceInfo(INodeMap & nodeMap) {
 	Utility::printLine();
 	Utility::printLine("*** CAMERA INFORMATION ***");
-	try
-	{
+	try	{
 		FeatureList_t features;
 		CCategoryPtr category = nodeMap.GetNode("DeviceInformation");
-		if (IsAvailable(category) && IsReadable(category))
-		{
+		if (IsAvailable(category) && IsReadable(category)) {
 			category->GetFeatures(features);
 			FeatureList_t::const_iterator it;
-			for (it = features.begin(); it != features.end(); ++it)
-			{
+			for (it = features.begin(); it != features.end(); ++it)	{
 				CNodePtr pfeatureNode = *it;
 				std::string name(pfeatureNode->GetName().c_str());
 				Utility::printLine(name + " : ");
 
 				CValuePtr pValue = (CValuePtr)pfeatureNode;
-				if (IsReadable(pValue))
-				{
+				if (IsReadable(pValue))	{
 					std::string value(pValue->ToString().c_str());
 					Utility::print(value);
 				}
@@ -595,13 +526,11 @@ int CameraController::PrintDeviceInfo(INodeMap & nodeMap)
 					Utility::print("Node not readable");
 			}
 		}
-		else
-		{
+		else {
 			Utility::printLine("Device control information not available.");
 		}
 	}
-	catch (Spinnaker::Exception &e)
-	{
+	catch (Spinnaker::Exception &e) {
 		Utility::printLine("ERROR: " + std::string(e.what()));
 		Utility::printLine();
 		return -1;
@@ -614,45 +543,37 @@ int CameraController::PrintDeviceInfo(INodeMap & nodeMap)
 
 /* ConfigureExposureTime: sets the cameras exposure time
  * @return - TRUE if success, FALSE if failed */
-bool CameraController::ConfigureExposureTime()
-{
+bool CameraController::ConfigureExposureTime() {
 	finalExposureTime = initialExposureTime;
-
-	SetExposure(finalExposureTime);
-
-	return true;
+		
+	return SetExposure(finalExposureTime);
 }
 
 // [UTILITY]
 // GetExposureRatio: calculates how many times exposure was cut in half
 // @returns - the ratio of starting and final exosure time 
-double CameraController::GetExposureRatio()
-{
+double CameraController::GetExposureRatio() {
 	return initialExposureTime / finalExposureTime;
 }
 
 /* SetExposure: configure a custom exposure time. Automatic exposure is turned off, then the custom setting is applied.
-* @param exposureTimeToSet - self explanatory (in MS)
+* @param exposureTimeToSet - self explanatory (in microseconds = 10^-6 seconds)
 * @return FALSE if failed, TRUE if succeded */
-bool CameraController::SetExposure(double exposureTimeToSet)
-{
+bool CameraController::SetExposure(double exposureTimeToSet) {
 	//Constraint exposure time from going lower than camera limit
 	//TODO: determine this lower bound for the camera we are using
 
-	try
-	{
+	try {
 		INodeMap &nodeMap = cam->GetNodeMap();
 
 		// Turn off automatic exposure mode
 		CEnumerationPtr ptrExposureAuto = nodeMap.GetNode("ExposureAuto");
-		if (!IsAvailable(ptrExposureAuto) || !IsWritable(ptrExposureAuto))
-		{
+		if (!IsAvailable(ptrExposureAuto) || !IsWritable(ptrExposureAuto)) {
 			Utility::printLine("Unable to disable automatic exposure (node retrieval)");
 			return false;
 		}
 		CEnumEntryPtr ptrExposureAutoOff = ptrExposureAuto->GetEntryByName("Off");
-		if (!IsAvailable(ptrExposureAutoOff) || !IsReadable(ptrExposureAutoOff))
-		{
+		if (!IsAvailable(ptrExposureAutoOff) || !IsReadable(ptrExposureAutoOff)) {
 			Utility::printLine("Unable to disable automatic exposure (enum entry retrieval)");
 			return false;
 		}
@@ -660,22 +581,19 @@ bool CameraController::SetExposure(double exposureTimeToSet)
 
 		// Set exposure manually
 		CFloatPtr ptrExposureTime = nodeMap.GetNode("ExposureTime");
-		if (!IsAvailable(ptrExposureTime) || !IsWritable(ptrExposureTime))
-		{
+		if (!IsAvailable(ptrExposureTime) || !IsWritable(ptrExposureTime)) {
 			Utility::printLine("ERROR: Unable to set exposure time.");
 			return false;
 		}
 		// Ensure new time does not exceed max set to max if does
 		const double exposureTimeMax = ptrExposureTime->GetMax();
-		if (exposureTimeToSet > exposureTimeMax)
-		{
+		if (exposureTimeToSet > exposureTimeMax) {
 			exposureTimeToSet = exposureTimeMax;
 			Utility::printLine("WARNING: Exposure time of " + std::to_string(exposureTimeToSet) + " is to big. Exposure set too max of " + std::to_string(exposureTimeMax));
 		}
 		ptrExposureTime->SetValue(exposureTimeToSet);
 	}
-	catch (Spinnaker::Exception &e)
-	{
+	catch (Spinnaker::Exception &e)	{
 		Utility::printLine("ERROR: Cannot Set Exposure Time:\n" + std::string(e.what()));
 		return false;
 	}
@@ -683,16 +601,14 @@ bool CameraController::SetExposure(double exposureTimeToSet)
 	return true;
 }
 
-void CameraController::HalfExposureTime()
-{
+void CameraController::HalfExposureTime() {
 	finalExposureTime /= 2;
 	if (!SetExposure(finalExposureTime))
 		Utility::printLine("ERROR: wasn't able to half the exposure time!");
 }
 
 // [ACCESSOR(S)/MUTATOR(S)]
-bool CameraController::GetCenter(int &x, int &y)
-{
+bool CameraController::GetCenter(int &x, int &y) {
 	int fullWidth = -1;
 	int fullHeight = -1;
 	
@@ -707,8 +623,7 @@ bool CameraController::GetCenter(int &x, int &y)
 	return true;
 }
 
-bool CameraController::GetFullImage(int &x, int &y)
-{
+bool CameraController::GetFullImage(int &x, int &y) {
 	//TODO: implement check if camera is currently running an optimization
 	//if (isCamStarted)
 	//{
@@ -716,16 +631,14 @@ bool CameraController::GetFullImage(int &x, int &y)
 	//	return false;
 	//}
 
-	if (cam->IsValid() && cam->IsInitialized())
-	{
+	if (cam->IsValid() && cam->IsInitialized()) {
 		CIntegerPtr ptrWidth = cam->GetNodeMap().GetNode("WidthMax");
 		x = ptrWidth->GetValue();
 
 		CIntegerPtr ptrHeight = cam->GetNodeMap().GetNode("HeightMax");
 		y = ptrHeight->GetValue();
 	}
-	else
-	{
+	else {
 		Utility::printLine("ERROR: camera that was retrived for gathering info is not valid!");
 		return false;
 	}
