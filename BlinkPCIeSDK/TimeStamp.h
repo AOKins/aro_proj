@@ -1,4 +1,4 @@
-//This class contains a list of the time stamp object members
+// This class contains a list of the time stamp object members
 
 #ifndef TIME_STAMP
 #define TIME_STAMP

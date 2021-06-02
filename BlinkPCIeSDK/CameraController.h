@@ -10,8 +10,7 @@ using namespace Spinnaker::GenICam;
 // [FORWARD DEFINITIONS]
 class MainDialog;
 
-class CameraController
-{
+class CameraController {
 public:
 	//Image parameters (with defaults set)
 	int x0 = 896;				//  Must be a factor of 4 (like 752)
@@ -76,6 +75,5 @@ public:
 	bool GetFullImage(int &x, int &y);
 
 };
-
 
 #endif

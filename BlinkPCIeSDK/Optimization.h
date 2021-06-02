@@ -25,9 +25,9 @@ protected:
 	CameraController* cc;
 	SLMController* sc;
 	//Base algorithm parameters
-	double acceptedSimilarity = .97; //images considered the same when reach this threshold (has to be less than 1)
-	double maxFitnessValue  = 200;	 //max allowed fitness value - when reached exposure is halved (TODO: check this feature)
-	double maxGenenerations = 3000;
+	double acceptedSimilarity = .97; // images considered the same when reach this threshold (has to be less than 1)
+	double maxFitnessValue    = 200; // max allowed fitness value - when reached exposure is halved (TODO: check this feature)
+	double maxGenenerations   = 3000;
 
 	//Base algorithm stop conditions
 	double fitnessToStop =  0;

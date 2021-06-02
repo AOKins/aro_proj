@@ -39,6 +39,8 @@ public:
 
 	// Starts next generation using fitness of individuals.
 	bool StartNextGeneration() {
+		// TODO: Implementation of uGA
+
 	}	// ... Function nextGeneration
 }; // ... class uGAPopulation
 

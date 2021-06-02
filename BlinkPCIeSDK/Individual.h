@@ -31,7 +31,7 @@ public:
 	}
 
 	// Returns the array(genome) associated with the individual.
-	std::shared_ptr<std::vector<T>> genome(){
+	std::shared_ptr<std::vector<T>> genome() {
 		return genome_;
 	}
 
@@ -42,7 +42,7 @@ public:
 
 	// Sets the genome to be associated with the individual.
 	// @param new_genome -> genome to be associated
-	void set_genome(std::shared_ptr<std::vector<T>> new_genome){
+	void set_genome(std::shared_ptr<std::vector<T>> new_genome) {
 		genome_ = new_genome;
 	}
 
