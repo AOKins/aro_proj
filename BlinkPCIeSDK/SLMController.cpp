@@ -1,4 +1,3 @@
-
 // [INCUDE FILES]
 // - Required
 #include "stdafx.h"				// Required in source
@@ -9,7 +8,6 @@
 #include "SLMController.h"		// Header file
 #include "SLM_Board.h"
 
-
 //	- External libraries
 #include "Blink_SDK.h"			// Camera functions
 #include "cdib.h"				// Used by blink to read in bitmaps
@@ -19,8 +17,7 @@
 #include "Utility.h"
 // - System libraries
 
-SLMController::SLMController()
-{
+SLMController::SLMController() {
 	unsigned int bits_per_pixel = 8U;			 //8 -> small SLM, 16 -> large SLM
 	bool is_LC_Nematic = true;					 //HUGE TODO: perform this setup on evey board not just the beginning
 	bool RAM_write_enable = true;
@@ -36,15 +33,15 @@ SLMController::SLMController()
 	LoadSequence();
 }
 
-bool SLMController::setupSLM(bool repopulateBoardList, int boardIdx) //index 0 based
-{
+// Input:
+//  repopulateBoardList - boolean if true will reset the board list
+//	boardIDx - index for SLM (0 based)
+bool SLMController::setupSLM(bool repopulateBoardList, int boardIdx) {
 	boards.clear();
 
 	//Create all board references
-	if (repopulateBoardList)
-	{
-		for (int i = 1; i <= numBoards; i++)
-		{
+	if (repopulateBoardList) {
+		for (int i = 1; i <= numBoards; i++) {
 			SLM_Board *curBoard = new SLM_Board(true, blink_sdk->Get_image_width(i), blink_sdk->Get_image_height(i));
 			int boardArea = blink_sdk->Get_image_width(i) * blink_sdk->Get_image_height(i);
 
@@ -64,17 +61,15 @@ bool SLMController::setupSLM(bool repopulateBoardList, int boardIdx) //index 0 b
 			boards.push_back(curBoard);
 		}
 	}
-
 	//Check if board is avaliable
-	if (boards.size() >= boardIdx)
+	if (boards.size() >= boardIdx) {
 		return false;
-
+	}
 	//Read LUT File into the SLM board so it is applied to images automatically by the hardware
 	AssignLUTFile(boardIdx, "");
 
 	float fps;
-	try
-	{
+	try	{
 		CString path("");
 		dlg->m_cameraControlDlg.m_FramesPerSecond.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
@@ -83,30 +78,28 @@ bool SLMController::setupSLM(bool repopulateBoardList, int boardIdx) //index 0 b
 		//IMPORTANT NOTE: if framerate is not thesame framerate that was used in OnInitDialog AND the LC type is FLC 
 		//				  then it is VERY IMPORTANT that true frames be recalculated prior to calling SetTimer such
 		//				  that the FrameRate and TrueFrames are properly related
-		if (!boards[boardIdx]->is_LC_Nematic)
+		if (!boards[boardIdx]->is_LC_Nematic) {
 			trueFrames = blink_sdk->Compute_TF(float(fps));
+		}
 		blink_sdk->Set_true_frames(trueFrames);
 	}
-	catch (...)
-	{
+	catch (...)	{
 		Utility::printLine("ERROR: Was unable to parse integration radius input feild!");
 	}
-
 	//Start with SLMs OFF
 	blink_sdk->SLM_power(false);
 
 	return false;
 }
 
-void SLMController::AssignLUTFile(int boardIdx, std::string path)
-{
+void SLMController::AssignLUTFile(int boardIdx, std::string path) {
 	//TODO: do some validation/error handling
+	//TODO: make adjustable through the UI
 
 	//Set the new LUT file path to the board //TODO: check if needed
-	if (path != "")
+	if (path != "") {
 		boards[boardIdx]->LUTFileName = path;
-
-	//TODO: make adjustable through the UI
+	}
 	const char* LUT_file;
 	CStringA filename = "slm3986_at532_P8.LUT";
 	LUT_file = filename;
@@ -114,7 +107,6 @@ void SLMController::AssignLUTFile(int boardIdx, std::string path)
 	//Write LUT file to the board
 	blink_sdk->Load_LUT_file(boardIdx + 1, LUT_file);
 }
-
 
 /* LoadSequence: This function will load a series of two images to the PCIe board memory.
  *               The first image is written to the first frame of memory in the hardware,
@@ -125,22 +117,18 @@ void SLMController::AssignLUTFile(int boardIdx, std::string path)
  *				  Once we're using Overdrive, I think it'll be easier because the
  *				  construction of the sdk includes a correction file, and even in the 
  *  			  old code used the same correction file. */
-void SLMController::LoadSequence()
-{
-	if (!dlg)
-	{
+void SLMController::LoadSequence() {
+	if (!dlg) {
 		Utility::printLine("WARNING: trying to load sequence without dlg reference");
 		return;
 	}
-
 
 	int i;
 
 	//loop through each PCIe board found, read in the calibrations for that SLM
 	//as well as the images in the wequence list, and store the merged image/calibration
 	//data in an array that will later be referenced
-	for (int h = 0; h < boards.size(); h++) //please note: BoardList has a 0-based index, but Blink's index of available boards is 1-based.
-	{
+	for (int h = 0; h < boards.size(); h++) { // please note: BoardList has a 0-based index, but Blink's index of available boards is 1-based.
 
 		//if the user has a nematic SLM and the user is viewing the SLM through an interferometer, 
 		//then the user has the option to correct for SLM imperfections by applying a predetermined 
@@ -148,13 +136,11 @@ void SLMController::LoadSequence()
 		//own custom phase correction file. This step is either reading in that correction file, or
 		//setting the data in the array to 0 for users that don't want to correct, or for users with
 		//amplitude devies
-		if (dlg->m_CompensatePhase)
-		{
+		if (dlg->m_CompensatePhase) {
 			ReadAndScaleBitmap(boards[h], boards[h]->PhaseCompensationData, boards[h]->PhaseCompensationFileName); //save to PhaseCompensationData
 			ReadAndScaleBitmap(boards[h], boards[h]->SystemPhaseCompensationData, boards[h]->SystemPhaseCompensationFileName); //save to SystemPhaseCompensationData
 		}
-		else
-		{
+		else {
 			memset(boards[h]->PhaseCompensationData, 0, boards[h]->GetArea()); //set PhaseCompensationData to 0
 			memset(boards[h]->SystemPhaseCompensationData, 0, boards[h]->GetArea()); //set SystemPhaseCompensationData to 0
 		}
@@ -165,8 +151,7 @@ void SLMController::LoadSequence()
 		int total;
 		//Superimpose the SLM phase compensation, the system phase compensation, and
 		//the image data. Then store the image in FrameOne
-		for (i = 0; i < boards[h]->GetArea(); i++)
-		{
+		for (i = 0; i < boards[h]->GetArea(); i++) {
 			total = boards[h]->FrameOne[i] +
 					boards[h]->PhaseCompensationData[i] +
 					boards[h]->SystemPhaseCompensationData[i];
@@ -179,8 +164,7 @@ void SLMController::LoadSequence()
 
 		//Superimpose the SLM phase compensation, the system phase compensation, and
 		//the image data. Then store the image in FrameTwo
-		for (i = 0; i < boards[h]->GetArea(); i++)
-		{
+		for (i = 0; i < boards[h]->GetArea(); i++) {
 			total = boards[h]->FrameTwo[i] +
 					boards[h]->PhaseCompensationData[i] +
 					boards[h]->SystemPhaseCompensationData[i];
@@ -192,8 +176,7 @@ void SLMController::LoadSequence()
 
 
 // [DESTRUCTOR]
-SLMController::~SLMController()
-{
+SLMController::~SLMController() {
 	//Poweroff and deallokate sdk functionality
 	blink_sdk->SLM_power(false);
 	blink_sdk->~Blink_SDK();
@@ -208,8 +191,7 @@ SLMController::~SLMController()
  * @param LUTBuf - array in which to store  the LUT File info
  * @param LUTPath - the name of the LUT file to read
  * @return TRUE if success, FALSE if failed */
-bool SLMController::ReadLUTFile(unsigned char *LUTBuf, std::string LUTPath)
-{
+bool SLMController::ReadLUTFile(unsigned char *LUTBuf, std::string LUTPath) {
 	FILE *stream;
 	int i, seqnum, ReturnVal, tmpLUT;
 	bool errorFlag;
@@ -219,14 +201,11 @@ bool SLMController::ReadLUTFile(unsigned char *LUTBuf, std::string LUTPath)
 	errorFlag = false;
 
 	stream = fopen(LUTPath.c_str(), "r");
-	if ((stream != NULL) && (errorFlag == false))
-	{
+	if ((stream != NULL) && (errorFlag == false)) {
 		//read in all 256 values
-		for (i = 0; i < 256; i++)
-		{
+		for (i = 0; i < 256; i++) {
 			ReturnVal = fscanf(stream, "%d %d", &seqnum, &tmpLUT);
-			if (ReturnVal != 2 || seqnum != i || tmpLUT < 0 || tmpLUT > 255)
-			{
+			if (ReturnVal != 2 || seqnum != i || tmpLUT < 0 || tmpLUT > 255) {
 				fclose(stream);
 				errorFlag = true;
 				break;
@@ -236,8 +215,7 @@ bool SLMController::ReadLUTFile(unsigned char *LUTBuf, std::string LUTPath)
 		fclose(stream);
 	}
 	//if there was an error reading in the LUT, default to a linear LUT
-	if ((stream == NULL) || (errorFlag == true))
-	{
+	if ((stream == NULL) || (errorFlag == true)) {
 		for (i = 0; i < 256; i++)
 			LUTBuf[i] = i;
 		return false;
@@ -262,8 +240,7 @@ bool SLMController::ReadLUTFile(unsigned char *LUTBuf, std::string LUTPath)
 //   Modifications: 
 //
 //////////////////////////////////////////////////////////
-bool SLMController::ReadAndScaleBitmap(SLM_Board *board, unsigned char *Image, std::string filename)
-{
+bool SLMController::ReadAndScaleBitmap(SLM_Board *board, unsigned char *Image, std::string filename) {
 	int width, height, bytespixel;
 
 	//need a tmpImage because we cannot assume that the bitmap we
@@ -277,8 +254,7 @@ bool SLMController::ReadAndScaleBitmap(SLM_Board *board, unsigned char *Image, s
 
 	//if it is a .bmp file and we can open it
 	CString file = CString(filename.c_str());
-	if (pFile->Open(file, CFile::modeRead | CFile::shareDenyNone, NULL))
-	{
+	if (pFile->Open(file, CFile::modeRead | CFile::shareDenyNone, NULL)) {
 		//read in bitmap dimensions
 		CDib dib;
 		dib.Read(pFile);
@@ -292,10 +268,8 @@ bool SLMController::ReadAndScaleBitmap(SLM_Board *board, unsigned char *Image, s
 		tmpImage = new unsigned char[height*width];
 
 		//flip the image right side up (INVERT)
-		for (int i = 0; i < height; i++)
-		{
-			for (int j = 0; j < width; j++)
-			{
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
 				if (bytespixel == 4)
 					tmpImage[((height - 1) - i)*height + j] = dib.m_lpImage[i*(height / 2) + (j / 2)];
 				if (bytespixel == 8)
@@ -306,12 +280,10 @@ bool SLMController::ReadAndScaleBitmap(SLM_Board *board, unsigned char *Image, s
 					tmpImage[((height - 1) - i)*height + j] = dib.m_lpImage[i * 3 * height + j * 3];
 			}
 		}
-
 		dib.~CDib();
 	}
 	//we could not open the file, or the file was not a .bmp
-	else
-	{
+	else {
 		//depending on if we are trying to read a bitmap to dowload
 		//or if we are trying to read it for the screen, memset
 		//the array to zero and return false
@@ -348,8 +320,7 @@ bool SLMController::ReadAndScaleBitmap(SLM_Board *board, unsigned char *Image, s
 //   Modifications:
 //
 /////////////////////////////////////////////////////////////////////////
-unsigned char* SLMController::ScaleBitmap(unsigned char* InvertedImage, int BitmapSize, int FinalBitmapSize)
-{
+unsigned char* SLMController::ScaleBitmap(unsigned char* InvertedImage, int BitmapSize, int FinalBitmapSize) {
 	int height = BitmapSize;
 	int width = BitmapSize;
 
@@ -359,19 +330,14 @@ unsigned char* SLMController::ScaleBitmap(unsigned char* InvertedImage, int Bitm
 		AfxMessageBox(_T("Error allocating memory for CFile,LoadSIFRec"), MB_OK);
 
 	//EXPAND THE IMAGE to FinalBitmapSize
-	if (height < FinalBitmapSize)
-	{
+	if (height < FinalBitmapSize) {
 		int r, c, row, col, Index; //row and col correspond to InvertedImage
 		int Scale = FinalBitmapSize / height;
 
-		for (row = 0; row < height; row++)
-		{
-			for (col = 0; col < width; col++)
-			{
-				for (r = 0; r < Scale; r++)
-				{
-					for (c = 0; c < Scale; c++)
-					{
+		for (row = 0; row < height; row++) {
+			for (col = 0; col < width; col++) {
+				for (r = 0; r < Scale; r++) {
+					for (c = 0; c < Scale; c++)	{
 						Index = ((row*Scale) + r)*FinalBitmapSize + (col*Scale) + c;
 						ScaledImage[Index] = InvertedImage[row*height + col];
 					}
@@ -380,20 +346,16 @@ unsigned char* SLMController::ScaleBitmap(unsigned char* InvertedImage, int Bitm
 		}
 	}
 	//SHRINK THE IMAGE to FinalBitmapSize
-	else if (height > FinalBitmapSize)
-	{
+	else if (height > FinalBitmapSize) {
 		int Scale = height / FinalBitmapSize;
-		for (int i = 0; i < height; i += Scale)
-		{
-			for (int j = 0; j < width; j += Scale)
-			{
+		for (int i = 0; i < height; i += Scale) {
+			for (int j = 0; j < width; j += Scale) {
 				ScaledImage[(i / Scale) + FinalBitmapSize*(j / Scale)] = InvertedImage[i + height*j];
 			}
 		}
 	}
 	//if the image is already the correct size, just copy the array over
-	else
-	{
+	else {
 		memcpy(ScaledImage, InvertedImage, FinalBitmapSize*FinalBitmapSize);
 	}
 	return(ScaledImage);
@@ -414,8 +376,7 @@ unsigned char* SLMController::ScaleBitmap(unsigned char* InvertedImage, int Bitm
 //
 /////////////////////////////////////////////////////////////////////////////
 #define MAX_ZERNIKE_LINE 300
-bool SLMController::ReadZernikeFile(SLM_Board* board, unsigned char *GeneratedImage, std::string fileName)
-{
+bool SLMController::ReadZernikeFile(SLM_Board* board, unsigned char *GeneratedImage, std::string fileName) {
 	char inBuf[MAX_ZERNIKE_LINE];
 	char inputString[MAX_ZERNIKE_LINE];
 	char inputKey[MAX_ZERNIKE_LINE];
@@ -446,10 +407,8 @@ bool SLMController::ReadZernikeFile(SLM_Board* board, unsigned char *GeneratedIm
 
 	//open the zernike file to read
 	std::ifstream ZernikeFile(fileName);
-	if (ZernikeFile.is_open())
-	{
-		while (ZernikeFile.getline(inBuf, MAX_ZERNIKE_LINE, '\n'))
-		{
+	if (ZernikeFile.is_open()) {
+		while (ZernikeFile.getline(inBuf, MAX_ZERNIKE_LINE, '\n')) {
 			//read in a line from the file
 			sscanf(inBuf, "%[^= ]%*[= ]%s", inputKey, inputString);
 
@@ -559,16 +518,13 @@ bool SLMController::ReadZernikeFile(SLM_Board* board, unsigned char *GeneratedIm
 		return true;
 	}
 	//if we could not open the zernike file
-	else
-	{
+	else {
 		memset(GeneratedImage, 0, board->GetArea());
 		return false;
 	}
 }
 
-
-bool SLMController::IsAnyNematic()
-{
+bool SLMController::IsAnyNematic() {
 	for (int i = 0; 0 < boards.size(); i++)
 		if (boards[i]->is_LC_Nematic)
 			return true;
@@ -577,10 +533,8 @@ bool SLMController::IsAnyNematic()
 }
 
 //index  - the image index to use to write to slm
-void SLMController::ImageListBoxUpdate(int index)
-{
-	for (int i = 0; i < boards.size(); i++)
-	{
+void SLMController::ImageListBoxUpdate(int index) {
+	for (int i = 0; i < boards.size(); i++)	{
 		// Send the data of the selected image in the sequence list out to the SLM
 		// LARGE TODO: instead of storing frames in the board struct store this 
 		// info on the main dlg as a n object and pass into this function
@@ -591,8 +545,7 @@ void SLMController::ImageListBoxUpdate(int index)
 	}
 }
 
-bool SLMController::slmCtrlReady()
-{
+bool SLMController::slmCtrlReady() {
 	if (blink_sdk == NULL || blink_sdk == nullptr)
 		return false;
 
@@ -601,25 +554,21 @@ bool SLMController::slmCtrlReady()
 	return true;
 }
 
-
-int SLMController::getBoardWidth(int boardIdx)
-{
+int SLMController::getBoardWidth(int boardIdx) {
 	if (boardIdx >= boards.size())
 		return -1;
 
 	return boards[boardIdx]->imageWidth;
 }
 
-int SLMController::getBoardHeight(int boardIdx)
-{
+int SLMController::getBoardHeight(int boardIdx) {
 	if (boardIdx >= boards.size())
 		return -1;
 
 	return boards[boardIdx]->imageHeight;
 }
 
-void SLMController::setBoardPower(bool isOn)
-{
+void SLMController::setBoardPower(bool isOn) {
 	if (blink_sdk != NULL)
 		blink_sdk->SLM_power(isOn);
 	else

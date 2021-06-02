@@ -22,8 +22,11 @@ using std::ofstream;
 using std::ostringstream;
 using namespace cv;
 
-bool uGA_Optimization::runOptimization()
-{
+////
+// TODOs:	Implement runOptimization() and any other methods needed
+
+
+bool uGA_Optimization::runOptimization() {
 	//Utility::printLine("UGA BUTTON CLICKED!");
 
 	////Setup before optimization (see base class for implementation)

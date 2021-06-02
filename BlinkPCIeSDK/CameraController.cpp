@@ -1,4 +1,3 @@
-
 #include "stdafx.h"				// Required in source
 
 #include "CameraController.h"	// Header file
@@ -7,7 +6,6 @@
 #include <string>
 
 using std::ostringstream;
-
 
 // [CONSTRUCTOR(S)]
 CameraController::CameraController(MainDialog& dlg_) : dlg(dlg_) {
@@ -98,7 +96,6 @@ bool CameraController::stopCamera() {
 	return true;
 }
 
-
 //Releases camera references - have to call setup camera again if need to use camer after this call
 bool CameraController::shutdownCamera()
 {
@@ -113,7 +110,6 @@ bool CameraController::shutdownCamera()
 
 	return true;
 }
-
 
 // [ACQUISITION]
 /*getImage: high level wrapper that allows to take an image if camera was started
@@ -548,7 +544,6 @@ int CameraController::PrintDeviceInfo(INodeMap & nodeMap) {
 	Utility::printLine();
 	return 0;
 }
-
 
 /* ConfigureExposureTime: sets the cameras exposure time
  * @return - TRUE if success, FALSE if failed */

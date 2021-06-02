@@ -26,13 +26,13 @@ protected:
 	SLMController* sc;
 	//Base algorithm parameters
 	double acceptedSimilarity = .97; //images considered the same when reach this threshold (has to be less than 1)
-	double maxFitnessValue = 200;	 //max allowed fitness value - when reached exposure is halved (TODO: check this feature)
+	double maxFitnessValue  = 200;	 //max allowed fitness value - when reached exposure is halved (TODO: check this feature)
 	double maxGenenerations = 3000;
 
 	//Base algorithm stop conditions
-	double fitnessToStop = 0;
+	double fitnessToStop =  0;
 	double secondsToStop = 60;
-	double genEvalToStop = 0;
+	double genEvalToStop =  0;
 
 	//Preference-type parameters
 	bool saveImages = false;		//TRUE -> save images of the fittest individual of each gen
@@ -40,7 +40,7 @@ protected:
 	bool displaySLMImage = false; //TODO: only first SLM right now - add functionality to display any or all boards
 
 	//Instance variables
-	bool isWorking = false;
+	bool isWorking = false; // true if currently actively running the optimization algorithm
 	int populationSize; // Size of the population being used
 	int eliteSize;		// Number of elite individuals within the population (should be less than populationSize)
 	int slmLength;		// Size of images for sc
@@ -77,10 +77,8 @@ public:
 	Optimization(MainDialog& dlg_, CameraController* cc, SLMController* sc);
 
 	// Method for performing the optimization
-	// Output:
-	//	return true if successful, false if failure from any cause
+	// Output: returns true if successful ran without error, false if error occurs
 	virtual bool runOptimization() = 0;
 };
-
 
 #endif

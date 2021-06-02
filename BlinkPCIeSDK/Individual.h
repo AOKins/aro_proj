@@ -11,7 +11,7 @@
 #include <memory>
 
 template <class T>
-class Individual{
+class Individual {
 private:
 
 	// The genome associated with the individual.
@@ -54,5 +54,9 @@ public:
 
 }; // ... class Individual
 
+template <typename T>
+bool operator<(Individual<T> &a, Individual<T> &b) {
+	return a.fitness() < b.fitness();
+}
 
 #endif

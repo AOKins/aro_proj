@@ -10,7 +10,8 @@
 #include <vector>
 
 ////
-// TODOs:	Update sortIndividuals to use more efficient algorithm (currently using insertion sort!)
+// TODOs:	Consider update sortIndividuals to use more efficient algorithm
+//					(currently using insertion sort but with small size may not be needed/gain much)
 //			Consider how to handle possible case of elite_size exceeding pop_size (necessarry?)
 ////
 
@@ -139,8 +140,8 @@ public:
 	// Input:
 	//	to_sort - the individuals to be sorted
 	//	size - the size of the array to_sort
-	// Output: returns sorted pointer array of individuals
-	Individual<T> *SortIndividuals(Individual<T> *to_sort, int size) {
+	// Output: returns sorted pointer array of individuals originating from to_sort
+	Individual<T>* SortIndividuals(Individual<T> *to_sort, int size) {
 		bool found = false;
 		Individual<T> *temp = new Individual<T>[size];
 		DeepCopyIndividual(temp[0], to_sort[0]);

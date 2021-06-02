@@ -5,8 +5,7 @@
 #include <string>
 #include "SLM_Board.h"
 
-SLM_Board::SLM_Board(bool isNematic, int width, int height)
-{
+SLM_Board::SLM_Board(bool isNematic, int width, int height) {
 	is_LC_Nematic = isNematic;
 	imageWidth = width;
 	imageHeight = height;
@@ -15,8 +14,7 @@ SLM_Board::SLM_Board(bool isNematic, int width, int height)
 	SystemPhaseCompensationFileName = "";
 }
 
-SLM_Board::~SLM_Board()
-{
+SLM_Board::~SLM_Board() {
 	delete[] FrameOne;
 	delete[] FrameTwo;
 	delete[] PhaseCompensationData;
@@ -24,7 +22,6 @@ SLM_Board::~SLM_Board()
 	delete[] LUT;
 }
 
-int SLM_Board::GetArea()
-{
+int SLM_Board::GetArea() {
 	return imageWidth * imageHeight;
 }

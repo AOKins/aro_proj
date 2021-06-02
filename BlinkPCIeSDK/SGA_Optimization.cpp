@@ -1,4 +1,7 @@
-
+////////////////////
+// Optimization handler methods implementation for standard genetic algorithm
+// Last edited: 06/02/2021 by Andrew O'Kins
+////////////////////
 #include "stdafx.h"				// Required in source
 #include "SGA_Optimization.h"	// Header file
 #include "SGA_Population.h"
@@ -22,15 +25,16 @@ using std::ostringstream;
 using namespace cv;
 
 ////
-// TODOs:	Refactor the code, breaking runOptimization() content down into submethods in preparation for multithreading and improved readability
+// TODOs:	Support multithreading where appriopriate to improve speed performance
 //			Add support for multiple boards
 //			Address how to handle if image acquisition failed (currently just moves on to next individual without assigning a default fitness value)
 //			send final scaled image to the SLM //ASK needed?
 //			Remove unneeded file i/o once debugging is complete
 
+// Method for executing the optimization
+// Output: returns true if successful ran without error, false if error occurs
 bool SGA_Optimization::runOptimization() {
 	Utility::printLine("SGA BUTTON PRESSED!");
-
     //Setup before optimization (see base class for implementation)
 	if (!prepareSoftwareHardware()) {
 		Utility::printLine("ERROR: Failed to prepare software or/and hardware for SGA Optimization");
@@ -41,8 +45,7 @@ bool SGA_Optimization::runOptimization() {
 		Utility::printLine("ERROR: Failed to prepare values and files for SGA Optimization");
 		return false;
 	}
-	// Begin Camera Exception Handling
-	try {
+	try {	// Begin camera exception handling while optimization loop is going
 		this->timestamp = new TimeStampGenerator();		// Starting time stamp to track elapsed time
 		// Optimization loop for each generation
 		for (this->curr_gen = 0; this->curr_gen < maxGenenerations && !stopConditionsMetFlag; this->curr_gen++) {
@@ -89,11 +92,11 @@ bool SGA_Optimization::runIndividual(int indID) {
 	tempptr = std::make_shared<int>(population->getImage(indID)); // Get the image for the individual
 	scaler->TranslateImage(tempptr, aryptr);
 
-	//Write translated image to SLM boards //TODO: modify as it assumes boards get the same image and have same size
+	// Write translated image to SLM boards //TODO: modify as it assumes boards get the same image and have same size
 	for (int i = 1; i <= sc->boards.size(); i++) {
-		sc->blink_sdk->Write_image(i, aryptr, sc->getBoardHeight(i - 1), false, false, 0.0);
+		sc->blink_sdk->Write_image(i, aryptr, sc->getBoardHeight(i-1), false, false, 0.0);
 	}
-	//Acquire images // - take image and determine fitness
+	// Acquire images // - take image and determine fitness
 	cc->AcquireImages(curImage, convImage);
 	int imgWidth = convImage->GetWidth();
 	int imgHeight = convImage->GetHeight();
@@ -119,7 +122,7 @@ bool SGA_Optimization::runIndividual(int indID) {
 		this->timeVsFitnessFile << timestamp->MS_SinceStart() << "," << fitness*exposureTimesRatio << "," << cc->finalExposureTime << "," << exposureTimesRatio << std::endl;
 	}
 	//Save elite info of last generation
-	if (indID == 29) {
+	if (indID == (population->getSize()-1)) {
 		this->tfile << "SGA GENERATION," << curr_gen << "," << fitness*exposureTimesRatio << std::endl;
 		if (saveImages) {
 			cc->saveImage(convImage, (curr_gen + 1));
@@ -144,6 +147,7 @@ bool SGA_Optimization::runIndividual(int indID) {
 	return true;
 }
 
+// Method to setup specific properties runOptimziation() instance
 bool SGA_Optimization::setupInstanceVariables() {
 	// Setting population size as well as number of elite individuals kept in the genetic repopulation
 	this->populationSize = 30;
@@ -196,6 +200,7 @@ bool SGA_Optimization::setupInstanceVariables() {
 	return true; // Returning true if no issues met
 }
 
+// Method to clean up & save resulting runOptimziation() instance
 bool SGA_Optimization::shutdownOptimizationInstance() {
 	// - image displays
 	this->camDisplay->CloseDisplay();

@@ -1,3 +1,7 @@
+////////////////////
+// Population handler for standard genetic algorithm that inherits from base Population
+// Last edited: 06/02/2021 by Andrew O'Kins
+////////////////////
 #ifndef SGAPOPULATION_H_
 #define SGAPOPULATION_H_
 #include "Individual.h"
@@ -6,6 +10,7 @@
 #include <vector>
 ////
 // TODOs:	Verify update of inherit from Population works (would assume so as the methods are largely unchanged)
+//			Mulithreading in StartNextGeneration to improve speed performance
 
 template <class T>
 class SGAPopulation : public Population {
@@ -52,7 +57,8 @@ public:
 		double divisor = RAND_MAX / fitness_sum;
 
 		// for each new individual
-		for (int i = 0; i < this->pop_size_ - this->elite_size_; i++) {
+			// TODO: This may be where to have some multithreading to improve speed performance
+		for (int i = 0; i < (this->pop_size_ - this->elite_size_); i++) {
 			// select first parent with fitness proportionate selection
 			double selected = parent_selector() / divisor;
 			double temp_sum = individuals_[0].fitness();
@@ -78,11 +84,12 @@ public:
 		}
 
 		// for the elites, copy directly into new generation
-		for (int i = this->pop_size_ - this->elite_size_; i < this->pop_size_; i++) {
+		for (int i = (this->pop_size_ - this->elite_size_); i < this->pop_size_; i++) {
 			DeepCopyIndividual(temp[i], individuals_[i]);
 		}
 
 		// if all of our individuals are labeled similar, replace half of them with new images
+			// TODO: This may be where to have some multithreading to improve speed performance
 		if (same_check) {
 			for (int i = 0; i < this->pop_size_ / 2; i++) {
 				temp[i].set_genome(GenerateRandomImage());

@@ -312,8 +312,7 @@ void Utility::GenerateTargetMatrix_LoadFromFile(int *target, int width, int heig
 
 
 //[STRING PROCCESING]
-std::vector<std::string> Utility::seperateByDelim(std::string fullString, char delim)
-{
+std::vector<std::string> Utility::seperateByDelim(std::string fullString, char delim) {
 	//TODO: make into a seperate UTILITY function
 	std::vector<std::string> parts;
 	std::string curPart = "";

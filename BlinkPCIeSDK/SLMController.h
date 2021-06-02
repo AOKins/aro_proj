@@ -9,8 +9,8 @@ class MainDialog;
 class Blink_SDK;
 class SLM_Board;
 
-class SLMController
-{
+// Class to encapsulate interactions with SLM boards
+class SLMController {
 private:
 	//UI Reference
 	MainDialog* dlg;
@@ -51,8 +51,7 @@ private:
 	bool ReadLUTFile(unsigned char *LUTBuf, std::string LUTPath);
 	bool ReadZernikeFile(SLM_Board* board, unsigned char *GeneratedImage, std::string fileName);
 	unsigned char* ScaleBitmap(unsigned char* InvertedImage, int BitmapSize, int FinalBitmapSize);
-
-
+	
 };
 
 #endif

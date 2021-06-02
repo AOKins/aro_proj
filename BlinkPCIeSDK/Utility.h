@@ -4,10 +4,8 @@
 #include <string>
 #include <vector>
 
-class Utility
-{
+class Utility {
 public:
-
 	// [CONSOLE FEATURES]
 	static void printLine(std::string msg = "", bool isDebug = false);
 	static void print(std::string msg);
@@ -33,6 +31,5 @@ public:
 	// [STRING PROCCESSING]
 	static std::vector<std::string> seperateByDelim(std::string fullString, char delim);
 };
-
 
 #endif

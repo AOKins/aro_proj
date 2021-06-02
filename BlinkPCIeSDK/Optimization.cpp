@@ -20,7 +20,6 @@ Optimization::Optimization(MainDialog& dlg_, CameraController* cc, SLMController
 		Utility::printLine("WARNING: invalid camera controller passed to optimization!");
 	if (sc == nullptr)
 		Utility::printLine("WARNING: invalid camera controller passed to optimization!");
-
 	this->cc = cc;
 	this->sc = sc;
 }

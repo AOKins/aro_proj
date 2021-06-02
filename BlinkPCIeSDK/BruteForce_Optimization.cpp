@@ -20,7 +20,6 @@ using std::ofstream;
 using std::ostringstream;
 using namespace cv;
 
-
 bool BruteForce_Optimization::runOptimization() {
 	Utility::printLine("OPT 5 BUTTON CLICKED!");
 
