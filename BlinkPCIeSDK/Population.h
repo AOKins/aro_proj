@@ -10,8 +10,7 @@
 #include <vector>
 
 ////
-// TODOs:	Consider sortIndividuals and DeepCopyIndividuals to be outside of Population class
-//			Update sortIndividuals to use more efficient algorithm (currently using insertion sort!)
+// TODOs:	Update sortIndividuals to use more efficient algorithm (currently using insertion sort!)
 //			Consider how to handle possible case of elite_size exceeding pop_size (necessarry?)
 ////
 

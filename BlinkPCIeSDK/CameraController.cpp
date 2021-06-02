@@ -383,43 +383,52 @@ bool CameraController::ConfigureCustomImageSettings() {
 			Utility::printLine("ERROR: Pixel format not available...");
 
 		//Apply initial zero offset in x direction (needed to minimize AOI errors)
-		if (cam->OffsetX != NULL && cam->OffsetX.GetAccessMode() == RW)
+		if (cam->OffsetX != NULL && cam->OffsetX.GetAccessMode() == RW) {
 			cam->OffsetX.SetValue(0);
-		else
+		}
+		else {
 			Utility::printLine("ERROR: OffsetX not available for initial setup");
+		}
 		//Apply initial zero offset in y direction (needed to minimize AOI errors)
-		if (cam->OffsetY != NULL && cam->OffsetY.GetAccessMode() == RW)
+		if (cam->OffsetY != NULL && cam->OffsetY.GetAccessMode() == RW) {
 			cam->OffsetY.SetValue(0);
-		else
+		}
+		else {
 			Utility::printLine("ERROR: OffsetY not available for initial setup");
-
+		}
 		//Apply target image width
-		if (cam->Width != NULL && cam->Width.GetAccessMode() == RW && cam->Width.GetInc() != 0 && cam->Width.GetMax() != 0)
+		if (cam->Width != NULL && cam->Width.GetAccessMode() == RW && cam->Width.GetInc() != 0 && cam->Width.GetMax() != 0) {
 			cam->Width.SetValue(cameraImageWidth);
-		else
+		}
+		else {
 			Utility::printLine("ERROR: Width not available to be set");
+		}
 		//Apply target image height
-		if (cam->Height != NULL && cam->Height.GetAccessMode() == RW && cam->Height.GetInc() != 0 && cam->Height.GetMax() != 0)
+		if (cam->Height != NULL && cam->Height.GetAccessMode() == RW && cam->Height.GetInc() != 0 && cam->Height.GetMax() != 0) {
 			cam->Height.SetValue(cameraImageHeight);
-		else
+		}
+		else {
 			Utility::printLine("ERROR: Height not available");
-
+		}
 		//Apply final offset in x direction
-		if (cam->OffsetX != NULL && cam->OffsetX.GetAccessMode() == RW)
+		if (cam->OffsetX != NULL && cam->OffsetX.GetAccessMode() == RW) {
 			cam->OffsetX.SetValue(x0);
-		else
+		}
+		else {
 			Utility::printLine("ERROR: Final OffsetX not available");
+		}
 		//Apply final offset in y direction
-		if (cam->OffsetY != NULL && cam->OffsetY.GetAccessMode() == RW)
+		if (cam->OffsetY != NULL && cam->OffsetY.GetAccessMode() == RW) {
 			cam->OffsetY.SetValue(y0);
-		else
+		}
+		else {
 			Utility::printLine("ERROR: OffsetY not available");
-
+		}
 		INodeMap & nodeMap = cam->GetNodeMap();
 		INodeMap & nodeMapTLDevice = cam->GetTLDeviceNodeMap();
-		if (PrintDeviceInfo(nodeMapTLDevice) == -1)
+		if (PrintDeviceInfo(nodeMapTLDevice) == -1) {
 			Utility::printLine("WARNING: Couldn't display camera information!");
-
+		}
 		//Enable Manual Frame Rate Setting
 		bool setFrameRate = true;
 		Spinnaker::GenApi::CBooleanPtr FrameRateEnablePtr = cam->GetNodeMap().GetNode("AcquisitionFrameRateEnabled");

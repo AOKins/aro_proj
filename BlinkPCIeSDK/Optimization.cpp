@@ -8,15 +8,14 @@ using std::string;
 #include "CameraController.h"
 #include "SLMController.h"
 #include "Utility.h"			// used for debug statements
-#include "Timing.h"			// contains time keeping functions
+#include "Timing.h"				// contains time keeping functions
 #include "ImageScaler.h"		// changes size of image to fit slm //ASK: is this correct? 
 
 #include <fstream>				// used to export information to file 
 #include <chrono>
 #include <thread>
 
-Optimization::Optimization(MainDialog& dlg_, CameraController* cc, SLMController* sc) : dlg(dlg_)
-{
+Optimization::Optimization(MainDialog& dlg_, CameraController* cc, SLMController* sc) : dlg(dlg_) {
 	if (cc == nullptr)
 		Utility::printLine("WARNING: invalid camera controller passed to optimization!");
 	if (sc == nullptr)
@@ -27,48 +26,41 @@ Optimization::Optimization(MainDialog& dlg_, CameraController* cc, SLMController
 }
 
 // [SETUP]
-bool Optimization::prepareStopConditions()
-{
+bool Optimization::prepareStopConditions() {
 	bool result = true;
 
 	// Fitness to stop at
-	try
-	{
+	try	{
 		CString path;
 		dlg.m_optimizationControlDlg.m_minFitness.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
 		fitnessToStop = _tstof(path);
 	}
-	catch (...)
-	{
+	catch (...)	{
 		Utility::printLine("ERROR: Can't Parse Minimum Fitness");
 		result = false;
 	}
 
 	// Time (in sec) to stop at
-	try
-	{
+	try	{
 		CString path;
 		dlg.m_optimizationControlDlg.m_minSeconds.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
 		secondsToStop = _tstof(path);
 	}
-	catch (...)
-	{
+	catch (...)	{
 		Utility::printLine("ERROR: Can't Parse Minimum Seconds Elapsed");
 		result = false;
 	}
 
 	// Generations evaluations to stop at
-	try
-	{
+	try	{
 		CString path;
 		dlg.m_optimizationControlDlg.m_minGenerations.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
 		genEvalToStop = _tstof(path);
 	}
-	catch (...)
-	{
+	catch (...)	{
 		Utility::printLine("ERROR: Can't Parse Minimum Function Evaluations");
 		result = false;
 	}
@@ -77,13 +69,11 @@ bool Optimization::prepareStopConditions()
 }
 
 //[SETUP]
-bool Optimization::prepareSoftwareHardware()
-{
+bool Optimization::prepareSoftwareHardware() {
 	Utility::printLine("INFO: Preparing equipment and software for optimization!");
 
 	//Can't start operation if an optimization is already running 
-	if (isWorking)
-	{
+	if (isWorking) {
 		Utility::printLine("WARNING: cannot prepare hardware the second time!");
 		return false;
 	}
@@ -91,23 +81,20 @@ bool Optimization::prepareSoftwareHardware()
 
 
 	// - configure equipment
-	if (!cc->setupCamera())
-	{
+	if (!cc->setupCamera())	{
 		Utility::printLine("ERROR: Camera setup has failed!");
 		return false;
 	}
 	Utility::printLine("INFO: Camera setup complete!");
 
-	if (!sc->slmCtrlReady())
-	{
+	if (!sc->slmCtrlReady()) {
 		Utility::printLine("ERROR: SLM setup has failed!");
 		return false;
 	}
 	Utility::printLine("INFO: SLM setup complete!");
 
 	// - configure algorithm parameters
-	if (!prepareStopConditions())
-	{
+	if (!prepareStopConditions()) {
 		Utility::printLine("ERROR: Preparing stop conditions has failed!");
 		return false;
 	}
@@ -119,8 +106,7 @@ bool Optimization::prepareSoftwareHardware()
 	return true;
 }
 
-ImageScaler* Optimization::setupScaler(unsigned char *aryptr)
-{
+ImageScaler* Optimization::setupScaler(unsigned char *aryptr) {
 	ImageScaler* scaler = new ImageScaler(sc->getBoardWidth(0), sc->getBoardHeight(0), 1, NULL);
 	scaler->SetBinSize(cc->binSizeX, cc->binSizeY);
 	scaler->SetLUT(NULL);
@@ -130,16 +116,13 @@ ImageScaler* Optimization::setupScaler(unsigned char *aryptr)
 	return scaler;
 }
 
-
 // [SAVE/LOAD FEATURES]
-void Optimization::saveParameters(std::string time, std::string optType)
-{
+void Optimization::saveParameters(std::string time, std::string optType) {
 	std::ofstream paramFile("logs/" + time + "_" + optType + "_Optimization_Parameters.txt", std::ios::app);
 	paramFile << "----------------------------------------------------------------" << std::endl;
 	paramFile << "OPTIMIZATION SETTINGS:" << std::endl;
 	paramFile << "Type - " << optType << std::endl;
-	if (optType != "OPT5")
-	{
+	if (optType != "OPT5") {
 		paramFile << "Stop Fitness - " << std::to_string(fitnessToStop) << std::endl;
 		paramFile << "Stop Time - " << std::to_string(secondsToStop) << std::endl;
 		paramFile << "Stop Generation - " << std::to_string(genEvalToStop) << std::endl;
@@ -164,12 +147,10 @@ void Optimization::saveParameters(std::string time, std::string optType)
 	paramFile.close();
 }
 
-
 //[CHECKS]
-bool Optimization::stopConditionsReached(double curFitness, double curSecPassed, double curGenerations)
-{
-	if (curFitness > fitnessToStop && curSecPassed > secondsToStop && curGenerations > genEvalToStop)
-		return  true;
-
+bool Optimization::stopConditionsReached(double curFitness, double curSecPassed, double curGenerations) {
+	if (curFitness > fitnessToStop && curSecPassed > secondsToStop && curGenerations > genEvalToStop) {
+		return true;
+	}
 	return false;
 }
