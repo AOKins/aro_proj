@@ -17,7 +17,7 @@
 
 template <class T>
 class Population {
-private:
+protected:
 	// The array of individuals in the population.
 	Individual<T>* individuals_;
 	
@@ -54,7 +54,7 @@ public:
 
 		//initialize images for each individual
 		for (int i = 0; i < this->pop_size_; i++){
-			this->individuals_[i].set_genome(RandomImage());
+			this->individuals_[i].set_genome(GenerateRandomImage());
 		}
 	}
 
@@ -72,7 +72,7 @@ public:
 	// Output: a randomly generated image that has size of genome_length for Population
 	std::shared_ptr<std::vector<T>> GenerateRandomImage() {
 		static BetterRandom ran(256);
-		std::shared_ptr<std::vector<T>> image = std::make_shared<std::vector<T>>(this->genome_length_, 0);
+		std::shared_ptr<std::vector<T>> image = std::make_shared<std::vector<T>>(genome_length_,0);
 		for (int j = 0; j < this->genome_length_; j++) {
 			(*image)[j] = (T)ran();
 		} // ... for each pixel in image
@@ -82,8 +82,8 @@ public:
 	// Getter for image of individual at inputted index
 	// Input: i - individual at given index (population not guranteed sorted)
 	// Output: the image for the individual
-	T* getImage(int i){
-		return this->individuals_[i].genome();
+	std::shared_ptr<std::vector<T>> getImage(int i){
+		return  this->individuals_[i].genome();
 	}
 
 	// Setter for the fitness of the individual at given index

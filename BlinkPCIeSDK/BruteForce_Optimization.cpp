@@ -118,7 +118,7 @@ bool BruteForce_Optimization::runOptimization() {
 						Utility::printLine("ERROR: Image Acquisition has failed!");
 						continue;
 					}
-					if (displayCameraImage)
+					if (displayCamImage)
 						camDisplay->UpdateDisplay(camImg);
 					exposureTimesRatio = cc->GetExposureRatio();
 					fitness = Utility::FindAverageValue(camImg, convImage->GetWidth(), curImage->GetHeight(), cc->targetRadius);

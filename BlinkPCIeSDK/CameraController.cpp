@@ -114,11 +114,8 @@ bool CameraController::shutdownCamera()
 // [ACQUISITION]
 /*getImage: high level wrapper that allows to take an image if camera was started
 */
-bool CameraController::saveImage(ImagePtr curImage, int curGen)
-{
-
-	if (!curImage.IsValid())
-	{
+bool CameraController::saveImage(ImagePtr curImage, int curGen) {
+	if (!curImage.IsValid()) {
 		Utility::printLine("ERROR: Camera Aquisition resulted in a NULL image!");
 		return false;
 	}
@@ -150,7 +147,6 @@ void CameraController::AcquireImages(ImagePtr& curImage, ImagePtr& convertedImag
 			//TODO: implement proper handling of inclomplete images (retake of image)
 			Utility::printLine("ERROR: Image incomplete: " + std::string(Image::GetImageStatusDescription(curImage->GetImageStatus())));
 		}
-
 		//Print The dimensions of the image (should be XX by YY)
 		//Utility::printLine("Current Image Dimensions : " + std::to_string(pResultImage->GetWidth()) + " by " + std::to_string(pResultImage->GetHeight()));
 

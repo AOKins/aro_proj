@@ -128,16 +128,14 @@ void ImageScaler::TranslateImage(int* input_image, unsigned char* output_image)
 // Takes an array holding values for each bin and fills an image with those values
 // @param input_image -> the array holding all the bin values
 // @param output_image -> the array holding the output image	
-void ImageScaler::TranslateImage(std::shared_ptr<std::vector<int>> input_image, unsigned char* output_image)
-{
-	if (requirement_set_bin_size_ && requirement_set_used_bins_ && requirement_set_lut_)
-	{	// prevent action if all steps to set up image scaling have not been completed
+void ImageScaler::TranslateImage(std::shared_ptr<std::vector<int>> input_image, unsigned char* output_image) {
+	if (requirement_set_bin_size_ && requirement_set_used_bins_ && requirement_set_lut_) {
+		// prevent action if all steps to set up image scaling have not been completed
 		int start_point = top_remainder_y_ + left_remainder_x_;
-		for (int i = 0; i < used_bins_y_; i++)
-		{	// for each row
+		for (int i = 0; i < used_bins_y_; i++) {	// for each row
+			
 			int line_start_point = start_point + (i*(bin_size_y_*output_image_width_));
-			for (int j = 0; j < used_bins_x_; j++)
-			{	// for each bin in the row
+			for (int j = 0; j < used_bins_x_; j++) {	// for each bin in the row
 				int bin_start_point = line_start_point + (j * bin_size_x_);
 				int pix_value;
 				//if (lut_ != NULL)
@@ -173,8 +171,7 @@ void ImageScaler::TranslateImage(std::shared_ptr<std::vector<int>> input_image, 
 // @param value -> the value to set the bin to
 void ImageScaler::UpdateSelectedBin(unsigned char* image, int x_bin, int y_bin, int value)
 {
-	if (requirement_set_bin_size_ && requirement_set_used_bins_ && requirement_set_lut_)
-	{
+	if (requirement_set_bin_size_ && requirement_set_used_bins_ && requirement_set_lut_) {
 		int pix_value;
 		//if (lut_ != NULL)
 		//{
@@ -206,8 +203,7 @@ void ImageScaler::UpdateSelectedBin(unsigned char* image, int x_bin, int y_bin, 
 // @param value -> the value to set the bin to
 void ImageScaler::UpdateSelectedBin(unsigned char* image, int bin, int value)
 {
-	if (requirement_set_bin_size_ && requirement_set_used_bins_ && requirement_set_lut_)
-	{
+	if (requirement_set_bin_size_ && requirement_set_used_bins_ && requirement_set_lut_) {
 		int x_bin = bin % used_bins_x_;
 		int y_bin = bin / used_bins_x_;
 		int pix_value;
