@@ -433,6 +433,19 @@ bool CameraController::ConfigureCustomImageSettings() {
 			setFrameRate = false;
 		}
 
+		// Setting buffer handler
+		//		Spinnaker defaults to OldestFirst, changed to NewestOnly as we are only interested in current image for individual being run
+		CEnumerationPtr ptrBufferHandler = cam->GetNodeMap().getNode("StreamBufferHandlingMode");
+		if (Spinnaker::GenApi::isAvailable(ptrBufferHandler) && Spinnaker::GenApi::IsWritable(ptrBufferHandler)) {
+			CEnumEntryPtr ptrNewestOnly = ptrBufferHandler->GetEntryByName("Newest Only");
+			ptrBufferHandler->SetIntValue(ptrNewestOnly->GetValue());
+			if (ptrNewestOnly->GetIntValue() == ptrBufferHandler->GetValue()) {
+				Utility::printLine("INFO: Camera buffer set to 'Newest Only'!");
+			}
+			else {
+				Utility::printLine("WARNING: Camera buffer not set!  Defaults to 'Oldest First'!");
+			}
+		}
 
 		// Disable Auto Frame Rate Control
 		if (setFrameRate) {
