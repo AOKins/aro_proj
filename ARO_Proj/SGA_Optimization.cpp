@@ -1,5 +1,5 @@
 ////////////////////
-// Optimization handler methods implementation for standard genetic algorithm
+// Optimization handler methods implementation for simple genetic algorithm
 // Last edited: 06/02/2021 by Andrew O'Kins
 ////////////////////
 #include "stdafx.h"				// Required in source
@@ -182,7 +182,7 @@ bool SGA_Optimization::setupInstanceVariables() {
 	if (displaySLMImage)
 		slmDisplay->OpenDisplay();
 	// Scaler Setup (using base class)
-	scaler = setupScaler(aryptr);
+	this->scaler = setupScaler(aryptr);
 
 	// Start up the camera
 	cc->startCamera();
@@ -210,7 +210,6 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	// - pointers
 	delete this->camDisplay;
 	delete this->slmDisplay;
-	delete this->scaler;
 	delete[] this->aryptr;
 	delete this->population;
 	delete timestamp;
@@ -231,6 +230,7 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	scaler->TranslateImage(tempptr, aryptr);
 	Mat m_ary = Mat(512, 512, CV_8UC1, aryptr);
 	cv::imwrite("logs/" + curTime + "_SGA_phaseopt.bmp", m_ary);
+	delete this->scaler;
 
 	// Generic file renaming to have time stamps of run
 	std::rename("logs/SGA_functionEvals_vs_fitness.txt", ("logs/" + curTime + "_SGA_functionEvals_vs_fitness.txt").c_str());

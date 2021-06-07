@@ -1,6 +1,6 @@
 ////////////////////
 // Population handler for standard genetic algorithm that inherits from base Population
-// Last edited: 06/02/2021 by Andrew O'Kins
+// Last edited: 06/07/2021 by Andrew O'Kins
 ////////////////////
 #ifndef UGAPOPULATION_H_
 #define UGAPOPULATION_H_
@@ -24,8 +24,28 @@ public:
 
 	// Starts next generation using fitness of individuals.
 	bool nextGeneration() {
-		// TODO: Implementation of uGA
+		// temp for storing sorted current population
+		Individual<T>* sorted_temp = SortIndividuals(individuals_, this->pop_size_);
+		bool same_check; // Not really used, but made for use with crossover
 
+		// temp for storing new population
+		Individual<T>* temp = new Individual<T>[this->pop_size_];
+
+		// Assumes population is 5
+			// Crossover generation for new population
+			// Lower index is higher fitness, so index 4 is most fit individual
+		temp[0].set_genome(Crossover(sorted_temp[4].genome(), sorted_temp[3].genome(), same_check));
+		temp[1].set_genome(Crossover(sorted_temp[4].genome(), sorted_temp[2].genome(), same_check));
+		temp[2].set_genome(Crossover(sorted_temp[3].genome(), sorted_temp[2].genome(), same_check));
+		temp[3].set_genome(Crossover(sorted_temp[3].genome(), sorted_temp[2].genome(), same_check));
+			// Keeping current best onto next generation
+		temp[4].set_genome(sorted_temp[4].genome()));
+
+		// Assign new population to individuals_
+		delete[] individuals_;
+		individuals_ = temp;
+		// No issues!
+		return true;
 	}	// ... Function nextGeneration
 }; // ... class uGAPopulation
 

@@ -68,6 +68,11 @@ public:
 		return this->pop_size_;
 	}
 
+	// Get number of elite individuals in population
+	int getEliteSize() {
+		return this->elite_size_;
+	}
+
 	// Generates a random image using BetterRandom
 	// Output: a randomly generated image that has size of genome_length for Population
 	std::shared_ptr<std::vector<T>> GenerateRandomImage() {

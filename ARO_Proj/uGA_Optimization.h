@@ -13,10 +13,10 @@ class SLMController;
 
 class uGA_Optimization : public Optimization {
 	// Method to setup specific properties runOptimziation() instance
-	bool setupInstanceVariables() { return false; };
+	bool setupInstanceVariables();
 
 	// Method to clean up & save resulting runOptimziation() instance
-	bool shutdownOptimizationInstance() { return false; };
+	bool shutdownOptimizationInstance();
 
 	// Method for handling the execution of an individual
 	// Input: indID - index value for individual being run to determine fitness (for multithreading will be the thread id as well)
@@ -25,7 +25,7 @@ class uGA_Optimization : public Optimization {
 	//	lastImgWidth,lastImgHeight updated according to result from cc
 	//     shortenExposureFlag is set to true if fitness value is high enough
 	//     stopConditionsMetFlag is set to true if conditions met
-	bool runIndividual(int indID) { return false; };
+	bool runIndividual(int indID);
 
 	// Population that this optimization class uses
 	// Set here to prevent possible slicing if were instead using a base class pointer in base class of Optimization

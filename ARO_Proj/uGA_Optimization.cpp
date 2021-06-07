@@ -1,7 +1,10 @@
-
+////////////////////
+// Optimization handler methods implementation for micro-genetic algorithm
+// Last edited: 06/02/2021 by Andrew O'Kins
+////////////////////
 #include "stdafx.h"				// Required in source
 #include "uGA_Optimization.h"	// Header file
-#include "Population.h"
+#include "uGA_Population.h"
 
 #include "Utility.h"
 #include "Timing.h"
@@ -9,186 +12,229 @@
 
 #include "MainDialog.h"
 #include "SLMController.h"
-#include "SLM_Board.h"
 #include "CameraController.h"
+#include "ImageScaler.h"
 #include "Blink_SDK.h"
+#include "SLM_Board.h"
 
-#include <fstream>				// used to export information to file 
+#include <cstdlib>
 #include <chrono>
 #include <thread>
-#include <string>
-using std::string;
-using std::ofstream;
+#include <memory>
 using std::ostringstream;
 using namespace cv;
 
 ////
-// TODOs:	Implement runOptimization() and any other methods needed
+// TODOs:	Verify implementation of runIndividual(), setupInstanceVariables(), and shutdownOptimizationInstance()
+//			
 
-
+// Method for executing the optimization
+// Output: returns true if successful ran without error, false if error occurs
 bool uGA_Optimization::runOptimization() {
-	//Utility::printLine("UGA BUTTON CLICKED!");
+	Utility::printLine("UGA BUTTON CLICKED!");
 
-	////Setup before optimization (see base class for implementation)
-	//if (!prepareSoftwareHardware())
-	//	Utility::printLine("ERROR: Failed to prepare software or/and hardware for UGA Optimization");
+	//Setup before optimization (see base class for implementation)
+	if (!prepareSoftwareHardware()) {
+		Utility::printLine("ERROR: Failed to prepare software or/and hardware for UGA Optimization");
+		return false;
+	}
+	if (!setupInstanceVariables()) {
+		Utility::printLine("ERROR: Failed to prepare values and files for SGA Optimization");
+		return false;
+	}
+	try {	// Begin camera exception handling while optimization loop is going
+	
+		this->timestamp = new TimeStampGenerator();		// Starting time stamp to track elapsed time
+		// Optimization loop for each generation
+		for (this->curr_gen = 0; this->curr_gen < maxGenenerations && !stopConditionsMetFlag; this->curr_gen++) {
+			// Run each individual, giving them all fitness values as a result of their genome
+			for (int indID = 0; indID < population->getSize(); indID++) {
+				runIndividual(indID);
+			}
+			// Only create new geneartion and change exposure setting if the stop condition hasn't been reached yet
+			if (!stopConditionsMetFlag) {
+				// Create a more fit generation
+				population->nextGeneration();
+				// Half exposure time if fitness value is too high
+				if (this->shortenExposureFlag) {
+					cc->HalfExposureTime();
+					shortenExposureFlag = false;
+					efile << "Exposure shortened after gen: " << this->curr_gen + 1 << " with new ratio " << cc->GetExposureRatio() << std::endl;
+				}
+			}
+		}
+		// Cleanup & Save resulting instance
+		if (shutdownOptimizationInstance()) {
+			Utility::printLine("INFO: Successfully ended optimization instance and saved results");
+		}
+	}
+	catch (Spinnaker::Exception &e) {
+		Utility::printLine("ERROR: " + string(e.what()));
 
-	//try // Begin Camera Exception Handling
-	//{
-	//	// Create initial "individual" images that form the small population
-	//	Population<int> population(cc->numberOfBinsX, cc->numberOfBinsY, 1, acceptedSimilarity);
-	//	
-	//	unsigned char *camImg = new unsigned char;
-	//	unsigned char *aryptr = new unsigned char[cc->cameraImageWidth * cc->cameraImageHeight];
-	//	double exposureTimesRatio = 1.0;
-
-	//	// Generation monitoring variables
-	//	double fitness = 0;
-	//	bool shortenExposureFlag = false;
-	//	bool stopConditionsMetFlag = false;
-
-	//	// Open files to for recording progress info 
-	//	ofstream tfile("uGA_generation_vs_fitness.txt", std::ios::app);
-	//	ofstream timeVsFitnessFile("uGA_time_vs_fitness.txt", std::ios::app);
-	//	TimeStampGenerator timestamp;
-
-	//	// Setup image displays for camera and SLM
-	//	bool displayCamImage = true;
-	//	bool displaySLMImage = false; //TODO: only first SLM right now - add functionality to display any or all boards
-	//	CameraDisplay* camDisplay = new CameraDisplay(cc->cameraImageHeight, cc->cameraImageWidth, "Camera Display");
-	//	//CameraDisplay* slmDisplay = new CameraDisplay(sc->boards[0]->imageHeight, sc->boards[0]->imageWidth, "SLM Display");
-	//	ASSERT(camDisplay != NULL);	//TODO: convert to normal validations with messages for user
-	//	//ASSERT(slmDisplay != NULL);
-	//	if (displayCamImage)
-	//		camDisplay->OpenDisplay();
-	//	//if (displaySLMImage)
-	//	//	slmDisplay->OpenDisplay();
-
-	//	//Begin recording
-	//	if (!cc->startCamera())
-	//	{
-	//		Utility::printLine("ERROR: was unable to start the camera!");
-	//		return false;
-	//	}
-
-	//	///HUGE TODO: make this a part of slm controller
-	//	for (int i = 0; i < maxGenenerations; i++)
-	//	{//each generation
-	//		for (int j = 0; j < population.GetSize(); j++)
-	//		{//each individual
-
-	//			if (sc->scaler == NULL)
-	//			{
-	//				return false;
-	//				Utility::printLine("ERROR: Image Scaler in slm controller Not Avaliable!");
-	//			}
-
-	//			Utility::printLine("UGA _ 0");
-
-	//			//Apply LUT/Binning to randomly the generated individual's image
-	//			sc->scaler->TranslateImage(population.GetImage(), aryptr);
+	}
+	//Reset UI State
+	isWorking = false;
+	dlg.disableMainUI(!isWorking);
+	return true;
+}
 
 
+// Method for handling the execution of an individual
+// Input: indID - index value for individual being run to determine fitness (for multithreading will be the thread id as well)
+// Output: returns false if a critical error occurs, true otherwise
+//	individual in population index indID will have assigned fitness according to result from cc
+//	lastImgWidth,lastImgHeight updated according to result from cc
+//     shortenExposureFlag is set to true if fitness value is high enough
+//     stopConditionsMetFlag is set to true if conditions met
+bool uGA_Optimization::runIndividual(int indID) {
+	//Apply LUT/Binning to randomly the generated individual's image
+	std::shared_ptr<std::vector<int>> tempptr = (population->getImage(indID)); // Get the image for the individual
+	scaler->TranslateImage(tempptr, aryptr);
 
-	//			Utility::printLine("UGA _ 1");
+	// Write translated image to SLM boards //TODO: modify as it assumes boards get the same image and have same size
+	for (int i = 1; i <= sc->boards.size(); i++) {
+		sc->blink_sdk->Write_image(i, aryptr, sc->getBoardHeight(i - 1), false, false, 0.0);
+	}
+	// Acquire images // - take image and determine fitness
+	cc->AcquireImages(curImage, convImage);
+	int imgWidth = convImage->GetWidth();
+	int imgHeight = convImage->GetHeight();
+	camImg = static_cast<unsigned char*>(convImage->GetData());
 
-	//			//Write translated image to SLM boards
-	//			for (int i = 1; i <= sc->boards.size(); i++)
-	//				sc->blink_sdk->Write_image(i, aryptr, sc->boards[i - 1]->imageHeight, false, false, 0.0);
+	if (camImg == NULL) { // TODO: I think this is dangerous as Individual does not have default fitness if left unevaluated
+		Utility::printLine("ERROR: Image Acquisition has failed!");
+		return false;
+	}
+	double exposureTimesRatio = cc->GetExposureRatio();	// needed for proper fitness value across changing exposure time
+	double fitness = Utility::FindAverageValue(camImg, imgWidth, imgHeight, cc->targetRadius);
 
-	//			Utility::printLine("UGA _ 2");
+	// Setting last height and width info to current
+	this->lastImgHeight = imgWidth;
+	this->lastImgWidth = imgHeight;
 
-	//			//Acquire images
-	//			// - determine if currently testing last generation's elite
-	//			bool saveImage = false;
-	//			if (j == 0 && saveImages) // if current elite and image saving is enabled
-	//				saveImage = true;
+	// Display first individual
+	if (indID == 0 && displayCamImage) {
+		camDisplay->UpdateDisplay(camImg);
+	}
+	// Record values for the top six individuals in each generation
+	if (indID > 23) {
+		this->timeVsFitnessFile << timestamp->MS_SinceStart() << "," << fitness*exposureTimesRatio << "," << cc->finalExposureTime << "," << exposureTimesRatio << std::endl;
+	}
+	//Save elite info of last generation
+	if (indID == (population->getSize() - 1)) {
+		this->tfile << "uGA GENERATION," << curr_gen << "," << fitness*exposureTimesRatio << std::endl;
+		if (saveImages) {
+			cc->saveImage(convImage, (curr_gen + 1));
+		}
+	}
+	try {
+		curImage->Release(); //important to not fill camera buffer
+	}
+	catch (Spinnaker::Exception &e) {
+		Utility::printLine("WARNING: current image release failed. no need to release image at this point");
+	}
 
-	//			Utility::printLine("UGA _ 3");
+	// Check stop conditions
+	stopConditionsMetFlag = stopConditionsReached((fitness*exposureTimesRatio), timestamp->S_SinceStart(), curr_gen + 1);
 
-	//			// - take image and determine fitness
-	//			ImagePtr curImage = Image::Create();
-	//			curImage = cc->AcquireImages();
-	//			camImg = static_cast<unsigned char*>(curImage->GetData());
-	//			if (camImg == NULL)
-	//			{
-	//				Utility::printLine("ERROR: Image Acquisition has failed!");
-	//				continue;
-	//			}
+	// Update fitness for this individual
+	population->setFitness(indID, fitness * exposureTimesRatio);
+	// If the fitness value is too high, flag that the exposure needs to be shortened
+	if (fitness > maxFitnessValue) {
+		this->shortenExposureFlag = true;
+	}
+	return true;
+}
 
-	//			exposureTimesRatio = cc->GetExposureRatio();	//needed for proper fitness value logging
-	//			fitness = Utility::FindAverageValue(camImg, cc->targetMatrix, cc->cameraImageWidth, cc->cameraImageHeight);
 
-	//			Utility::printLine("UGA _ 4");
+bool uGA_Optimization::setupInstanceVariables() {
+	// Setting population size as well as number of elite individuals kept in the genetic repopulation
+	this->populationSize = 5;
+	this->eliteSize = 1;
 
-	//			Utility::printLine("UGA _ 5");
+	// Find length for SLM images
+	this->slmLength = sc->getBoardWidth(0) * sc->getBoardHeight(0) * 1;
+	if (slmLength <= -1) {
+		Utility::printLine("ERROR: SLM Length cannot be less than 0!");
+		return false;
+	}
+	// Find length of camera images
+	this->imageLength = cc->cameraImageHeight * cc->cameraImageWidth;
+	if (imageLength <= -1) {
+		Utility::printLine("ERROR: Image Length cannot be less than 0!");
+		return false;
+	}
+	// Setting population
+	this->population = new uGAPopulation<int>(cc->numberOfBinsY * cc->numberOfBinsX * cc->populationDensity, populationSize, eliteSize, acceptedSimilarity);
 
-	//			if (j == 1 && displayCamImage)
-	//				camDisplay->UpdateDisplay(camImg);
+	this->aryptr = new unsigned char[slmLength]; // Char array for writing SLM images
+	this->camImg = new unsigned char; // Char array to store resulting camera image
 
-	//			Utility::printLine("UGA _ 6");
+	this->shortenExposureFlag = false; // Set to true by individual if fitness is too high
+	this->stopConditionsMetFlag = false; // Set to true if a stop condition was reached by one of the individuals
 
-	//			// Save the elite information of last generation
-	//			if (j == 0)
-	//			{
-	//				timeVsFitnessFile << timestamp.MS_SinceStart() << " " << fitness*exposureTimesRatio << std::endl;
-	//				tfile << "UGA GENERATION:" << i  << " " << fitness*exposureTimesRatio << std::endl;
+	// Setup image displays for camera and SLM
+	camDisplay = new CameraDisplay(cc->cameraImageHeight, cc->cameraImageWidth, "Camera Display");
+	slmDisplay = new CameraDisplay(sc->getBoardHeight(0), sc->getBoardWidth(0), "SLM Display");
+	// Open displays if preference is set
+	if (displayCamImage)
+		camDisplay->OpenDisplay();
+	if (displaySLMImage)
+		slmDisplay->OpenDisplay();
+	// Scaler Setup (using base class)
+	this->scaler = setupScaler(aryptr);
 
-	//				if (saveImages)
-	//					cc->saveImage(curImage, (i+1));
-	//			}
+	// Start up the camera
+	cc->startCamera();
 
-	//			// Check stop conditions
-	//			stopConditionsMetFlag = stopConditionsReached((fitness*exposureTimesRatio), timestamp.S_SinceStart(), i+1);
+	// Setup image pointers
+	this->curImage = Image::Create();
+	this->convImage = Image::Create();
 
-	//			// Update population fitness
-	//			population.SetFitness(fitness);
-	//			if (fitness > maxFitnessValue) shortenExposureFlag = true;
+	//Open up files to which progress will be logged
+	tfile.open("logs/uGA_functionEvals_vs_fitness.txt", std::ios::app);
+	timeVsFitnessFile.open("logs/uGA_time_vs_fitness.txt", std::ios::app);
+	efile.open("logs/exposure.txt", std::ios::app);
 
-	//		}// for each individual
+	return true; // Returning true if no issues met
+}
 
-	//		//Create a more fit generation
-	//		population.NextGeneration(i + 1);
+bool uGA_Optimization::shutdownOptimizationInstance() {
+	// - image displays
+	this->camDisplay->CloseDisplay();
+	this->slmDisplay->CloseDisplay();
+	// - camera
+	cc->stopCamera();
+	cc->shutdownCamera();
+	// - pointers
+	delete this->camDisplay;
+	delete this->slmDisplay;
+	delete[] this->aryptr;
+	delete this->population;
+	delete timestamp;
 
-	//		// Half exposure time if fitness value is too high
-	//		if (shortenExposureFlag)
-	//		{
-	//			cc->HalfExposureTime();
-	//			shortenExposureFlag = false;
-	//		}
+	// - fitness logging files
+	timeVsFitnessFile << timestamp->MS_SinceStart() << " " << 0 << std::endl;
+	timeVsFitnessFile.close();
+	tfile.close();
+	efile.close();
 
-	//		if (stopConditionsMetFlag)
-	//			break;
+	// Save how final optimization looks through camera
+	std::string curTime = Utility::getCurTime();
+	Mat Opt_ary = Mat(lastImgHeight, lastImgWidth, CV_8UC1, camImg);
+	cv::imwrite("logs/" + curTime + "_uGA_Optimized.bmp", Opt_ary);
 
-	//	}//for each generation
+	// Save final (most fit SLM image)
+	std::shared_ptr<std::vector<int>> tempptr = (population->getImage(population->getSize() - 1)); // Get the image for the individual (most fit)
+	scaler->TranslateImage(tempptr, aryptr);
+	Mat m_ary = Mat(512, 512, CV_8UC1, aryptr);
+	cv::imwrite("logs/" + curTime + "_uGA_phaseopt.bmp", m_ary);
+	delete this->scaler;
 
-	//	// Cleanup
-	//	// - image displays
-	//	delete camDisplay;
-	//	//delete slmDisplay;
-	//	delete[] camImg;
-	//	delete[] aryptr;
-	//	// - fitness logging files
-	//	timeVsFitnessFile.close();
-	//	tfile.close();
-	//	// - camera
-	//	cc->endCamera();
-
-	//	// Save final (most fit) SLM image
-	//	sc->scaler->TranslateImage(population.GetImage(), aryptr);
-	//	Mat m_ary = Mat(512, 512, CV_8UC1, aryptr);
-	//	cv::imwrite("uGA_phaseopt.bmp", m_ary);
-
-	//	//TODO: send final scaled image to the SLM
-	//}
-	//catch (Spinnaker::Exception &e)
-	//{
-	//	Utility::printLine("ERROR: " + string(e.what()));
-	//}
-
-	////Reset UI State
-	//isWorking = false;
-	//dlg.disableMainUI(!isWorking);
-
+	// Generic file renaming to have time stamps of run
+	std::rename("logs/uGA_functionEvals_vs_fitness.txt", ("logs/" + curTime + "_uGA_functionEvals_vs_fitness.txt").c_str());
+	std::rename("logs/uGA_time_vs_fitness.txt", ("logs/" + curTime + "_uGA_time_vs_fitness.txt").c_str());
+	std::rename("logs/exposure.txt", ("logs/" + curTime + "_uGA_exposure.txt").c_str());
+	saveParameters(curTime, "SGA");
 	return true;
 }
