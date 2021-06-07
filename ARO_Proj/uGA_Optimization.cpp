@@ -146,7 +146,6 @@ bool uGA_Optimization::runIndividual(int indID) {
 	return true;
 }
 
-
 bool uGA_Optimization::setupInstanceVariables() {
 	// Setting population size as well as number of elite individuals kept in the genetic repopulation
 	this->populationSize = 5;

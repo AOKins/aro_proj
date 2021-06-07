@@ -9,10 +9,12 @@
 #include "Utility.h" // For printLine
 #include <vector>
 
+
+#include <thread> // For ind_threads and general multithreaded behavior
 ////
 // TODOs:	Consider update sortIndividuals to use more efficient algorithm
 //					(currently using insertion sort but with small size may not be needed/gain much)
-//			Consider how to handle possible case of elite_size exceeding pop_size (necessarry?)
+//			Consider how to handle possible case of elite_size exceeding pop_size (necessarry?) currently gives warning
 ////
 
 template <class T>
@@ -31,7 +33,10 @@ protected:
 
 	// genome length for individual images
 	int genome_length_;
-	
+
+	// vector for managing the multithreads for individuals used in genetic algorithm
+	std::vector<std::thread> ind_threads;
+
 public:
 	// Constructor
 	// Input:
@@ -45,9 +50,11 @@ public:
 		this->pop_size_ = population_size;
 		this->elite_size_ = elite_size;
 
+		this->ind_threads.clear();
+
 		// Check to see if elite size exceeds the population size, currently just gives warning
 		if (this->elite_size_ > this->pop_size_) {
-			Utility::printLine("WARNING: Elite size (" + std::to_string(this->elite_size_) + ") of population exceeds population size (" + std::to_string(this->pop_size_) + ")!");
+			Utility::printLine("WARNING: Elite size (" + std::to_string(this->elite_size_) + ") of population exceeding population size (" + std::to_string(this->pop_size_) + ")!");
 		}
 
 		this->individuals_ = new Individual<T>[pop_size_];
@@ -61,6 +68,9 @@ public:
 	//Destructor - delete individuals
 	~Population() {
 		delete[] this->individuals_;
+		for (int i = 0; i < this->ind_threads.size(); i++) {
+			this->ind_threads[i].join();
+		}
 	}
 
 	// Get number of individuals in population
@@ -88,7 +98,7 @@ public:
 	// Input: i - individual at given index (population not guranteed sorted)
 	// Output: the image for the individual
 	std::shared_ptr<std::vector<T>> getImage(int i){
-		return  this->individuals_[i].genome();
+		return this->individuals_[i].genome();
 	}
 
 	// Setter for the fitness of the individual at given index
@@ -142,6 +152,7 @@ public:
 	}
 
 	// Sorts an array of individuals
+	//		Currently (June 7 2021) this is using insertion sort and DeepCopyIndividual() method
 	// Input:
 	//	to_sort - the individuals to be sorted
 	//	size - the size of the array to_sort

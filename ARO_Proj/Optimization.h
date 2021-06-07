@@ -35,11 +35,12 @@ protected:
 	double genEvalToStop =  0;
 
 	//Preference-type parameters
-	bool saveImages = false;		//TRUE -> save images of the fittest individual of each gen
-	bool displayCamImage = true; //TRUE -> opens a window showing the camera image
-	bool displaySLMImage = false; //TODO: only first SLM right now - add functionality to display any or all boards
+	bool saveImages = false;		// TRUE -> save images of the fittest individual of each gen
+	bool displayCamImage = true;    // TRUE -> opens a window showing the camera image
+	bool displaySLMImage = false;   // TODO: only first SLM right now - add functionality to display any or all boards
 
-	//Instance variables
+	//Instance variables (used during optimization process)
+		// Values assigned within setupInstanceVariables(), then if needed cleared in shutdownOptimizationInstance()
 	bool isWorking = false; // true if currently actively running the optimization algorithm
 	int populationSize; // Size of the population being used
 	int eliteSize;		// Number of elite individuals within the population (should be less than populationSize)

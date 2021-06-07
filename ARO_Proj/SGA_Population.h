@@ -11,7 +11,7 @@
 
 ////
 // TODOs:	Verify update of inherit from Population works (would assume so as the methods are largely unchanged)
-//			Mulithreading in StartNextGeneration to improve speed performance
+//			Mulithreading in StartNextGeneration to improve speed performance, consider/add mutexes to address critical sections
 
 template <class T>
 class SGAPopulation : public Population<T> {
@@ -47,39 +47,52 @@ public:
 		for (int i = 0; i < (this->pop_size_ - this->elite_size_); i++) {
 			// select first parent with fitness proportionate selection
 			double selected = parent_selector() / divisor;
-			double temp_sum = individuals_[0].fitness();
+			double temp_sum = this->individuals_[0].fitness();
 			int j = 0;
 			while (temp_sum < selected) {
 				j++;
-				temp_sum += individuals_[j].fitness();
+				temp_sum += this->individuals_[j].fitness();
 			}
-			std::shared_ptr<std::vector<T>> temp_image1 = individuals_[j].genome();
+			std::shared_ptr<std::vector<T>> temp_image1 = this->individuals_[j].genome();
 
 			// Select second parent with fitness proportionate selection
 			selected = parent_selector() / divisor;
-			temp_sum = individuals_[0].fitness();
+			temp_sum = this->individuals_[0].fitness();
 			j = 0;
 			while (temp_sum < selected) {
 				j++;
-				temp_sum += individuals_[j].fitness();
+				temp_sum += this->individuals_[j].fitness();
 			}
-			std::shared_ptr<std::vector<T>> temp_image2 = individuals_[j].genome();
+			std::shared_ptr<std::vector<T>> temp_image2 = this->individuals_[j].genome();
 
 			// perform crossover
 			temp[i].set_genome(Crossover(temp_image1, temp_image2, same_check));
 		}
 
 		// for the elites, copy directly into new generation
+			// TODO: Test this multithreading implementation (currently [June 7th] haven't implemented consideration of possible race conditions!)
+		// Performing deep copy for individuals in parallel
 		for (int i = (this->pop_size_ - this->elite_size_); i < this->pop_size_; i++) {
-			DeepCopyIndividual(temp[i], individuals_[i]);
+			this->ind_threads.push_back(DeepCopyIndividual(temp[i], individuals_[i]));
 		}
+		// Rejoin
+		for (int i = 0; i < this->ind_threads.size()) {
+			this->ind_threads[i].join();
+		}
+		this->ind_threads.clear(); // Clearing as done with these threads and will want to reuse this vector
 
 		// if all of our individuals are labeled similar, replace half of them with new images
-			// TODO: This may be where to have some multithreading to improve speed performance
+			// TODO: Test this multithreading implementation
 		if (same_check) {
+			// Calling generate random image for half of opop individuals
 			for (int i = 0; i < this->pop_size_ / 2; i++) {
-				temp[i].set_genome(GenerateRandomImage());
+				this->ind_threads.push_back(temp[i].set_genome(GenerateRandomImage()));
 			}
+			// Rejoin
+			for (int i = 0; i < this->ind_threads.size()) {
+				this->ind_threads[i].join();
+			}
+			this->ind_threads.clear(); // Clearing as done with these threads and will want to reuse this vector
 		}
 		delete[] individuals_;
 		individuals_ = temp;
