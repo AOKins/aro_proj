@@ -16,7 +16,6 @@
 #include <chrono>
 #include <string>
 using std::ofstream;
-using std::ostringstream;
 using namespace cv;
 
 bool BruteForce_Optimization::runOptimization() {
@@ -34,11 +33,12 @@ bool BruteForce_Optimization::runOptimization() {
 
 	//Declare variables
 		// TODO: which of these can be combined which can be deleted or implified ALSO make them understandable!
-	double exptime, PC, crop, dblN;
+	double dblN;
 	int ii, jj, nn, mm, iMax, jMax, ll, lMax, kk;
 	int bin, dphi;
 	double allTimeBestFitness = 0;
 	double rMax;
+	double exposureTimesRatio;
 
 	//set variables TODO: determine wich are needed and whch are in controllers
 	iMax = 512;
@@ -57,9 +57,7 @@ bool BruteForce_Optimization::runOptimization() {
 		return false;
 	}
 
-	double exposureTimesRatio = 1.0;
-
-	//Initialize "2D" array
+	//Initialize array
 	for (ii = 0; ii < iMax; ii++) {
 		for (jj = 0; jj < jMax; jj++) {
 			kk = ii * 512 + jj;
@@ -71,22 +69,20 @@ bool BruteForce_Optimization::runOptimization() {
 	int index = 0;
 	double fitness = 0;
 
+	// Creating displays if desired
 	if (displayCamImage) {
-		camDisplay->OpenDisplay();
+		this->camDisplay->OpenDisplay();
 	}
 	if (displaySLMImage) {
-		slmDisplay->OpenDisplay();
+		this->slmDisplay->OpenDisplay();
 	}
 	try	{
-		time_t start = time(0);
-
 		this->timestamp = new TimeStampGenerator();
 		// Iterate over bins
 		for (ii = 0; ii < iMax; ii += bin) {
 			for (jj = 0; jj < jMax; jj += bin)	{
 				lMax = 0;
 				rMax = 0;
-				const clock_t begin = clock();
 				//find max phase for bin
 				for (ll = 0; ll < 256; ll += dphi)	{
 					//bin phase
@@ -156,23 +152,21 @@ bool BruteForce_Optimization::runOptimization() {
 				// Save progress data
 				ofstream rtime;
 				rtime.open("logs/Opt_rtime.txt", std::ios::app);
-				rtime << float(clock() - begin) << "   " << lMax << "   " << cc->finalExposureTime << std::endl;
+				rtime << timestamp->MS_SinceStart() << " ms  " << lMax << "   " << cc->finalExposureTime << std::endl;
 				rtime.close();
 
 				index += 1;
 			}
 
 			//See if this is supposed to be here 
-			if (timestamp->S_SinceStart() > secondsToStop)
+			if (this->timestamp->S_SinceStart() > secondsToStop)
 				break;
 		}
-		time_t end = time(0);
 
 		//Record total time taken for optimization
 		std::string curTime = Utility::getCurTime();
-		double dt = difftime(end, start);
 		ofstream tfile2("logs/" + curTime + "_OPT5_time.txt", std::ios::app);
-		tfile2 << dt << std::endl;
+		tfile2 << timestamp->MS_SinceStart() << std::endl;
 		tfile2.close();
 
 		// Save how final optimization looks through camera
@@ -193,8 +187,8 @@ bool BruteForce_Optimization::runOptimization() {
 	shutdownOptimizationInstance();
 	
 	//Reset UI State
-	isWorking = false;
-	dlg.disableMainUI(!isWorking);
+	this->isWorking = false;
+	this->dlg.disableMainUI(!isWorking);
 
 	return true;
 }

@@ -19,9 +19,8 @@
 
 #include <cstdlib>
 #include <chrono>
-#include <thread>
 #include <memory>
-using std::ostringstream;
+
 using namespace cv;
 
 ////

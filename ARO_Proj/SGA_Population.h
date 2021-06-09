@@ -1,6 +1,6 @@
 ////////////////////
 // Population handler for standard genetic algorithm that inherits from base Population
-// Last edited: 06/02/2021 by Andrew O'Kins
+// Last edited: 06/09/2021 by Andrew O'Kins
 ////////////////////
 #ifndef SGAPOPULATION_H_
 #define SGAPOPULATION_H_
@@ -43,7 +43,7 @@ public:
 
 		// Lambda function to be used for generating new individual
 		// Input: i - index for new individual
-		// Captures 
+		// Captures:
 		//		temp - pointer to array of individuals to store current new individual at temp[i]
 		//		parent_selector - RNG machine
 		//		divisor - used in proportionate selection
@@ -71,7 +71,7 @@ public:
 			std::shared_ptr<std::vector<T>> temp_image2 = this->individuals_[j].genome();
 
 			// perform crossover with temp_image1 & temp_image2 into temp[i]
-			temp[i].set_genome(Crossover(temp_image1, temp_image2, same_check[i]));
+			temp[i].set_genome(Crossover(temp_image1, temp_image2, same_check[i], true));
 		}; // ... genInd(i)
 
 		// for each new individual a thread with call to genInd()
@@ -90,26 +90,32 @@ public:
 		// Collect the resulting same_check values,
 			// if at least one is false (not similar) then the result is set to false
 		bool same_check_result = true;
-		for (int i = 0; i < (this->pop_size_ - this->elite_size_); i++) {
+		for (int i = 0; i < (this->pop_size_ - this->elite_size_) && same_check_result; i++) {
 			if (same_check[i] == false) {
 				same_check_result = false;
-				break;
 			}
 		}
 
 		// if all of our individuals are labeled similar, replace half of them with new images
 		if (same_check_result) {
+			// Lambda function to ensure that generating random image is done in parallel
+			// Input: id - index for individual to be set
+			// Captures: temp - pointer to array of individuals to store new random genomes in
+			auto randInd = [temp](int id) {
+				temp[id].set_genome(GenerateRandomImage());
+			}
 			// Calling generate random image for half of pop individuals
 			for (int i = 0; i < this->pop_size_ / 2; i++) {
-				this->ind_threads.push_back(std::thread(temp[i].set_genome(), GenerateRandomImage()));
+				this->ind_threads.push_back(std::thread(randInd, i));
 			}
 			rejoinClear();			// Rejoin
 		}
 
 		delete[] same_check;
+		// Assign new population to individuals_
 		delete[] individuals_;
 		individuals_ = temp;
-		return true;
+		return true; // No issues!
 	}	// ... Function nextGeneration
 }; // ... class SGAPopulation
 

@@ -60,8 +60,17 @@ public:
 		this->individuals_ = new Individual<T>[pop_size_];
 
 		//initialize images for each individual
+		
+		// Lambda function to ensure that generating random image is done in parallel
+			// Input: id - index for individual to be set
+			// Captures
+			//		individuals_ - pointer to array of individuals to store new random genomes in
+		auto randInd = [this->individuals_](int id) {
+			this->individuals_[id].set_genome(GenerateRandomImage());
+		}
+
 		for (int i = 0; i < this->pop_size_; i++){
-			this->ind_threads.push_back(std::thread(this->individuals_[i].set_genome(), GenerateRandomImage()));
+			this->ind_threads.push_back(std::thread(randInd, i));
 		}
 		rejoinClear();
 	}
@@ -113,9 +122,10 @@ public:
 	// Input:
 	//	a - First individual to be crossed over.
 	//	b - Second individual to be crossed over.
-	//	same_check - Boolean will be turned to false if the arrays are different.
+	//	same_check - boolean will be set to false if the arrays are different.
+	//  useMutation - boolean set if to perform mutation or not, defaults to true (enable).
 	// Output: returns new individual as result of crossover algorithm
-	std::shared_ptr<std::vector<T>> Crossover(std::shared_ptr<std::vector<T>> a, std::shared_ptr<std::vector<T>> b, bool& same_check) {
+	std::shared_ptr<std::vector<T>> Crossover(std::shared_ptr<std::vector<T>> a, std::shared_ptr<std::vector<T>> b, bool& same_check, bool useMutation = true) {
 		std::shared_ptr<std::vector<T>> temp = std::make_shared<std::vector<T>>(genome_length_, 0);
 		double same_counter = 0; // counter keeping track of how many indices in the genomes are the same
 		static BetterRandom ran(100);
@@ -136,7 +146,7 @@ public:
 				same_counter += 1;
 			}
 			// mutation
-			if (mut() == 0)	{
+			if (mut() == 0 && useMutation)	{
 				(*temp)[i] = (T)mutatedValue();
 			}
 		}

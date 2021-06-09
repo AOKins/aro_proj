@@ -1,6 +1,6 @@
 ////////////////////
-// Population handler for standard genetic algorithm that inherits from base Population
-// Last edited: 06/07/2021 by Andrew O'Kins
+// Population handler for micro genetic algorithm that inherits from base Population
+// Last edited: 06/09/2021 by Andrew O'Kins
 ////////////////////
 #ifndef UGAPOPULATION_H_
 #define UGAPOPULATION_H_
@@ -29,30 +29,21 @@ public:
 	bool nextGeneration() {
 		// temp for storing sorted current population
 		Individual<T>* sorted_temp = SortIndividuals(individuals_, this->pop_size_);
-		bool same_check; // Not really used, but made for use with base crossover method
+		bool * same_check = new bool[(this->pop_size_ - this->elite_size_)];
 
 		// temp for storing new population
 		Individual<T>* temp = new Individual<T>[this->pop_size_];
-
-		/* Serial (non-multithreaded) implementation to be kept as reference
-		temp[0].set_genome(Crossover(sorted_temp[4].genome(), sorted_temp[3].genome(), same_check));
-		temp[1].set_genome(Crossover(sorted_temp[4].genome(), sorted_temp[2].genome(), same_check));
-		temp[2].set_genome(Crossover(sorted_temp[3].genome(), sorted_temp[2].genome(), same_check));
-		temp[3].set_genome(Crossover(sorted_temp[3].genome(), sorted_temp[2].genome(), same_check));
-			// Keeping current best onto next generation
-		temp[4].set_genome(sorted_temp[4].genome()));
-		*/
 
 		// Lambda function to do assignment in parallel
 		// Input: indID - index of location to store individual in temp array
 		//		parent1 - index of a parent in sorted_temp
 		//		parent2 - index of the other parent in sorted_temp
-		// Captures
+		// Captures:
 		//		temp - pointer array to store new individuals
 		//		sorted_temp - pointer to array of sorted individuals to draw parents from
 		//		same_check - unused bool passed in for Crossover()
 		auto genInd = [temp, sorted_temp, &same_check](int indID, int parent1, int parent2) {
-			temp[indID].set_genome(Crossover(sorted_temp[parent1], sorted_temp[parent2], same_check));
+			temp[indID].set_genome(Crossover(sorted_temp[parent1], sorted_temp[parent2], same_check[indID], false));
 		};
 
 		// Crossover generation for new population
@@ -68,10 +59,36 @@ public:
 		
 		rejoinClear();	// rejoin
 
+		// Collect the resulting same_check values,
+		// if at least one is false (not similar) then the result is set to false
+		bool same_check_result = true;
+		for (int i = 0; i < (this->pop_size_ - this->elite_size_); i++) {
+			if (same_check[i] == false) {
+				same_check_result = false;
+				break;
+			}
+		}
+
+		// if all of our individuals are labeled similar, replace half of them with new images
+		if (same_check_result) {
+			// Lambda function to ensure that generating random image is done in parallel
+			// Input: id - index for individual to be set
+			// Captures: temp - pointer to array of individuals to store new random genomes in
+			auto randInd = [temp](int id) {
+				temp[id].set_genome(GenerateRandomImage());
+			}
+			// Calling generate random image for bottom 4 individuals (keeping best)
+			for (int i = 0; i < 4; i++) {
+				this->ind_threads.push_back(std::thread(randInd, i));
+			}
+			rejoinClear();			// Rejoin
+		}
+
+		delete[] same_check;
 		// Assign new population to individuals_
 		delete[] individuals_;
 		individuals_ = temp;
-		return true;		// No issues!
+		return true; // No issues!
 	}	// ... Function nextGeneration
 }; // ... class uGAPopulation
 
