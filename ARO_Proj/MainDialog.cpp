@@ -29,7 +29,6 @@
 #include "Blink_SDK.h"			// Camera functions
 #include "SLM_Board.h"
 
-
 //	- System
 #include <fstream>				// Used to export information to file 
 #include <string>				// Used as the primary "letters" datatype
@@ -321,7 +320,7 @@ void MainDialog::OnSelchangeImageListbox()
 void MainDialog::OnStartStopButton()
 {
 	//LARGE TODO: allow to stop execution by pressing stop HERE
-	return;
+
 }
 
 /////////////////////////////////////////////////
@@ -397,8 +396,9 @@ void MainDialog::OnBnClickedUgaButton()
 {
 	Utility::printLine("INFO: uGA optimization started!");
 	uGA_Optimization opt((*this), camCtrl, slmCtrl);
-	if (!opt.runOptimization())
+	if (!opt.runOptimization()) {
 		Utility::printLine("ERROR: uGA optimization failed!");
+	}
 }
 
 //OnBnClickedSgaButton: Performs the SGA Algorithm Button Press Action
@@ -406,8 +406,9 @@ void MainDialog::OnBnClickedSgaButton()
 {
 	Utility::printLine("INFO: SGA optimization started!");
 	SGA_Optimization opt((*this), camCtrl, slmCtrl);
-	if(!opt.runOptimization())
+	if (!opt.runOptimization()) {
 		Utility::printLine("ERROR: SGA optimization failed!");
+	}
 }
 
 //OnBnClickedOptButton: Performs the OPT5 Algorithm Button Press Action
@@ -415,8 +416,9 @@ void MainDialog::OnBnClickedOptButton()
 {
 	Utility::printLine("INFO: OPT5 optimization started!");
 	BruteForce_Optimization opt((*this), camCtrl, slmCtrl);
-	if(!opt.runOptimization())
+	if (!opt.runOptimization()) {
 		Utility::printLine("ERROR: OPT 5 optimization failed!");
+	}
 }
 
 //OnTcnSelchangeTab1: changes the shown dialog when a new tab is selected
@@ -452,8 +454,6 @@ void MainDialog::OnTcnSelchangeTab1(NMHDR *pNMHDR, LRESULT *pResult)
 	}
 	*pResult = 0;
 }
-
-
 
 // [UI UPDATE]
 void MainDialog::disableMainUI(bool isMainEnabled)
@@ -555,4 +555,3 @@ void MainDialog::disableMainUI(bool isMainEnabled)
 //
 //	CDialog::OnTimer(nIDEvent);
 //}
-

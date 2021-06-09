@@ -8,7 +8,7 @@
 #include "BetterRandom.h"
 
 ////
-// TODOs:	Debug mulithreading in StartNextGeneration consider/add mutexes to address identified critical sections
+// TODOs:	Debug mulithreading in StartNextGeneration and consider/add mutexes to address identified critical sections
 
 template <class T>
 class SGAPopulation : public Population<T> {
@@ -34,6 +34,7 @@ public:
 		}
 
 		// Breeding
+			// Size of same_check is being how many new individuals are being made
 		bool * same_check = new bool[(this->pop_size_ - this->elite_size_)];
 		Individual<T> * temp = new Individual<T>[this->pop_size_];
 		BetterRandom parent_selector(RAND_MAX);
@@ -43,7 +44,7 @@ public:
 		// Input: i - index for new individual
 		// Captures:
 		//		temp - pointer to array of individuals to store current new individual at temp[i]
-		//		parent_selector - RNG machine
+		//		parent_selector - RNG machine captured by reference
 		//		divisor - used in proportionate selection
 		// Output: temp[i] is set a new genome using crossover algorithm
 		auto genInd = [temp, &parent_selector, divisor, same_check](int i) {

@@ -75,7 +75,7 @@ public:
 		rejoinClear();
 	}
 
-	//Destructor - delete individuals
+	//Destructor - delete individuals and call rejoinClear()
 	~Population() {
 		delete[] this->individuals_;
 		rejoinClear();
@@ -126,14 +126,14 @@ public:
 	//  useMutation - boolean set if to perform mutation or not, defaults to true (enable).
 	// Output: returns new individual as result of crossover algorithm
 	shared_ptr< vector<T>> Crossover(shared_ptr< vector<T>> a, shared_ptr< vector<T>> b, bool& same_check, bool useMutation = true) {
-		shared_ptr< vector<T>> temp = std::make_shared<vector<T>>(genome_length_, 0);
+		shared_ptr< vector<T>> temp = std::make_shared<vector<T>>(this->genome_length_, 0);
 		double same_counter = 0; // counter keeping track of how many indices in the genomes are the same
 		static BetterRandom ran(100);
 		static BetterRandom mut(200);
 		static BetterRandom mutatedValue(256);
 
 		// For each index in the genome
-		for (int i = 0; i < genome_length_; i++) {
+		for (int i = 0; i < this->genome_length_; i++) {
 			// 50% chance of coming from either parent
 			if (ran() < 50) {
 				(*temp)[i] = (*a)[i];
@@ -145,7 +145,7 @@ public:
 			if ((*a)[i] == (*b)[i])	{
 				same_counter += 1;
 			}
-			// mutation
+			// mutation occuring if useMutation and at 0.05% chance
 			if (mut() == 0 && useMutation)	{
 				(*temp)[i] = (T)mutatedValue();
 			}
@@ -153,7 +153,7 @@ public:
 		// ... End image creation
 
 		// if the percentage of indices that are the same is less than the accepted similarity, label the two genomes as not the same (same_check = false)
-		same_counter /= genome_length_;
+		same_counter /= this->genome_length_;
 		if (same_counter < accepted_similarity_) {
 			same_check = false;
 		}
@@ -204,26 +204,27 @@ public:
 	// Output: to is contains deep copy of from
 	void DeepCopyIndividual(Individual<T> &to, Individual<T> &from) {
 		to.set_fitness(from.fitness());
-		shared_ptr< vector<T>> temp_image1 = std::make_shared<vector<T>>(genome_length_, 0);
+		shared_ptr< vector<T>> temp_image1 = std::make_shared<vector<T>>(this->genome_length_, 0);
 		shared_ptr< vector<T>> temp_image2 = from.genome();
-		for (int i = 0; i < genome_length_; i++) {
+		for (int i = 0; i < this->genome_length_; i++) {
 			(*temp_image1)[i] = (*temp_image2)[i];
 		}
 		to.set_genome(temp_image1);
 	}
-	
-	// Perform the genetic algorithm to create new individuals for next gneeration
-	// virtual method to have child classes define this behavior
-	// Output: False if error occurs, otherwise True
-	virtual bool nextGeneration() = 0;
 
 	// Rejoin all the threads and clear ind_threads vector for future use
+		// Note: if a thread is stuck in an indefinite duration, this will lock out
 	void rejoinClear() {
 		for (int i = 0; i < this->ind_threads.size(); i++) {
 			this->ind_threads[i].join();
 		}
 		this->ind_threads.clear();
 	}
+
+	// Perform the genetic algorithm to create new individuals for next gneeration
+	// virtual method to have child classes define this behavior
+	// Output: False if error occurs, otherwise True
+	virtual bool nextGeneration() = 0;
 
 }; // ... class Population
 
