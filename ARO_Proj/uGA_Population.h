@@ -39,8 +39,8 @@ public:
 		//		temp - pointer array to store new individuals
 		//		sorted_temp - pointer to array of sorted individuals to draw parents from
 		//		same_check - unused bool passed in for Crossover()
-		auto genInd = [temp, sorted_temp, &same_check](int indID, int parent1, int parent2) {
-			temp[indID].set_genome(Crossover(sorted_temp[parent1], sorted_temp[parent2], same_check[indID], false));
+		auto genInd = [temp, sorted_temp, &same_check, this](int indID, int parent1, int parent2) {
+			temp[indID].set_genome(this->Crossover(sorted_temp[parent1].genome(), sorted_temp[parent2].genome(), same_check[indID], false));
 		};
 
 		// Crossover generation for new population
@@ -52,7 +52,7 @@ public:
 		this->ind_threads.push_back(thread(genInd, 2, 3, 2));
 		this->ind_threads.push_back(thread(genInd, 3, 3, 2));
 			// Keeping current best onto next generation
-		temp[4].set_genome(sorted_temp[4].genome()));		// Doing here since it's just a simple assignment while other threads perform genInd()
+		temp[4].set_genome(sorted_temp[4].genome());		// Doing here since it's just a simple assignment while other threads perform genInd()
 		
 		rejoinClear();	// rejoin
 
@@ -71,9 +71,9 @@ public:
 			// Lambda function to ensure that generating random image is done in parallel
 			// Input: id - index for individual to be set
 			// Captures: temp - pointer to array of individuals to store new random genomes in
-			auto randInd = [temp](int id) {
-				temp[id].set_genome(GenerateRandomImage());
-			}
+			auto randInd = [temp, this](int id) {
+				temp[id].set_genome(this->GenerateRandomImage());
+			};
 			// Calling generate random image for bottom 4 individuals (keeping best)
 			for (int i = 0; i < 4; i++) {
 				this->ind_threads.push_back(thread(randInd, i));
