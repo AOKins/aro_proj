@@ -27,5 +27,5 @@ public:
 	CEdit m_binSize;
 	CEdit m_numberBins;
 	CEdit m_targetRadius;
-	CButton m_SampleCheckmark;
+	CButton m_SampleCheckmark; // Appears to currently (June 9th 2021) to be unused, getCheck() commented out in initDialog of mainDialog()
 };

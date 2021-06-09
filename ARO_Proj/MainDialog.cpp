@@ -103,9 +103,9 @@ BOOL MainDialog::OnInitDialog()
 	//Enable console output
 	//#ifdef _DEBUG
 
-	if (!AllocConsole())
+	if (!AllocConsole()) {
 		AfxMessageBox(L"Console will not be shown!");
-
+	}
 	freopen_s(&fp, "CONOUT$", "w", stdout);
 	std::cout.clear();
 
@@ -173,7 +173,7 @@ BOOL MainDialog::OnInitDialog()
 	m_slmControlDlg.m_SlmPwrButton.SetWindowTextW(_T("Turn power ON")); // - power button (TODO: determine if SLM is actually off at start)
 	
 	//GetCheck() Retrieves BST_CHECKED if checked & BST_UNCHECKED if not checked
-	m_optimizationControlDlg.m_SampleCheckmark.GetCheck(); 
+	//Line currently commented out to identify if cause of assert failure m_optimizationControlDlg.m_SampleCheckmark.GetCheck();  
 
 	// - get reference to slm controller
 	slmCtrl = m_slmControlDlg.getSLMCtrl();

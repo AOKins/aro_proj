@@ -65,9 +65,9 @@ public:
 			// Input: id - index for individual to be set
 			// Captures
 			//		individuals_ - pointer to array of individuals to store new random genomes in
-		auto randInd = [this->individuals_](int id) {
+		auto randInd = [this](int id) {
 			this->individuals_[id].set_genome(GenerateRandomImage());
-		}
+		};
 		// Using multithreads for initializing each individual
 		for (int i = 0; i < this->pop_size_; i++){
 			this->ind_threads.push_back(thread(randInd, i));

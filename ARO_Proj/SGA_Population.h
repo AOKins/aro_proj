@@ -46,8 +46,9 @@ public:
 		//		temp - pointer to array of individuals to store current new individual at temp[i]
 		//		parent_selector - RNG machine captured by reference
 		//		divisor - used in proportionate selection
+		//		individuals_ access population genomes
 		// Output: temp[i] is set a new genome using crossover algorithm
-		auto genInd = [temp, &parent_selector, divisor, same_check](int i) {
+		auto genInd = [temp, &parent_selector, divisor, same_check, this](int i) {
 			same_check[i] = true;
 			// select first parent with fitness proportionate selection and store associated genome into temp_image1
 			double selected = parent_selector() / divisor;
@@ -75,14 +76,18 @@ public:
 
 		// for each new individual a thread with call to genInd()
 		for (int i = 0; i < (this->pop_size_ - this->elite_size_); i++) {
-			this->ind_threads.push_back(thread(genInd(), i));
+			this->ind_threads.push_back(thread(genInd, i));
 		}
 		rejoinClear();		// Rejoin
 
+		auto copyInds = [this](Individual<T> & to, Individual<T> & from ){
+			this->DeepCopyIndividual(to, from);
+		};
+		
 		// for the elites, copy directly into new generation
 		// Performing deep copy for individuals in parallel
 		for (int i = (this->pop_size_ - this->elite_size_); i < this->pop_size_; i++) {
-			this->ind_threads.push_back(thread(DeepCopyIndividual(), temp[i], individuals_[i]));
+			this->ind_threads.push_back(thread(copyInds, temp[i], this->individuals_[i]));
 		}
 		rejoinClear();		// Rejoin
 
@@ -100,9 +105,9 @@ public:
 			// Lambda function to ensure that generating random image is done in parallel
 			// Input: id - index for individual to be set
 			// Captures: temp - pointer to array of individuals to store new random genomes in
-			auto randInd = [temp](int id) {
-				temp[id].set_genome(GenerateRandomImage());
-			}
+			auto randInd = [temp, this](int id) {
+				temp[id].set_genome(this->GenerateRandomImage());
+			};
 			// Calling generate random image for half of pop individuals
 			for (int i = 0; i < this->pop_size_ / 2; i++) {
 				this->ind_threads.push_back(thread(randInd, i));
