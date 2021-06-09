@@ -4,12 +4,9 @@
 ////////////////////
 #ifndef UGAPOPULATION_H_
 #define UGAPOPULATION_H_
-#include "Individual.h"
-#include "Population.h"
+#include "Population.h" // Using std::thread
 #include "BetterRandom.h"
-#include <vector>
 
-using std::thread;
 ////
 // TODOs:	Verify/Debug uGA implementation
 //			Consider possible race condition issues
@@ -79,7 +76,7 @@ public:
 			}
 			// Calling generate random image for bottom 4 individuals (keeping best)
 			for (int i = 0; i < 4; i++) {
-				this->ind_threads.push_back(std::thread(randInd, i));
+				this->ind_threads.push_back(thread(randInd, i));
 			}
 			rejoinClear();			// Rejoin
 		}

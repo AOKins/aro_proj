@@ -4,13 +4,11 @@
 ////////////////////
 #ifndef SGAPOPULATION_H_
 #define SGAPOPULATION_H_
-#include "Individual.h"
 #include "Population.h"
 #include "BetterRandom.h"
-#include <vector>
 
 ////
-// TODOs:	Debug mulithreading in StartNextGeneration consider/add mutexes to address possible critical sections
+// TODOs:	Debug mulithreading in StartNextGeneration consider/add mutexes to address identified critical sections
 
 template <class T>
 class SGAPopulation : public Population<T> {
@@ -58,7 +56,7 @@ public:
 				j++;
 				temp_sum += this->individuals_[j].fitness();
 			}
-			std::shared_ptr<std::vector<T>> temp_image1 = this->individuals_[j].genome();
+			shared_ptr<vector<T>> temp_image1 = this->individuals_[j].genome();
 
 			// Select second parent with fitness proportionate selection and store associated genome into temp_image2
 			selected = parent_selector() / divisor;
@@ -68,7 +66,7 @@ public:
 				j++;
 				temp_sum += this->individuals_[j].fitness();
 			}
-			std::shared_ptr<std::vector<T>> temp_image2 = this->individuals_[j].genome();
+			shared_ptr<vector<T>> temp_image2 = this->individuals_[j].genome();
 
 			// perform crossover with temp_image1 & temp_image2 into temp[i]
 			temp[i].set_genome(Crossover(temp_image1, temp_image2, same_check[i], true));
@@ -76,14 +74,14 @@ public:
 
 		// for each new individual a thread with call to genInd()
 		for (int i = 0; i < (this->pop_size_ - this->elite_size_); i++) {
-			this->ind_threads.push_back(std::thread(genInd(), i));
+			this->ind_threads.push_back(thread(genInd(), i));
 		}
 		rejoinClear();		// Rejoin
 
 		// for the elites, copy directly into new generation
 		// Performing deep copy for individuals in parallel
 		for (int i = (this->pop_size_ - this->elite_size_); i < this->pop_size_; i++) {
-			this->ind_threads.push_back(std::thread(DeepCopyIndividual(), temp[i], individuals_[i]));
+			this->ind_threads.push_back(thread(DeepCopyIndividual(), temp[i], individuals_[i]));
 		}
 		rejoinClear();		// Rejoin
 
@@ -106,7 +104,7 @@ public:
 			}
 			// Calling generate random image for half of pop individuals
 			for (int i = 0; i < this->pop_size_ / 2; i++) {
-				this->ind_threads.push_back(std::thread(randInd, i));
+				this->ind_threads.push_back(thread(randInd, i));
 			}
 			rejoinClear();			// Rejoin
 		}

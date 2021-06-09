@@ -1,16 +1,16 @@
 ////////////////////
 // Base class to encapsulate a population in a genetic algorithm and some of the micro-genetic behaviors
-// Last edited: 06/01/2021 by Andrew O'Kins
+// Last edited: 06/09/2021 by Andrew O'Kins
 ////////////////////
 #ifndef POPULATION_H_
 #define POPULATION_H_
 #include "Individual.h"
 #include "BetterRandom.h"
 #include "Utility.h" // For printLine
-#include <vector>
-
 
 #include <thread> // For ind_threads and general multithreaded behavior
+using std::thread;
+
 ////
 // TODOs:	Consider update sortIndividuals to use more efficient algorithm
 //					(currently using insertion sort but with small size may not be needed/gain much)
@@ -35,7 +35,7 @@ protected:
 	int genome_length_;
 
 	// vector for managing the multithreads for individuals used in genetic algorithm
-	std::vector<std::thread> ind_threads;
+	vector<thread> ind_threads;
 
 public:
 	// Constructor
@@ -68,9 +68,9 @@ public:
 		auto randInd = [this->individuals_](int id) {
 			this->individuals_[id].set_genome(GenerateRandomImage());
 		}
-
+		// Using multithreads for initializing each individual
 		for (int i = 0; i < this->pop_size_; i++){
-			this->ind_threads.push_back(std::thread(randInd, i));
+			this->ind_threads.push_back(thread(randInd, i));
 		}
 		rejoinClear();
 	}
@@ -93,9 +93,9 @@ public:
 
 	// Generates a random image using BetterRandom
 	// Output: a randomly generated image that has size of genome_length for Population
-	std::shared_ptr<std::vector<T>> GenerateRandomImage() {
+	shared_ptr< vector<T> > GenerateRandomImage() {
 		static BetterRandom ran(256);
-		std::shared_ptr<std::vector<T>> image = std::make_shared<std::vector<T>>(genome_length_,0);
+		shared_ptr< vector<T> > image = std::make_shared<vector<T>>(genome_length_,0);
 		for (int j = 0; j < this->genome_length_; j++) {
 			(*image)[j] = (T)ran();
 		} // ... for each pixel in image
@@ -105,7 +105,7 @@ public:
 	// Getter for image of individual at inputted index
 	// Input: i - individual at given index (population not guranteed sorted)
 	// Output: the image for the individual
-	std::shared_ptr<std::vector<T>> getImage(int i){
+	shared_ptr< vector<T>> getImage(int i){
 		return this->individuals_[i].genome();
 	}
 
@@ -125,8 +125,8 @@ public:
 	//	same_check - boolean will be set to false if the arrays are different.
 	//  useMutation - boolean set if to perform mutation or not, defaults to true (enable).
 	// Output: returns new individual as result of crossover algorithm
-	std::shared_ptr<std::vector<T>> Crossover(std::shared_ptr<std::vector<T>> a, std::shared_ptr<std::vector<T>> b, bool& same_check, bool useMutation = true) {
-		std::shared_ptr<std::vector<T>> temp = std::make_shared<std::vector<T>>(genome_length_, 0);
+	shared_ptr< vector<T>> Crossover(shared_ptr< vector<T>> a, shared_ptr< vector<T>> b, bool& same_check, bool useMutation = true) {
+		shared_ptr< vector<T>> temp = std::make_shared<vector<T>>(genome_length_, 0);
 		double same_counter = 0; // counter keeping track of how many indices in the genomes are the same
 		static BetterRandom ran(100);
 		static BetterRandom mut(200);
@@ -204,8 +204,8 @@ public:
 	// Output: to is contains deep copy of from
 	void DeepCopyIndividual(Individual<T> &to, Individual<T> &from) {
 		to.set_fitness(from.fitness());
-		std::shared_ptr<std::vector<T>> temp_image1 = std::make_shared<std::vector<T>>(genome_length_, 0);
-		std::shared_ptr<std::vector<T>> temp_image2 = from.genome();
+		shared_ptr< vector<T>> temp_image1 = std::make_shared<vector<T>>(genome_length_, 0);
+		shared_ptr< vector<T>> temp_image2 = from.genome();
 		for (int i = 0; i < genome_length_; i++) {
 			(*temp_image1)[i] = (*temp_image2)[i];
 		}

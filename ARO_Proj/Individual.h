@@ -8,14 +8,17 @@
 #ifndef INDIVIDUAL_H_
 #define INDIVIDUAL_H_
 #include "BetterRandom.h"
+#include <vector>
+using std::vector;
 #include <memory>
+using std::shared_ptr;
 
 template <class T>
 class Individual {
 private:
 
 	// The genome associated with the individual.
-	std::shared_ptr<std::vector<T>> genome_;
+	shared_ptr< vector<T> > genome_;
 
 	// The fitness of the individual, this must be assigned with set_fitness
 	double fitness_;
@@ -31,7 +34,7 @@ public:
 	}
 
 	// Returns the array(genome) associated with the individual.
-	std::shared_ptr<std::vector<T>> genome() {
+	shared_ptr< vector<T> > genome() {
 		return genome_;
 	}
 
@@ -42,7 +45,7 @@ public:
 
 	// Sets the genome to be associated with the individual.
 	// @param new_genome -> genome to be associated
-	void set_genome(std::shared_ptr<std::vector<T>> new_genome) {
+	void set_genome(shared_ptr< vector<T> > new_genome) {
 		genome_ = new_genome;
 	}
 
