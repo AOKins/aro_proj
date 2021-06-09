@@ -88,7 +88,7 @@ bool uGA_Optimization::runOptimization() {
 //     stopConditionsMetFlag is set to true if conditions met
 bool uGA_Optimization::runIndividual(int indID) {
 	//Apply LUT/Binning to randomly the generated individual's image
-	std::shared_ptr<std::vector<int>> tempptr = (population->getImage(indID)); // Get the image for the individual
+	std::shared_ptr<std::vector<int>> tempptr = population->getImage(indID); // Get the image for the individual
 	scaler->TranslateImage(tempptr, aryptr);
 
 	// Write translated image to SLM boards //TODO: modify as it assumes boards get the same image and have same size
@@ -146,6 +146,7 @@ bool uGA_Optimization::runIndividual(int indID) {
 	return true;
 }
 
+// Method to setup specific properties runOptimziation() instance
 bool uGA_Optimization::setupInstanceVariables() {
 	// Setting population size as well as number of elite individuals kept in the genetic repopulation
 	this->populationSize = 5;
@@ -198,6 +199,7 @@ bool uGA_Optimization::setupInstanceVariables() {
 	return true; // Returning true if no issues met
 }
 
+// Method to clean up & save resulting runOptimziation() instance
 bool uGA_Optimization::shutdownOptimizationInstance() {
 	// - image displays
 	this->camDisplay->CloseDisplay();
@@ -234,6 +236,6 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 	std::rename("logs/uGA_functionEvals_vs_fitness.txt", ("logs/" + curTime + "_uGA_functionEvals_vs_fitness.txt").c_str());
 	std::rename("logs/uGA_time_vs_fitness.txt", ("logs/" + curTime + "_uGA_time_vs_fitness.txt").c_str());
 	std::rename("logs/exposure.txt", ("logs/" + curTime + "_uGA_exposure.txt").c_str());
-	saveParameters(curTime, "SGA");
+	saveParameters(curTime, "uGA");
 	return true;
 }

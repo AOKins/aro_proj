@@ -1,6 +1,6 @@
 ////////////////////
 // Optimization handler methods implementation for simple genetic algorithm
-// Last edited: 06/02/2021 by Andrew O'Kins
+// Last edited: 06/08/2021 by Andrew O'Kins
 ////////////////////
 #include "stdafx.h"				// Required in source
 #include "SGA_Optimization.h"	// Header file
@@ -19,13 +19,12 @@
 
 #include <cstdlib>
 #include <chrono>
-#include <thread>
 #include <memory>
-using std::ostringstream;
+
 using namespace cv;
 
 ////
-// TODOs:	Support multithreading where appriopriate to improve speed performance
+// TODOs:	Consider multithreading where appriopriate to improve speed performance
 //			Add support for multiple boards
 //			Address how to handle if image acquisition failed (currently just moves on to next individual without assigning a default fitness value)
 //			send final scaled image to the SLM //ASK needed?
@@ -45,7 +44,7 @@ bool SGA_Optimization::runOptimization() {
 		Utility::printLine("ERROR: Failed to prepare values and files for SGA Optimization");
 		return false;
 	}
-	try {	// Begin camera exception handling while optimization loop is going
+	try {	// Begin general camera exception handling while optimization loop is going
 		this->timestamp = new TimeStampGenerator();		// Starting time stamp to track elapsed time
 		// Optimization loop for each generation
 		for (this->curr_gen = 0; this->curr_gen < maxGenenerations && !stopConditionsMetFlag; this->curr_gen++) {
@@ -88,24 +87,28 @@ bool SGA_Optimization::runOptimization() {
 //     stopConditionsMetFlag is set to true if conditions met
 bool SGA_Optimization::runIndividual(int indID) {
 	//Apply LUT/Binning to randomly the generated individual's image
-	std::shared_ptr<std::vector<int>> tempptr = (population->getImage(indID)); // Get the image for the individual
-	scaler->TranslateImage(tempptr, aryptr);
+	std::shared_ptr<std::vector<int>> tempptr = population->getImage(indID); // Get the image for the individual
+	scaler->TranslateImage(tempptr, aryptr); // Scale the individual's image to SLM size
 
 	// Write translated image to SLM boards //TODO: modify as it assumes boards get the same image and have same size
 	for (int i = 1; i <= sc->boards.size(); i++) {
 		sc->blink_sdk->Write_image(i, aryptr, sc->getBoardHeight(i-1), false, false, 0.0);
 	}
-	// Acquire images // - take image and determine fitness
+	// Acquire images // - take image
 	cc->AcquireImages(curImage, convImage);
+	// Getting the image dimensions and raw data
 	int imgWidth = convImage->GetWidth();
 	int imgHeight = convImage->GetHeight();
 	camImg = static_cast<unsigned char*>(convImage->GetData());
 
+	// Giving error and ends early if there is no data
 	if (camImg == NULL) { // TODO: I think this is dangerous as Individual does not have default fitness if left unevaluated
 		Utility::printLine("ERROR: Image Acquisition has failed!");
 		return false;
 	}
+	// Get current exposure setting of camera (relative to initial)
 	double exposureTimesRatio = cc->GetExposureRatio();	// needed for proper fitness value across changing exposure time
+	// Determine the fitness by intensity of the image within circle of target radius
 	double fitness = Utility::FindAverageValue(camImg, imgWidth, imgHeight, cc->targetRadius);
 
 	// Setting last height and width info to current
@@ -168,19 +171,21 @@ bool SGA_Optimization::setupInstanceVariables() {
 	this->population = new SGAPopulation<int>(cc->numberOfBinsY * cc->numberOfBinsX * cc->populationDensity, populationSize, eliteSize, acceptedSimilarity);
 
 	this->aryptr = new unsigned char[slmLength]; // Char array for writing SLM images
-	this->camImg = new unsigned char; // Char array to store resulting camera image
+	this->camImg = new unsigned char;			 // Char array to store resulting camera image
 
-	this->shortenExposureFlag = false; // Set to true by individual if fitness is too high
-	this->stopConditionsMetFlag = false; // Set to true if a stop condition was reached by one of the individuals
+	this->shortenExposureFlag = false;		// Set to true by individual if fitness is too high
+	this->stopConditionsMetFlag = false;	// Set to true if a stop condition was reached by one of the individuals
 
 	// Setup image displays for camera and SLM
 	camDisplay = new CameraDisplay(cc->cameraImageHeight, cc->cameraImageWidth, "Camera Display");
 	slmDisplay = new CameraDisplay(sc->getBoardHeight(0), sc->getBoardWidth(0), "SLM Display");
 	// Open displays if preference is set
-	if (displayCamImage)
+	if (displayCamImage) {
 		camDisplay->OpenDisplay();
-	if (displaySLMImage)
+	}
+	if (displaySLMImage) {
 		slmDisplay->OpenDisplay();
+	}
 	// Scaler Setup (using base class)
 	this->scaler = setupScaler(aryptr);
 

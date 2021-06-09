@@ -443,7 +443,7 @@ bool CameraController::ConfigureCustomImageSettings() {
 				Utility::printLine("INFO: Camera buffer set to 'Newest Only'!");
 			}
 			else {
-				Utility::printLine("WARNING: Camera buffer not set!  Defaults to 'Oldest First'!");
+				Utility::printLine("WARNING: Camera buffer handler not successfully set! Defaulting to 'Oldest First'!");
 			}
 		}
 

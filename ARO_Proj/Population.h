@@ -61,16 +61,15 @@ public:
 
 		//initialize images for each individual
 		for (int i = 0; i < this->pop_size_; i++){
-			this->individuals_[i].set_genome(GenerateRandomImage());
+			this->ind_threads.push_back(std::thread(this->individuals_[i].set_genome(), GenerateRandomImage()));
 		}
+		rejoinClear();
 	}
 
 	//Destructor - delete individuals
 	~Population() {
 		delete[] this->individuals_;
-		for (int i = 0; i < this->ind_threads.size(); i++) {
-			this->ind_threads[i].join();
-		}
+		rejoinClear();
 	}
 
 	// Get number of individuals in population
@@ -207,6 +206,15 @@ public:
 	// virtual method to have child classes define this behavior
 	// Output: False if error occurs, otherwise True
 	virtual bool nextGeneration() = 0;
+
+	// Rejoin all the threads and clear ind_threads vector for future use
+	void rejoinClear() {
+		for (int i = 0; i < this->ind_threads.size(); i++) {
+			this->ind_threads[i].join();
+		}
+		this->ind_threads.clear();
+	}
+
 }; // ... class Population
 
 #endif

@@ -10,8 +10,7 @@
 #include <vector>
 
 ////
-// TODOs:	Verify update of inherit from Population works (would assume so as the methods are largely unchanged)
-//			Mulithreading in StartNextGeneration to improve speed performance, consider/add mutexes to address critical sections
+// TODOs:	Debug mulithreading in StartNextGeneration consider/add mutexes to address possible critical sections
 
 template <class T>
 class SGAPopulation : public Population<T> {
@@ -37,17 +36,23 @@ public:
 		}
 
 		// Breeding
-		bool same_check = true;
-		Individual<T>* temp = new Individual<T>[this->pop_size_];
+		bool * same_check = new bool[(this->pop_size_ - this->elite_size_)];
+		Individual<T> * temp = new Individual<T>[this->pop_size_];
 		BetterRandom parent_selector(RAND_MAX);
 		double divisor = RAND_MAX / fitness_sum;
 
-		// for each new individual
-			// TODO: This may be where to have some multithreading to improve speed performance
-		for (int i = 0; i < (this->pop_size_ - this->elite_size_); i++) {
-			// select first parent with fitness proportionate selection
+		// Lambda function to be used for generating new individual
+		// Input: i - index for new individual
+		// Captures 
+		//		temp - pointer to array of individuals to store current new individual at temp[i]
+		//		parent_selector - RNG machine
+		//		divisor - used in proportionate selection
+		// Output: temp[i] is set a new genome using crossover algorithm
+		auto genInd = [temp, &parent_selector, divisor, same_check](int i) {
+			same_check[i] = true;
+			// select first parent with fitness proportionate selection and store associated genome into temp_image1
 			double selected = parent_selector() / divisor;
-			double temp_sum = this->individuals_[0].fitness();
+			double temp_sum = this->individuals_[0].fitness(); // Recall 0 index has worst fitness
 			int j = 0;
 			while (temp_sum < selected) {
 				j++;
@@ -55,7 +60,7 @@ public:
 			}
 			std::shared_ptr<std::vector<T>> temp_image1 = this->individuals_[j].genome();
 
-			// Select second parent with fitness proportionate selection
+			// Select second parent with fitness proportionate selection and store associated genome into temp_image2
 			selected = parent_selector() / divisor;
 			temp_sum = this->individuals_[0].fitness();
 			j = 0;
@@ -65,35 +70,43 @@ public:
 			}
 			std::shared_ptr<std::vector<T>> temp_image2 = this->individuals_[j].genome();
 
-			// perform crossover
-			temp[i].set_genome(Crossover(temp_image1, temp_image2, same_check));
+			// perform crossover with temp_image1 & temp_image2 into temp[i]
+			temp[i].set_genome(Crossover(temp_image1, temp_image2, same_check[i]));
+		}; // ... genInd(i)
+
+		// for each new individual a thread with call to genInd()
+		for (int i = 0; i < (this->pop_size_ - this->elite_size_); i++) {
+			this->ind_threads.push_back(std::thread(genInd(), i));
 		}
+		rejoinClear();		// Rejoin
 
 		// for the elites, copy directly into new generation
-			// TODO: Test this multithreading implementation (currently [June 7th] haven't implemented consideration of possible race conditions!)
 		// Performing deep copy for individuals in parallel
 		for (int i = (this->pop_size_ - this->elite_size_); i < this->pop_size_; i++) {
-			this->ind_threads.push_back(DeepCopyIndividual(temp[i], individuals_[i]));
+			this->ind_threads.push_back(std::thread(DeepCopyIndividual(), temp[i], individuals_[i]));
 		}
-		// Rejoin
-		for (int i = 0; i < this->ind_threads.size()) {
-			this->ind_threads[i].join();
+		rejoinClear();		// Rejoin
+
+		// Collect the resulting same_check values,
+			// if at least one is false (not similar) then the result is set to false
+		bool same_check_result = true;
+		for (int i = 0; i < (this->pop_size_ - this->elite_size_); i++) {
+			if (same_check[i] == false) {
+				same_check_result = false;
+				break;
+			}
 		}
-		this->ind_threads.clear(); // Clearing as done with these threads and will want to reuse this vector
 
 		// if all of our individuals are labeled similar, replace half of them with new images
-			// TODO: Test this multithreading implementation
-		if (same_check) {
-			// Calling generate random image for half of opop individuals
+		if (same_check_result) {
+			// Calling generate random image for half of pop individuals
 			for (int i = 0; i < this->pop_size_ / 2; i++) {
-				this->ind_threads.push_back(temp[i].set_genome(GenerateRandomImage()));
+				this->ind_threads.push_back(std::thread(temp[i].set_genome(), GenerateRandomImage()));
 			}
-			// Rejoin
-			for (int i = 0; i < this->ind_threads.size()) {
-				this->ind_threads[i].join();
-			}
-			this->ind_threads.clear(); // Clearing as done with these threads and will want to reuse this vector
+			rejoinClear();			// Rejoin
 		}
+
+		delete[] same_check;
 		delete[] individuals_;
 		individuals_ = temp;
 		return true;
