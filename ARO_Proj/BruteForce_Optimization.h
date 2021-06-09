@@ -17,8 +17,8 @@ public:
 	bool runOptimization();
 
 	// These methods are given empty implementation as currently (June 3 2021) not updating/refactoring BF optimization
-	bool setupInstanceVariables() { return false; };
-	bool shutdownOptimizationInstance() { return false; };
+	bool setupInstanceVariables();
+	bool shutdownOptimizationInstance();
 	bool runIndividual(int indID) { return false; };
 };
 

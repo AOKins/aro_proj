@@ -14,7 +14,6 @@
 
 #include <fstream>				// used to export information to file 
 #include <chrono>
-#include <thread>
 #include <string>
 using std::ofstream;
 using std::ostringstream;
@@ -24,12 +23,18 @@ bool BruteForce_Optimization::runOptimization() {
 	Utility::printLine("OPT 5 BUTTON CLICKED!");
 
 	//Setup before optimization (see base class for implementation)
-	if (!prepareSoftwareHardware())
+	if (!prepareSoftwareHardware()) {
 		Utility::printLine("ERROR: Failed to prepare software or/and hardware for Brute Force Optimization");
+	}
+	// Setup variables that are of instance and depend on this specific optimization method (such as pop size)
+	if (!setupInstanceVariables()) {
+		Utility::printLine("ERROR: Failed to prepare values and files for OPT 5 Optimization");
+		return false;
+	}
 
 	//Declare variables
-	//TODO: which of these can be combined which can be deeleted or implified ALSO make them understandable!
-	double exptime, PC, crop, dexptime, dblN;
+		// TODO: which of these can be combined which can be deleted or implified ALSO make them understandable!
+	double exptime, PC, crop, dblN;
 	int ii, jj, nn, mm, iMax, jMax, ll, lMax, kk;
 	int bin, dphi;
 	double allTimeBestFitness = 0;
@@ -43,10 +48,7 @@ bool BruteForce_Optimization::runOptimization() {
 	dphi = 16;
 
 	// Open files for logging algorithm progress 
-	ofstream tfile("logs/Opt_functionEvals_vs_fitness.txt", std::ios::app);
-	ofstream timeVsFitnessFile("logs/Opt_time_vs_fitness.txt", std::ios::app);
 	ofstream lmaxfile("logs/lmax.txt", std::ios::app);
-	TimeStampGenerator timestamp;
 
 	//Find genome length
 	int genomeLength = sc->getBoardWidth(0) * sc->getBoardHeight(0) * 1;
@@ -55,12 +57,6 @@ bool BruteForce_Optimization::runOptimization() {
 		return false;
 	}
 
-	// Allocate memory to store used images
-	unsigned char *aryptr = new unsigned char[genomeLength];
-	unsigned char *camImg = new unsigned char;
-
-	ImagePtr curImage = Image::Create();
-	ImagePtr convImage = Image::Create();
 	double exposureTimesRatio = 1.0;
 
 	//Initialize "2D" array
@@ -74,23 +70,17 @@ bool BruteForce_Optimization::runOptimization() {
 	// Generation monitoring variables
 	int index = 0;
 	double fitness = 0;
-	bool shortenExposureFlag = false;
-	bool stopConditionsMetFlag = false;
 
-	// Setup image displays for camera and SLM
-	bool displayCamImage = true;
-	bool displaySLMImage = false; //TODO: only first SLM right now - add functionality to display any or all boards
-	CameraDisplay* camDisplay = new CameraDisplay(cc->cameraImageHeight, cc->cameraImageWidth, "Camera Display");
-	CameraDisplay* slmDisplay = new CameraDisplay(sc->getBoardHeight(0), sc->getBoardWidth(0), "SLM Display");
-	if (displayCamImage)
+	if (displayCamImage) {
 		camDisplay->OpenDisplay();
-	if (displaySLMImage)
+	}
+	if (displaySLMImage) {
 		slmDisplay->OpenDisplay();
-	
+	}
 	try	{
 		time_t start = time(0);
-		cc->startCamera();
 
+		this->timestamp = new TimeStampGenerator();
 		// Iterate over bins
 		for (ii = 0; ii < iMax; ii += bin) {
 			for (jj = 0; jj < jMax; jj += bin)	{
@@ -106,11 +96,10 @@ bool BruteForce_Optimization::runOptimization() {
 							aryptr[kk] = ll;
 						}
 					}
-
 					//Update board with new image
-					for (int i = 1; i <= sc->boards.size(); i++)
+					for (int i = 1; i <= sc->boards.size(); i++) {
 						sc->blink_sdk->Write_image(i, aryptr, sc->getBoardHeight(i-1), false, false, 0.0);
-
+					}
 					//Acquire and display camera image
 					cc->AcquireImages(curImage, convImage);
 					camImg = static_cast<unsigned char*>(convImage->GetData());
@@ -118,15 +107,16 @@ bool BruteForce_Optimization::runOptimization() {
 						Utility::printLine("ERROR: Image Acquisition has failed!");
 						continue;
 					}
-					if (displayCamImage)
+					if (displayCamImage) {
 						camDisplay->UpdateDisplay(camImg);
+					}
 					exposureTimesRatio = cc->GetExposureRatio();
 					fitness = Utility::FindAverageValue(camImg, convImage->GetWidth(), curImage->GetHeight(), cc->targetRadius);
 					curImage->Release(); //important to not fill camera buffer
 
 					//Record current performance to file //Ask what kind of calcualtion is this?
 					double ms = index*dphi + ll / dphi;
-					timeVsFitnessFile << timestamp.MS_SinceStart() << " " << fitness * cc->GetExposureRatio() << " " << cc->GetExposureRatio() << std::endl;
+					timeVsFitnessFile << timestamp->MS_SinceStart() << " " << fitness * cc->GetExposureRatio() << " " << cc->GetExposureRatio() << std::endl;
 					tfile << ms << " " << fitness * cc->GetExposureRatio() << " " << cc->GetExposureRatio() << std::endl;
 
 					// Keep record of the best fitness value and 
@@ -136,8 +126,9 @@ bool BruteForce_Optimization::runOptimization() {
 					}
 
 					// Halve the exposure time if over max fitness allowed
-					if (fitness > maxFitnessValue)
+					if (fitness > maxFitnessValue) {
 						cc->HalfExposureTime();
+					}
 
 				}
 
@@ -172,7 +163,7 @@ bool BruteForce_Optimization::runOptimization() {
 			}
 
 			//See if this is supposed to be here 
-			if (timestamp.S_SinceStart() > secondsToStop)
+			if (timestamp->S_SinceStart() > secondsToStop)
 				break;
 		}
 		time_t end = time(0);
@@ -192,35 +183,66 @@ bool BruteForce_Optimization::runOptimization() {
 		Mat m_ary = Mat(512, 512, CV_8UC1, aryptr);
 		imwrite("logs/" + curTime + "_OPT5_phaseopt.bmp", m_ary);
 
-		//Cleanup
-		// - camera shutdown
-		cc->stopCamera();
-		cc->shutdownCamera();
-		// - log files close
-		timeVsFitnessFile.close();
-		tfile.close();
-		lmaxfile.close();
-		// - memory deallocation
-		camDisplay->CloseDisplay();
-		slmDisplay->CloseDisplay();
-		delete camDisplay;
-		delete slmDisplay;
-		delete[] aryptr;
-
-		// Generic file renaming to include time stamps
-		std::rename("logs/Opt_functionEvals_vs_fitness.txt", ("logs/" + curTime + "_OPT5_functionEvals_vs_fitness.txt").c_str());
-		std::rename("logs/Opt_time_vs_fitness.txt", ("logs/" + curTime + "_OPT5_time_vs_fitness.txt").c_str());
-		std::rename("logs/lmax.txt", ("logs/" + curTime + "_OPT5_lmax.txt").c_str());
-		std::rename("logs/Opt_rtime.txt", ("logs/" + curTime + "_OPT5_rtime.txt").c_str());
-		saveParameters(curTime, "OPT5");
 	}
 	catch (Spinnaker::Exception &e) {
 		Utility::printLine("ERROR: " + string(e.what()));
 	}
 
+	//Cleanup
+	lmaxfile.close();
+	shutdownOptimizationInstance();
+	
 	//Reset UI State
 	isWorking = false;
 	dlg.disableMainUI(!isWorking);
+
+	return true;
+}
+
+bool BruteForce_Optimization::setupInstanceVariables() {
+	this->slmLength = sc->getBoardWidth(0) * sc->getBoardHeight(0) * 1;
+	// Allocate memory to store used images
+	this->aryptr = new unsigned char[slmLength];
+	this->camImg = new unsigned char;
+
+	this->cc->startCamera();
+
+	this->tfile.open("logs/Opt_functionEvals_vs_fitness.txt", std::ios::app);
+	this->timeVsFitnessFile.open("logs/Opt_time_vs_fitness.txt", std::ios::app);
+
+	this->camDisplay = new CameraDisplay(cc->cameraImageHeight, cc->cameraImageWidth, "Camera Display");
+	this->slmDisplay = new CameraDisplay(sc->getBoardHeight(0), sc->getBoardWidth(0), "SLM Display");
+
+	return true;
+}
+
+bool BruteForce_Optimization::shutdownOptimizationInstance() {
+	// - camera shutdown
+	this->cc->stopCamera();
+	this->cc->shutdownCamera();
+
+	this->curImage = Image::Create();
+	this->convImage = Image::Create();
+
+	// - log files close
+	this->timeVsFitnessFile.close();
+	this->tfile.close();
+	// - memory deallocation
+	this->camDisplay->CloseDisplay();
+	this->slmDisplay->CloseDisplay();
+	delete this->camDisplay;
+	delete this->slmDisplay;
+	delete[] this->aryptr;
+	delete this->timestamp;
+
+	// Generic file renaming to include time stamps
+	std::string curTime = Utility::getCurTime();
+	std::rename("logs/Opt_functionEvals_vs_fitness.txt", ("logs/" + curTime + "_OPT5_functionEvals_vs_fitness.txt").c_str());
+	std::rename("logs/Opt_time_vs_fitness.txt", ("logs/" + curTime + "_OPT5_time_vs_fitness.txt").c_str());
+	std::rename("logs/lmax.txt", ("logs/" + curTime + "_OPT5_lmax.txt").c_str());
+	std::rename("logs/Opt_rtime.txt", ("logs/" + curTime + "_OPT5_rtime.txt").c_str());
+	saveParameters(curTime, "OPT5");
+
 
 	return true;
 }

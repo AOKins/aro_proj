@@ -63,6 +63,7 @@ public:
 		this->ind_threads.push_back(thread(genInd, 1, 4, 2));
 		this->ind_threads.push_back(thread(genInd, 2, 3, 2));
 		this->ind_threads.push_back(thread(genInd, 3, 3, 2));
+			// Keeping current best onto next generation
 		temp[4].set_genome(sorted_temp[4].genome()));		// Doing here since it's just a simple assignment while other threads perform genInd()
 		
 		rejoinClear();	// rejoin
