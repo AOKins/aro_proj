@@ -52,7 +52,16 @@ public:
 
 	bool IsAnyNematic();
 	void ImageListBoxUpdate(int index);
-	void AssignLUTFile(int boardIdx, std::string);
+
+	// Assign and load LUT file
+	// Input:
+	//		boardIdx - index for which board (0 based index)
+	//		path - string to file being loaded
+	//				if path is "" then defaults to "./slm3986_at532_P8.LUT"
+	// Output: If no errors, the SLM baord at boardIdx will be assigned the LUT file at path
+	//		returns true if no errors
+	//		returns false if an error occurs while attempting to load LUT file
+	bool AssignLUTFile(int boardIdx, std::string);
 
 	//////////////////////////////////////////////////////////
 	//

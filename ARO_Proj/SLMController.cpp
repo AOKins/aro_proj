@@ -65,8 +65,11 @@ bool SLMController::setupSLM(bool repopulateBoardList, int boardIdx) {
 	if (boards.size() >= boardIdx) {
 		return false;
 	}
-	//Read LUT File into the SLM board so it is applied to images automatically by the hardware
-	AssignLUTFile(boardIdx, "");
+
+	//Read default LUT File into the SLM board so it is applied to images automatically by the hardware, doesn't check for errors
+	if (!AssignLUTFile(boardIdx, "")) {
+		Utility::printLine("WARNING: Failure to assign default LUT file for SLM!");
+	}
 
 	float fps;
 	try	{
@@ -92,20 +95,37 @@ bool SLMController::setupSLM(bool repopulateBoardList, int boardIdx) {
 	return false;
 }
 
-void SLMController::AssignLUTFile(int boardIdx, std::string path) {
-	//TODO: do some validation/error handling
-	//TODO: make adjustable through the UI
-
-	//Set the new LUT file path to the board //TODO: check if needed
-	if (path != "") {
-		boards[boardIdx]->LUTFileName = path;
-	}
+// Assign and load LUT file
+// Input:
+//		boardIdx - index for which board (0 based index)
+//		path - string to file being loaded
+//				if path is "" then defaults to "./slm3986_at532_P8.LUT"
+// Output: If no errors, the SLM baord at boardIdx will be assigned the LUT file at path
+//		returns true if no errors
+//		returns false if an error occurs while attempting to load LUT file
+bool SLMController::AssignLUTFile(int boardIdx, std::string path) {
 	const char* LUT_file;
-	CStringA filename = "slm3986_at532_P8.LUT";
-	LUT_file = filename;
+	if (path != "") {
+		LUT_file = path.c_str();
+		Utility::printLine("INFO: Setting LUT file path to what was provided by user input!");
+	}
+	else {
+		LUT_file = "./slm3986_at532_P8.LUT";
+		Utility::printLine("INFO: Setting LUT file path to default (given path was '')!");
+	}
 
 	//Write LUT file to the board
-	blink_sdk->Load_LUT_file(boardIdx + 1, LUT_file);
+	try {
+		blink_sdk->Load_LUT_file(boardIdx + 1, LUT_file);
+		boards[boardIdx]->LUTFileName = LUT_file;
+		// Printing resulting file
+		Utility::printLine("INFO: Loaded LUT file: " + std::string(LUT_file));
+		return true;
+	}
+	catch (...) {
+		Utility::printLine("ERROR: Failure to load LUT file: " + std::string(LUT_file));
+		return false;
+	}
 }
 
 /* LoadSequence: This function will load a series of two images to the PCIe board memory.
