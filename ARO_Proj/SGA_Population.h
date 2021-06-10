@@ -23,6 +23,7 @@ public:
 
 	// Starts next generation using fitness of individuals.
 	bool nextGeneration() {
+		// Setting individuals to sorted (best is at end of the array)
 		Individual<T>* sorted_temp = SortIndividuals(individuals_, this->pop_size_);
 		delete[] individuals_;
 		individuals_ = sorted_temp;
@@ -47,7 +48,7 @@ public:
 		//		parent_selector - RNG machine captured by reference
 		//		divisor - used in proportionate selection
 		//		individuals_ access population genomes
-		// Output: temp[i] is set a new genome using crossover algorithm
+		// Output: temp[i] is set a new genome using crossover algorithm and mutation enabled
 		auto genInd = [temp, &parent_selector, divisor, same_check, this](int i) {
 			same_check[i] = true;
 			// select first parent with fitness proportionate selection and store associated genome into temp_image1
@@ -117,8 +118,8 @@ public:
 
 		delete[] same_check;
 		// Assign new population to individuals_
-		delete[] individuals_;
-		individuals_ = temp;
+		delete[] this->individuals_;
+		this->individuals_ = temp;
 		return true; // No issues!
 	}	// ... Function nextGeneration
 }; // ... class SGAPopulation

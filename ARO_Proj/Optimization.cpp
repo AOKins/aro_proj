@@ -31,9 +31,11 @@ bool Optimization::prepareStopConditions() {
 	// Fitness to stop at
 	try	{
 		CString path;
-		dlg.m_optimizationControlDlg.m_minFitness.GetWindowTextW(path);
-		if (path.IsEmpty()) throw new std::exception();
-		fitnessToStop = _tstof(path);
+		this->dlg.m_optimizationControlDlg.m_minFitness.GetWindowTextW(path);
+		if (path.IsEmpty()){
+			throw new std::exception();
+		}
+		this->fitnessToStop = _tstof(path);
 	}
 	catch (...)	{
 		Utility::printLine("ERROR: Can't Parse Minimum Fitness");
@@ -43,7 +45,7 @@ bool Optimization::prepareStopConditions() {
 	// Time (in sec) to stop at
 	try	{
 		CString path;
-		dlg.m_optimizationControlDlg.m_minSeconds.GetWindowTextW(path);
+		this->dlg.m_optimizationControlDlg.m_minSeconds.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
 		secondsToStop = _tstof(path);
 	}
@@ -55,7 +57,7 @@ bool Optimization::prepareStopConditions() {
 	// Generations evaluations to stop at
 	try	{
 		CString path;
-		dlg.m_optimizationControlDlg.m_minGenerations.GetWindowTextW(path);
+		this->dlg.m_optimizationControlDlg.m_minGenerations.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
 		genEvalToStop = _tstof(path);
 	}
@@ -72,7 +74,7 @@ bool Optimization::prepareSoftwareHardware() {
 	Utility::printLine("INFO: Preparing equipment and software for optimization!");
 
 	//Can't start operation if an optimization is already running 
-	if (isWorking) {
+	if (this->isWorking) {
 		Utility::printLine("WARNING: cannot prepare hardware the second time!");
 		return false;
 	}
@@ -80,13 +82,13 @@ bool Optimization::prepareSoftwareHardware() {
 
 
 	// - configure equipment
-	if (!cc->setupCamera())	{
+	if (!this->cc->setupCamera())	{
 		Utility::printLine("ERROR: Camera setup has failed!");
 		return false;
 	}
 	Utility::printLine("INFO: Camera setup complete!");
 
-	if (!sc->slmCtrlReady()) {
+	if (!this->sc->slmCtrlReady()) {
 		Utility::printLine("ERROR: SLM setup has failed!");
 		return false;
 	}
@@ -100,8 +102,8 @@ bool Optimization::prepareSoftwareHardware() {
 	Utility::printLine("INFO: Stop conditions updated!");
 	
 	// - configure proper UI states
-	isWorking = true;
-	dlg.disableMainUI(!isWorking);
+	this->isWorking = true;
+	this->dlg.disableMainUI(!isWorking);
 	return true;
 }
 
@@ -148,7 +150,7 @@ void Optimization::saveParameters(std::string time, std::string optType) {
 
 //[CHECKS]
 bool Optimization::stopConditionsReached(double curFitness, double curSecPassed, double curGenerations) {
-	if (curFitness > fitnessToStop && curSecPassed > secondsToStop && curGenerations > genEvalToStop) {
+	if (curFitness > this->fitnessToStop && curSecPassed > this->secondsToStop && curGenerations > this->genEvalToStop) {
 		return true;
 	}
 	return false;

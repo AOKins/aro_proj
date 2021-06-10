@@ -22,21 +22,16 @@ class Population {
 protected:
 	// The array of individuals in the population.
 	Individual<T>* individuals_;
-	
 	// Number of individuals in the population.
 	int pop_size_;
 	// Number of individuals in the population that are to be kept as elite.
 	int elite_size_;
-
 	// Percentage of genome that must be shared for images to be counted as similar
 	double accepted_similarity_;
-
 	// genome length for individual images
 	int genome_length_;
-
 	// vector for managing the multithreads for individuals used in genetic algorithm
 	vector<thread> ind_threads;
-
 public:
 	// Constructor
 	// Input:
@@ -49,7 +44,7 @@ public:
 		this->accepted_similarity_ = accepted_similarity;
 		this->pop_size_ = population_size;
 		this->elite_size_ = elite_size;
-
+		// Clearing just in case there's something there beforehand
 		this->ind_threads.clear();
 
 		// Check to see if elite size exceeds the population size, currently just gives warning
@@ -60,13 +55,12 @@ public:
 		this->individuals_ = new Individual<T>[pop_size_];
 
 		//initialize images for each individual
-		
 		// Lambda function to ensure that generating random image is done in parallel
 			// Input: id - index for individual to be set
 			// Captures
 			//		individuals_ - pointer to array of individuals to store new random genomes in
 		auto randInd = [this](int id) {
-			this->individuals_[id].set_genome(GenerateRandomImage());
+			this->individuals_[id].set_genome(this->GenerateRandomImage());
 		};
 		// Using multithreads for initializing each individual
 		for (int i = 0; i < this->pop_size_; i++){
@@ -95,7 +89,7 @@ public:
 	// Output: a randomly generated image that has size of genome_length for Population
 	shared_ptr< vector<T> > GenerateRandomImage() {
 		static BetterRandom ran(256);
-		shared_ptr< vector<T> > image = std::make_shared<vector<T>>(genome_length_,0);
+		shared_ptr< vector<T>> image = std::make_shared<vector<T>>(this->genome_length_,0);
 		for (int j = 0; j < this->genome_length_; j++) {
 			(*image)[j] = (T)ran();
 		} // ... for each pixel in image
@@ -149,12 +143,11 @@ public:
 			if (mut() == 0 && useMutation)	{
 				(*temp)[i] = (T)mutatedValue();
 			}
-		}
-		// ... End image creation
+		} // ... End image creation
 
 		// if the percentage of indices that are the same is less than the accepted similarity, label the two genomes as not the same (same_check = false)
 		same_counter /= this->genome_length_;
-		if (same_counter < accepted_similarity_) {
+		if (same_counter < this->accepted_similarity_) {
 			same_check = false;
 		}
 		return temp;

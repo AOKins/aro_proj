@@ -24,6 +24,7 @@ bool BruteForce_Optimization::runOptimization() {
 	//Setup before optimization (see base class for implementation)
 	if (!prepareSoftwareHardware()) {
 		Utility::printLine("ERROR: Failed to prepare software or/and hardware for Brute Force Optimization");
+		return false;
 	}
 	// Setup variables that are of instance and depend on this specific optimization method (such as pop size)
 	if (!setupInstanceVariables()) {
@@ -61,7 +62,7 @@ bool BruteForce_Optimization::runOptimization() {
 	for (ii = 0; ii < iMax; ii++) {
 		for (jj = 0; jj < jMax; jj++) {
 			kk = ii * 512 + jj;
-			aryptr[kk] = 0;
+			this->aryptr[kk] = 0;
 		}
 	}
 
@@ -89,41 +90,41 @@ bool BruteForce_Optimization::runOptimization() {
 					for (nn = 0; nn < bin; nn++) {
 						for (mm = 0; mm < bin; mm++) {
 							kk = (ii + nn) * iMax + (mm + jj);
-							aryptr[kk] = ll;
+							this->aryptr[kk] = ll;
 						}
 					}
 					//Update board with new image
-					for (int i = 1; i <= sc->boards.size(); i++) {
-						sc->blink_sdk->Write_image(i, aryptr, sc->getBoardHeight(i-1), false, false, 0.0);
+					for (int i = 1; i <= this->sc->boards.size(); i++) {
+						this->sc->blink_sdk->Write_image(i, this->aryptr, this->sc->getBoardHeight(i - 1), false, false, 0.0);
 					}
 					//Acquire and display camera image
-					cc->AcquireImages(curImage, convImage);
-					camImg = static_cast<unsigned char*>(convImage->GetData());
-					if (camImg == NULL)	{
+					this->cc->AcquireImages(this->curImage, this->convImage);
+					this->camImg = static_cast<unsigned char*>(this->convImage->GetData());
+					if (this->camImg == NULL)	{
 						Utility::printLine("ERROR: Image Acquisition has failed!");
 						continue;
 					}
-					if (displayCamImage) {
-						camDisplay->UpdateDisplay(camImg);
+					if (this->displayCamImage) {
+						this->camDisplay->UpdateDisplay(camImg);
 					}
-					exposureTimesRatio = cc->GetExposureRatio();
-					fitness = Utility::FindAverageValue(camImg, convImage->GetWidth(), curImage->GetHeight(), cc->targetRadius);
-					curImage->Release(); //important to not fill camera buffer
+					exposureTimesRatio = this->cc->GetExposureRatio();
+					fitness = Utility::FindAverageValue(this->camImg, this->convImage->GetWidth(), this->curImage->GetHeight(), this->cc->targetRadius);
+					this->curImage->Release(); //important to not fill camera buffer
 
 					//Record current performance to file //Ask what kind of calcualtion is this?
 					double ms = index*dphi + ll / dphi;
-					timeVsFitnessFile << timestamp->MS_SinceStart() << " " << fitness * cc->GetExposureRatio() << " " << cc->GetExposureRatio() << std::endl;
-					tfile << ms << " " << fitness * cc->GetExposureRatio() << " " << cc->GetExposureRatio() << std::endl;
+					this->timeVsFitnessFile << this->timestamp->MS_SinceStart() << " " << fitness * this->cc->GetExposureRatio() << " " << this->cc->GetExposureRatio() << std::endl;
+					this->tfile << ms << " " << fitness * this->cc->GetExposureRatio() << " " << this->cc->GetExposureRatio() << std::endl;
 
 					// Keep record of the best fitness value and 
 					if (fitness * exposureTimesRatio > rMax) {
 						lMax = ll;
-						rMax = fitness * exposureTimesRatio;	
+						rMax = fitness * exposureTimesRatio;
 					}
 
 					// Halve the exposure time if over max fitness allowed
 					if (fitness > maxFitnessValue) {
-						cc->HalfExposureTime();
+						this->cc->HalfExposureTime();
 					}
 
 				}
@@ -152,29 +153,30 @@ bool BruteForce_Optimization::runOptimization() {
 				// Save progress data
 				ofstream rtime;
 				rtime.open("logs/Opt_rtime.txt", std::ios::app);
-				rtime << timestamp->MS_SinceStart() << " ms  " << lMax << "   " << cc->finalExposureTime << std::endl;
+				rtime << this->timestamp->MS_SinceStart() << " ms  " << lMax << "   " << this->cc->finalExposureTime << std::endl;
 				rtime.close();
 
 				index += 1;
 			}
 
 			//See if this is supposed to be here 
-			if (this->timestamp->S_SinceStart() > secondsToStop)
+			if (this->timestamp->S_SinceStart() > this->secondsToStop){
 				break;
+			}
 		}
 
 		//Record total time taken for optimization
 		std::string curTime = Utility::getCurTime();
 		ofstream tfile2("logs/" + curTime + "_OPT5_time.txt", std::ios::app);
-		tfile2 << timestamp->MS_SinceStart() << std::endl;
+		tfile2 << this->timestamp->MS_SinceStart() << std::endl;
 		tfile2.close();
 
 		// Save how final optimization looks through camera
-		Mat Opt_ary = Mat(curImage->GetHeight(), curImage->GetWidth(), CV_8UC1, camImg);
+		Mat Opt_ary = Mat(this->curImage->GetHeight(), this->curImage->GetWidth(), CV_8UC1, this->camImg);
 		cv::imwrite("logs/" + curTime + "_OPT5_Optimized.bmp", Opt_ary);
 
 		//Record the final (most fit) slm image
-		Mat m_ary = Mat(512, 512, CV_8UC1, aryptr);
+		Mat m_ary = Mat(512, 512, CV_8UC1, this->aryptr);
 		imwrite("logs/" + curTime + "_OPT5_phaseopt.bmp", m_ary);
 
 	}
@@ -194,7 +196,7 @@ bool BruteForce_Optimization::runOptimization() {
 }
 
 bool BruteForce_Optimization::setupInstanceVariables() {
-	this->slmLength = sc->getBoardWidth(0) * sc->getBoardHeight(0) * 1;
+	this->slmLength = this->sc->getBoardWidth(0) * this->sc->getBoardHeight(0) * 1;
 	// Allocate memory to store used images
 	this->aryptr = new unsigned char[slmLength];
 	this->camImg = new unsigned char;
@@ -204,8 +206,8 @@ bool BruteForce_Optimization::setupInstanceVariables() {
 	this->tfile.open("logs/Opt_functionEvals_vs_fitness.txt", std::ios::app);
 	this->timeVsFitnessFile.open("logs/Opt_time_vs_fitness.txt", std::ios::app);
 
-	this->camDisplay = new CameraDisplay(cc->cameraImageHeight, cc->cameraImageWidth, "Camera Display");
-	this->slmDisplay = new CameraDisplay(sc->getBoardHeight(0), sc->getBoardWidth(0), "SLM Display");
+	this->camDisplay = new CameraDisplay(this->cc->cameraImageHeight, this->cc->cameraImageWidth, "Camera Display");
+	this->slmDisplay = new CameraDisplay(this->sc->getBoardHeight(0), this->sc->getBoardWidth(0), "SLM Display");
 
 	return true;
 }

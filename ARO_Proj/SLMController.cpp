@@ -525,10 +525,11 @@ bool SLMController::ReadZernikeFile(SLM_Board* board, unsigned char *GeneratedIm
 }
 
 bool SLMController::IsAnyNematic() {
-	for (int i = 0; 0 < boards.size(); i++)
-		if (boards[i]->is_LC_Nematic)
+	for (int i = 0; 0 < boards.size(); i++) {
+		if (boards[i]->is_LC_Nematic) {
 			return true;
-	
+		}
+	}
 	return false;
 }
 
@@ -538,39 +539,43 @@ void SLMController::ImageListBoxUpdate(int index) {
 		// Send the data of the selected image in the sequence list out to the SLM
 		// LARGE TODO: instead of storing frames in the board struct store this 
 		// info on the main dlg as a n object and pass into this function
-		if (index == 0)
+		if (index == 0) {
 			blink_sdk->Write_image(i + 1, boards[i]->FrameOne, boards[i]->imageHeight, false, false, 0.0);
-		if (index == 1)
+		}
+		if (index == 1) {
 			blink_sdk->Write_image(i + 1, boards[i]->FrameTwo, boards[i]->imageHeight, false, false, 0.0);
+		}
 	}
 }
 
 bool SLMController::slmCtrlReady() {
-	if (blink_sdk == NULL || blink_sdk == nullptr)
+	if (blink_sdk == NULL || blink_sdk == nullptr) {
 		return false;
-
+	}
 	//TODO: add more conditions
 
 	return true;
 }
 
 int SLMController::getBoardWidth(int boardIdx) {
-	if (boardIdx >= boards.size())
+	if (boardIdx >= boards.size()) {
 		return -1;
-
+	}
 	return boards[boardIdx]->imageWidth;
 }
 
 int SLMController::getBoardHeight(int boardIdx) {
-	if (boardIdx >= boards.size())
+	if (boardIdx >= boards.size()) {
 		return -1;
-
+	}
 	return boards[boardIdx]->imageHeight;
 }
 
 void SLMController::setBoardPower(bool isOn) {
-	if (blink_sdk != NULL)
+	if (blink_sdk != NULL) {
 		blink_sdk->SLM_power(isOn);
-	else
+	}
+	else {
 		Utility::printLine("WARNING: SDK not avalible cannot power ON/OFF the boards!");
+	}
 }

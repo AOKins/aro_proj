@@ -156,19 +156,19 @@ bool SGA_Optimization::setupInstanceVariables() {
 	this->eliteSize = 5;
 
 	// Find length for SLM images
-	this->slmLength = sc->getBoardWidth(0) * sc->getBoardHeight(0) * 1;
+	this->slmLength = this->sc->getBoardWidth(0) * this->sc->getBoardHeight(0) * 1;
 	if (slmLength <= -1) {
 		Utility::printLine("ERROR: SLM Length cannot be less than 0!");
 		return false;
 	}
 	// Find length of camera images
-	this->imageLength = cc->cameraImageHeight * cc->cameraImageWidth;
-	if (imageLength <= -1) {
+	this->imageLength = this->cc->cameraImageHeight * this->cc->cameraImageWidth;
+	if (this->imageLength <= -1) {
 		Utility::printLine("ERROR: Image Length cannot be less than 0!");
 		return false;
 	}
 	// Setting population
-	this->population = new SGAPopulation<int>(cc->numberOfBinsY * cc->numberOfBinsX * cc->populationDensity, populationSize, eliteSize, acceptedSimilarity);
+	this->population = new SGAPopulation<int>(this->cc->numberOfBinsY * this->cc->numberOfBinsX * this->cc->populationDensity, this->populationSize, this->eliteSize, this->acceptedSimilarity);
 
 	this->aryptr = new unsigned char[slmLength]; // Char array for writing SLM images
 	this->camImg = new unsigned char;			 // Char array to store resulting camera image
@@ -177,29 +177,29 @@ bool SGA_Optimization::setupInstanceVariables() {
 	this->stopConditionsMetFlag = false;	// Set to true if a stop condition was reached by one of the individuals
 
 	// Setup image displays for camera and SLM
-	camDisplay = new CameraDisplay(cc->cameraImageHeight, cc->cameraImageWidth, "Camera Display");
-	slmDisplay = new CameraDisplay(sc->getBoardHeight(0), sc->getBoardWidth(0), "SLM Display");
+	this->camDisplay = new CameraDisplay(this->cc->cameraImageHeight, this->cc->cameraImageWidth, "Camera Display");
+	this->slmDisplay = new CameraDisplay(this->sc->getBoardHeight(0), this->sc->getBoardWidth(0), "SLM Display");
 	// Open displays if preference is set
-	if (displayCamImage) {
-		camDisplay->OpenDisplay();
+	if (this->displayCamImage) {
+		this->camDisplay->OpenDisplay();
 	}
-	if (displaySLMImage) {
-		slmDisplay->OpenDisplay();
+	if (this->displaySLMImage) {
+		this->slmDisplay->OpenDisplay();
 	}
 	// Scaler Setup (using base class)
 	this->scaler = setupScaler(aryptr);
 
 	// Start up the camera
-	cc->startCamera();
+	this->cc->startCamera();
 
 	// Setup image pointers
 	this->curImage = Image::Create();
 	this->convImage = Image::Create();
 
 	//Open up files to which progress will be logged
-	tfile.open("logs/SGA_functionEvals_vs_fitness.txt", std::ios::app);
-	timeVsFitnessFile.open("logs/SGA_time_vs_fitness.txt", std::ios::app);
-	efile.open("logs/exposure.txt", std::ios::app);
+	this->tfile.open("logs/SGA_functionEvals_vs_fitness.txt", std::ios::app);
+	this->timeVsFitnessFile.open("logs/SGA_time_vs_fitness.txt", std::ios::app);
+	this->efile.open("logs/exposure.txt", std::ios::app);
 
 	return true; // Returning true if no issues met
 }
@@ -210,20 +210,20 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	this->camDisplay->CloseDisplay();
 	this->slmDisplay->CloseDisplay();
 	// - camera
-	cc->stopCamera();
-	cc->shutdownCamera();
+	this->cc->stopCamera();
+	this->cc->shutdownCamera();
 	// - pointers
 	delete this->camDisplay;
 	delete this->slmDisplay;
 	delete[] this->aryptr;
 	delete this->population;
-	delete timestamp;
+	delete this->timestamp;
 
 	// - fitness logging files
-	timeVsFitnessFile << timestamp->MS_SinceStart() << " " << 0 << std::endl;
-	timeVsFitnessFile.close();
-	tfile.close();
-	efile.close();
+	this->timeVsFitnessFile << timestamp->MS_SinceStart() << " " << 0 << std::endl;
+	this->timeVsFitnessFile.close();
+	this->tfile.close();
+	this->efile.close();
 
 	// Save how final optimization looks through camera
 	std::string curTime = Utility::getCurTime();
@@ -232,7 +232,7 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 
 	// Save final (most fit SLM image)
 	std::shared_ptr<std::vector<int>> tempptr = (population->getImage(population->getSize() - 1)); // Get the image for the individual (most fit)
-	scaler->TranslateImage(tempptr, aryptr);
+	this->scaler->TranslateImage(tempptr, aryptr);
 	Mat m_ary = Mat(512, 512, CV_8UC1, aryptr);
 	cv::imwrite("logs/" + curTime + "_SGA_phaseopt.bmp", m_ary);
 	delete this->scaler;
