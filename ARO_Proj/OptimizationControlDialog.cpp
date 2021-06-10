@@ -36,5 +36,4 @@ void OptimizationControlDialog::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(OptimizationControlDialog, CDialogEx)
 END_MESSAGE_MAP()
 
-
 // OptimizationControlDialog message handlers

@@ -7,9 +7,6 @@
 // SLM - Spatial Light Modulator - the device that contains parameters which we want to optimize (takes in image an reflects light based on that image)
 // LC  - Liquid Crystal - the type of diplay the SLM has
 
-// [REFERENCES]
-// 1) Thread sleep example http://www.enseignement.polytechnique.fr/informatique/INF478/docs/Cpp/en/cpp/thread/sleep_for.html 
-
 // [INCUDE FILES]
 #include "stdafx.h"				// Required in source
 #include "resource.h"
@@ -23,21 +20,21 @@
 
 //	- Helper
 #include "Utility.h"			// Collection of static helper functions
-#include "CamDisplay.h"
-#include "SLMController.h"
-#include "CameraController.h"
-#include "Blink_SDK.h"			// Camera functions
+#include "CamDisplay.h"			//
+#include "SLMController.h"		// Wrapper for SLM control
+#include "CameraController.h"	// Spinnaker Camera interface wrapper
+#include "Blink_SDK.h"			// SLM SDK functions
 #include "SLM_Board.h"
 
 //	- System
 #include <fstream>				// Used to export information to file 
 #include <string>				// Used as the primary "letters" datatype
 #include <vector>				// Used for image value storage
+#include <iostream>				// Used for console output
 
 //[NAMESPACES]
 using namespace std;
 using namespace cv;
-
 
 #define MAX_CFileDialog_FILE_COUNT 99
 #define FILE_LIST_BUFFER_SIZE ((MAX_CFileDialog_FILE_COUNT * (MAX_PATH + 1)) + 1)
@@ -48,7 +45,6 @@ MainDialog::MainDialog(CWnd* pParent) : CDialog(IDD_BLINKPCIESDK_DIALOG, pParent
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
-
 
 // Reference UI components
 void MainDialog::DoDataExchange(CDataExchange* pDX)
@@ -77,8 +73,6 @@ BEGIN_MESSAGE_MAP(MainDialog, CDialog)
 	ON_BN_CLICKED(IDC_OPT_BUTTON, &MainDialog::OnBnClickedOptButton)
 	ON_NOTIFY(TCN_SELCHANGE, IDC_TAB1, &MainDialog::OnTcnSelchangeTab1)
 END_MESSAGE_MAP()
-
-
 
 //////////////////////////////////////////////////////////////
 //
@@ -186,8 +180,7 @@ BOOL MainDialog::OnInitDialog()
 	//Use slm control reference to set additional settings
 	// - if the liquid crystal type is nematic, then allow the user the option to
 	//compensate for phase imperfections by applying a phase compensation image
-	if (slmCtrl != nullptr)
-	{
+	if (slmCtrl != nullptr)	{
 		Utility::printLine("INFO: SLM Control not NULL");
 
 		if (!slmCtrl->IsAnyNematic())
@@ -199,8 +192,7 @@ BOOL MainDialog::OnInitDialog()
 		Utility::printLine("INFO: SLM Control NULL");
 
 	camCtrl = new CameraController((*this));
-	if (camCtrl != nullptr)
-	{
+	if (camCtrl != nullptr)	{
 		m_aoiControlDlg.SetCameraController(camCtrl);
 		Utility::printLine("INFO: Camera Control not NULL");
 	}
@@ -249,8 +241,6 @@ void MainDialog::OnSysCommand(UINT nID, LPARAM lParam)
 /////////////////////////////////////////////////////////////////////////
 void MainDialog::OnPaint()
 {
-
-
 	if (IsIconic())
 	{
 		CPaintDC dc(this); // device context for painting
@@ -310,9 +300,9 @@ void MainDialog::OnSelchangeImageListbox()
 {
 	//Figure out which image in the list was just selected
 	int sel = m_ImageListBox.GetCurSel();
-	if (sel == LB_ERR) //nothing selected
+	if (sel == LB_ERR){ //nothing selected
 		return;
-
+	}
 	slmCtrl->ImageListBoxUpdate(sel);
 }
 
@@ -389,7 +379,6 @@ void MainDialog::OnCompensatePhaseCheckbox()
 	//Load the currently selected image to the SLM
 	OnSelchangeImageListbox();
 }
-
 
 //OnBnClickedUgaButton: Performs the uGA Algorithm Button Press Action
 void MainDialog::OnBnClickedUgaButton()
@@ -470,7 +459,6 @@ void MainDialog::disableMainUI(bool isMainEnabled)
 	//Stop button always enabled when everything is disabled
 	//TODO: add and implement a stop button
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //FUNCTIONS THAT MIGHT BE NEEDED IN THE FUTURE

@@ -8,7 +8,7 @@
 #include "BetterRandom.h"
 
 ////
-// TODOs:	Debug mulithreading in StartNextGeneration and consider/add mutexes to address identified critical sections
+// TODOs:	Debug mulithreading in StartNextGeneration
 
 template <class T>
 class SGAPopulation : public Population<T> {
@@ -59,7 +59,7 @@ public:
 				j++;
 				temp_sum += this->individuals_[j].fitness();
 			}
-			shared_ptr<vector<T>> temp_image1 = this->individuals_[j].genome();
+			shared_ptr<vector<T>> parent1 = this->individuals_[j].genome();
 
 			// Select second parent with fitness proportionate selection and store associated genome into temp_image2
 			selected = parent_selector() / divisor;
@@ -69,10 +69,10 @@ public:
 				j++;
 				temp_sum += this->individuals_[j].fitness();
 			}
-			shared_ptr<vector<T>> temp_image2 = this->individuals_[j].genome();
+			shared_ptr<vector<T>> parent2 = this->individuals_[j].genome();
 
-			// perform crossover with temp_image1 & temp_image2 into temp[i]
-			temp[i].set_genome(Crossover(temp_image1, temp_image2, same_check[i], true));
+			// perform crossover with mutation
+			temp[i].set_genome(Crossover(parent1, parent2, same_check[i], true));
 		}; // ... genInd(i)
 
 		// for each new individual a thread with call to genInd()
@@ -120,6 +120,7 @@ public:
 		// Assign new population to individuals_
 		delete[] this->individuals_;
 		this->individuals_ = temp;
+
 		return true; // No issues!
 	}	// ... Function nextGeneration
 }; // ... class SGAPopulation
