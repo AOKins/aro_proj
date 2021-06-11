@@ -62,11 +62,17 @@ public:
 		auto randInd = [this](int id) {
 			this->individuals_[id].set_genome(this->GenerateRandomImage());
 		};
+		
 		// Using multithreads for initializing each individual
 		for (int i = 0; i < this->pop_size_; i++){
 			this->ind_threads.push_back(thread(randInd, i));
 		}
 		rejoinClear();
+		/*/
+		for (int i = 0; i < this->pop_size_; i++){
+			this->individuals_[i].set_genome(this->GenerateRandomImage());
+		}
+		/*/
 	}
 
 	//Destructor - delete individuals and call rejoinClear()

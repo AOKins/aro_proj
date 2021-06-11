@@ -61,7 +61,7 @@ bool CameraController::startCamera() {
 
 		// Set acquisition mode to singleframe
 		// - retrieve enumerationg node to set
-		CEnumerationPtr ptrAcquisitionMode = nodeMap.GetNode("AcquisitionMode");
+		CEnumerationPtr ptrAcquisitionMode = nodeMap.GetNode("AcquisitionMode"); 
 		if (!IsAvailable(ptrAcquisitionMode) || !IsWritable(ptrAcquisitionMode)) {
 			Utility::printLine("Unable to set acquisition mode (enum retrieval).");
 			return false;
@@ -77,6 +77,11 @@ bool CameraController::startCamera() {
 		// - set the retrieved integer as the correct node value
 		ptrAcquisitionMode->SetIntValue(acquisitionModeTypeValue);
 
+		// Setting buffer handler
+		//		Spinnaker defaults to OldestFirst, changed to NewestOnly as we are only interested in current image for individual being run
+		cam->TLStream.StreamBufferHandlingMode = StreamBufferHandlingMode_NewestOnly;
+		Utility::printLine("INFO: Camera buffer set to 'NewestOnly'!");
+		
 		//Begin Aquisition
 		cam->BeginAcquisition();
 		Utility::printLine("INFO: Successfully began acquiring images!");
@@ -299,7 +304,7 @@ bool CameraController::UpdateConnectedCameraInfo() {
 			//clear camera list before releasing system
 			camList.Clear();
 			system->ReleaseInstance();
-			Utility::printLine("ERROR: only 1 camera has to be connected,but you have" + std::to_string(camAmount));
+			Utility::printLine("ERROR: only 1 camera has to be connected, but you have" + std::to_string(camAmount));
 			return false;
 		}
 
@@ -431,20 +436,6 @@ bool CameraController::ConfigureCustomImageSettings() {
 		else {
 			Utility::printLine("ERROR: Unable to set Frame Rate Enable to True!");
 			setFrameRate = false;
-		}
-
-		// Setting buffer handler
-		//		Spinnaker defaults to OldestFirst, changed to NewestOnly as we are only interested in current image for individual being run
-		CEnumerationPtr ptrBufferHandler = cam->GetNodeMap().GetNode("StreamBufferHandlingMode");
-		if (Spinnaker::GenApi::IsAvailable(ptrBufferHandler) && Spinnaker::GenApi::IsWritable(ptrBufferHandler)) {
-			CEnumEntryPtr ptrNewestOnly = ptrBufferHandler->GetEntryByName("Newest Only");
-			ptrBufferHandler->SetIntValue(ptrNewestOnly->GetValue());
-			if (ptrNewestOnly->GetValue() == ptrBufferHandler->GetIntValue()) {
-				Utility::printLine("INFO: Camera buffer set to 'Newest Only'!");
-			}
-			else {
-				Utility::printLine("WARNING: Camera buffer handler not successfully set! Defaulting to 'Oldest First'!");
-			}
 		}
 
 		// Disable Auto Frame Rate Control

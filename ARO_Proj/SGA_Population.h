@@ -86,12 +86,14 @@ public:
 		}
 		rejoinClear();		// Rejoin
 
+		auto copyInds = [this, temp](int i){
+			this->DeepCopyIndividual(temp[i], this->individuals_[i]);
+		};
 		
 		// for the elites, copy directly into new generation
 		// Performing deep copy for individuals in parallel
-		for (int i = (this->pop_size_ - this->elite_size_); i < this->pop_size_; i++) {
-		//	this->ind_threads.push_back(thread(copyInds, temp[i], this->individuals_[i]));
-			DeepCopyIndividual(temp[i], this->individuals_[i]);
+		for (int id = (this->pop_size_ - this->elite_size_); id < this->pop_size_; id++) {
+			this->ind_threads.push_back(thread(copyInds, id));
 		}
 		rejoinClear();		// Rejoin
 		
