@@ -213,24 +213,9 @@ bool BruteForce_Optimization::setupInstanceVariables() {
 }
 
 bool BruteForce_Optimization::shutdownOptimizationInstance() {
-	// - camera shutdown
-	this->cc->stopCamera();
-	this->cc->shutdownCamera();
-
-	this->curImage = Image::Create();
-	this->convImage = Image::Create();
-
 	// - log files close
 	this->timeVsFitnessFile.close();
 	this->tfile.close();
-	// - memory deallocation
-	this->camDisplay->CloseDisplay();
-	this->slmDisplay->CloseDisplay();
-	delete this->camDisplay;
-	delete this->slmDisplay;
-	delete[] this->aryptr;
-	delete this->timestamp;
-
 	// Generic file renaming to include time stamps
 	std::string curTime = Utility::getCurTime();
 	std::rename("logs/Opt_functionEvals_vs_fitness.txt", ("logs/" + curTime + "_OPT5_functionEvals_vs_fitness.txt").c_str());
@@ -239,6 +224,19 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 	std::rename("logs/Opt_rtime.txt", ("logs/" + curTime + "_OPT5_rtime.txt").c_str());
 	saveParameters(curTime, "OPT5");
 
+	// - camera shutdown
+	this->cc->stopCamera();
+	this->cc->shutdownCamera();
+	this->curImage = Image::Create();
+	this->convImage = Image::Create();
+
+	// - memory deallocation
+	this->camDisplay->CloseDisplay();
+	this->slmDisplay->CloseDisplay();
+	delete this->camDisplay;
+	delete this->slmDisplay;
+	delete[] this->aryptr;
+	delete this->timestamp;
 
 	return true;
 }

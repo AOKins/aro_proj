@@ -199,21 +199,8 @@ bool uGA_Optimization::setupInstanceVariables() {
 
 // Method to clean up & save resulting runOptimziation() instance
 bool uGA_Optimization::shutdownOptimizationInstance() {
-	// - image displays
-	this->camDisplay->CloseDisplay();
-	this->slmDisplay->CloseDisplay();
-	// - camera
-	this->cc->stopCamera();
-	this->cc->shutdownCamera();
-	// - pointers
-	delete this->camDisplay;
-	delete this->slmDisplay;
-	delete this->population;
-
 	// - fitness logging files
 	this->timeVsFitnessFile << timestamp->MS_SinceStart() << " " << 0 << std::endl;
-	delete this->timestamp;
-
 	this->timeVsFitnessFile.close();
 	this->tfile.close();
 	this->efile.close();
@@ -228,13 +215,26 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 	scaler->TranslateImage(tempptr, this->aryptr);
 	Mat m_ary = Mat(512, 512, CV_8UC1, this->aryptr);
 	imwrite("logs/" + curTime + "_uGA_phaseopt.bmp", m_ary);
-	delete[] this->aryptr;
-	delete this->scaler;
 
 	// Generic file renaming to have time stamps of run
 	std::rename("logs/uGA_functionEvals_vs_fitness.txt", ("logs/" + curTime + "_uGA_functionEvals_vs_fitness.txt").c_str());
 	std::rename("logs/uGA_time_vs_fitness.txt", ("logs/" + curTime + "_uGA_time_vs_fitness.txt").c_str());
 	std::rename("logs/exposure.txt", ("logs/" + curTime + "_uGA_exposure.txt").c_str());
 	saveParameters(curTime, "uGA");
+
+	// - image displays
+	this->camDisplay->CloseDisplay();
+	this->slmDisplay->CloseDisplay();
+	// - camera
+	this->cc->stopCamera();
+	this->cc->shutdownCamera();
+	// - pointers
+	delete this->camDisplay;
+	delete this->slmDisplay;
+	delete this->population;
+	delete this->timestamp;
+	delete[] this->aryptr;
+	delete this->scaler;
+
 	return true;
 }

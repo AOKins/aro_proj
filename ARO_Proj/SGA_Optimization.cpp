@@ -206,6 +206,28 @@ bool SGA_Optimization::setupInstanceVariables() {
 
 // Method to clean up & save resulting runOptimziation() instance
 bool SGA_Optimization::shutdownOptimizationInstance() {
+	// - fitness logging files
+	this->timeVsFitnessFile << this->timestamp->MS_SinceStart() << " " << 0 << std::endl;
+	this->timeVsFitnessFile.close();
+	this->tfile.close();
+	this->efile.close();
+	// Save how final optimization looks through camera
+	std::string curTime = Utility::getCurTime();
+	Mat Opt_ary = Mat(lastImgHeight, lastImgWidth, CV_8UC1, camImg);
+	cv::imwrite("logs/" + curTime + "_SGA_Optimized.bmp", Opt_ary);
+
+	// Save final (most fit SLM image)
+	std::shared_ptr<std::vector<int>> tempptr = (population->getImage(population->getSize() - 1)); // Get the image for the individual (most fit)
+	this->scaler->TranslateImage(tempptr, aryptr);
+	Mat m_ary = Mat(512, 512, CV_8UC1, aryptr);
+	cv::imwrite("logs/" + curTime + "_SGA_phaseopt.bmp", m_ary);
+
+	// Generic file renaming to have time stamps of run
+	std::rename("logs/SGA_functionEvals_vs_fitness.txt", ("logs/" + curTime + "_SGA_functionEvals_vs_fitness.txt").c_str());
+	std::rename("logs/SGA_time_vs_fitness.txt", ("logs/" + curTime + "_SGA_time_vs_fitness.txt").c_str());
+	std::rename("logs/exposure.txt", ("logs/" + curTime + "_SGA_exposure.txt").c_str());
+	saveParameters(curTime, "SGA");
+
 	// - image displays
 	this->camDisplay->CloseDisplay();
 	this->slmDisplay->CloseDisplay();
@@ -217,30 +239,8 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	delete this->slmDisplay;
 	delete[] this->aryptr;
 	delete this->population;
-
-	// - fitness logging files
-	this->timeVsFitnessFile << this->timestamp->MS_SinceStart() << " " << 0 << std::endl;
 	delete this->timestamp;
-	this->timeVsFitnessFile.close();
-	this->tfile.close();
-	this->efile.close();
-
-	// Save how final optimization looks through camera
-	std::string curTime = Utility::getCurTime();
-	Mat Opt_ary = Mat(lastImgHeight, lastImgWidth, CV_8UC1, camImg);
-	cv::imwrite("logs/" + curTime + "_SGA_Optimized.bmp", Opt_ary);
-
-	// Save final (most fit SLM image)
-	std::shared_ptr<std::vector<int>> tempptr = (population->getImage(population->getSize() - 1)); // Get the image for the individual (most fit)
-	this->scaler->TranslateImage(tempptr, aryptr);
-	Mat m_ary = Mat(512, 512, CV_8UC1, aryptr);
-	cv::imwrite("logs/" + curTime + "_SGA_phaseopt.bmp", m_ary);
 	delete this->scaler;
 
-	// Generic file renaming to have time stamps of run
-	std::rename("logs/SGA_functionEvals_vs_fitness.txt", ("logs/" + curTime + "_SGA_functionEvals_vs_fitness.txt").c_str());
-	std::rename("logs/SGA_time_vs_fitness.txt", ("logs/" + curTime + "_SGA_time_vs_fitness.txt").c_str());
-	std::rename("logs/exposure.txt", ("logs/" + curTime + "_SGA_exposure.txt").c_str());
-	saveParameters(curTime, "SGA");
 	return true;
 }
