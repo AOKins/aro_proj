@@ -75,23 +75,27 @@ public:
 			temp[i].set_genome(Crossover(parent1, parent2, same_check[i], true));
 		}; // ... genInd(i)
 
+		// Simple lambda for parallel copy
+		auto copyInds = [this](Individual<T> & to, Individual<T> & from){
+			this->DeepCopyIndividual(to, from);
+		};
+
 		// for each new individual a thread with call to genInd()
 		for (int i = 0; i < (this->pop_size_ - this->elite_size_); i++) {
 			this->ind_threads.push_back(thread(genInd, i));
 		}
 		rejoinClear();		// Rejoin
 
-		auto copyInds = [this](Individual<T> & to, Individual<T> & from ){
-			this->DeepCopyIndividual(to, from);
-		};
 		
 		// for the elites, copy directly into new generation
 		// Performing deep copy for individuals in parallel
 		for (int i = (this->pop_size_ - this->elite_size_); i < this->pop_size_; i++) {
-			this->ind_threads.push_back(thread(copyInds, temp[i], this->individuals_[i]));
+		//	this->ind_threads.push_back(thread(copyInds, temp[i], this->individuals_[i]));
+			DeepCopyIndividual(temp[i], this->individuals_[i]);
 		}
 		rejoinClear();		// Rejoin
-
+		
+	
 		// Collect the resulting same_check values,
 			// if at least one is false (not similar) then the result is set to false
 		bool same_check_result = true;

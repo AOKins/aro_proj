@@ -21,7 +21,7 @@ template <class T>
 class Population {
 protected:
 	// The array of individuals in the population.
-	Individual<T>* individuals_;
+	shared_ptr<Individual<T>> individuals_;
 	// Number of individuals in the population.
 	int pop_size_;
 	// Number of individuals in the population that are to be kept as elite.
