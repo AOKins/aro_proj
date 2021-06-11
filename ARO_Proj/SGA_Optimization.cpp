@@ -217,10 +217,10 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	delete this->slmDisplay;
 	delete[] this->aryptr;
 	delete this->population;
-	delete this->timestamp;
 
 	// - fitness logging files
-	this->timeVsFitnessFile << timestamp->MS_SinceStart() << " " << 0 << std::endl;
+	this->timeVsFitnessFile << this->timestamp->MS_SinceStart() << " " << 0 << std::endl;
+	delete this->timestamp;
 	this->timeVsFitnessFile.close();
 	this->tfile.close();
 	this->efile.close();

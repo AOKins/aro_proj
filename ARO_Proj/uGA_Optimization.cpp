@@ -209,10 +209,11 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 	delete this->camDisplay;
 	delete this->slmDisplay;
 	delete this->population;
-	delete this->timestamp;
 
 	// - fitness logging files
 	this->timeVsFitnessFile << timestamp->MS_SinceStart() << " " << 0 << std::endl;
+	delete this->timestamp;
+
 	this->timeVsFitnessFile.close();
 	this->tfile.close();
 	this->efile.close();
