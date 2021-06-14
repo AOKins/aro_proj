@@ -41,6 +41,8 @@ bool BruteForce_Optimization::runOptimization() {
 	double rMax;
 	double exposureTimesRatio;
 
+	unsigned char * aryptr = new unsigned char[slmLength];
+
 	//set variables TODO: determine wich are needed and whch are in controllers
 	iMax = 512;
 	jMax = 512;
@@ -62,7 +64,7 @@ bool BruteForce_Optimization::runOptimization() {
 	for (ii = 0; ii < iMax; ii++) {
 		for (jj = 0; jj < jMax; jj++) {
 			kk = ii * 512 + jj;
-			this->aryptr[kk] = 0;
+			aryptr[kk] = 0;
 		}
 	}
 
@@ -90,12 +92,12 @@ bool BruteForce_Optimization::runOptimization() {
 					for (nn = 0; nn < bin; nn++) {
 						for (mm = 0; mm < bin; mm++) {
 							kk = (ii + nn) * iMax + (mm + jj);
-							this->aryptr[kk] = ll;
+							aryptr[kk] = ll;
 						}
 					}
 					//Update board with new image
 					for (int i = 1; i <= this->sc->boards.size(); i++) {
-						this->sc->blink_sdk->Write_image(i, this->aryptr, this->sc->getBoardHeight(i - 1), false, false, 0.0);
+						this->sc->blink_sdk->Write_image(i, aryptr, this->sc->getBoardHeight(i - 1), false, false, 0.0);
 					}
 					//Acquire and display camera image
 					this->cc->AcquireImages(this->curImage, this->convImage);
@@ -176,7 +178,7 @@ bool BruteForce_Optimization::runOptimization() {
 		cv::imwrite("logs/" + curTime + "_OPT5_Optimized.bmp", Opt_ary);
 
 		//Record the final (most fit) slm image
-		Mat m_ary = Mat(512, 512, CV_8UC1, this->aryptr);
+		Mat m_ary = Mat(512, 512, CV_8UC1, aryptr);
 		imwrite("logs/" + curTime + "_OPT5_phaseopt.bmp", m_ary);
 
 	}
@@ -187,7 +189,8 @@ bool BruteForce_Optimization::runOptimization() {
 	//Cleanup
 	lmaxfile.close();
 	shutdownOptimizationInstance();
-	
+	delete[] aryptr;
+
 	//Reset UI State
 	this->isWorking = false;
 	this->dlg.disableMainUI(!isWorking);
@@ -198,7 +201,6 @@ bool BruteForce_Optimization::runOptimization() {
 bool BruteForce_Optimization::setupInstanceVariables() {
 	this->slmLength = this->sc->getBoardWidth(0) * this->sc->getBoardHeight(0) * 1;
 	// Allocate memory to store used images
-	this->aryptr = new unsigned char[slmLength];
 	this->camImg = new unsigned char;
 
 	this->cc->startCamera();
@@ -235,7 +237,6 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 	this->slmDisplay->CloseDisplay();
 	delete this->camDisplay;
 	delete this->slmDisplay;
-	delete[] this->aryptr;
 	delete this->timestamp;
 
 	return true;
