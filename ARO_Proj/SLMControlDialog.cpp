@@ -82,8 +82,8 @@ void SLMControlDialog::OnBnClickedSetlut() {
 			Utility::printLine("ERROR: Failed to assign given file " + file + " to board 0!");
 			// Resource: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-messagebox
 			int err_response = MessageBox(
-				(LPCWSTR)L"ERROR in file loading!",
-				(LPCWSTR)L"Failed to load LUT file\nTry Again? Canceling may lead to undefined issues",
+				(LPCWSTR)L"ERROR in file load!",
+				(LPCWSTR)L"Failed to load LUT file\nTry Again? Canceling may leave undefined issues with SLM",
 				MB_ICONERROR | MB_RETRYCANCEL
 			);
 			// Respond to decision

@@ -76,6 +76,8 @@ public:
 		}; // ... genInd(i)
 
 		// Simple lambda for parallel copy
+		// Input: to, from - individuals to copy to and from respectively
+		// Captures: this - current Population instance for using appropriate methods
 		auto copyInds = [this](Individual<T> & to, Individual<T> & from){
 			this->DeepCopyIndividual(to, from);
 		};
@@ -86,8 +88,12 @@ public:
 		}
 		rejoinClear();		// Rejoin
 
-		auto copyInds = [this, temp](int i){
-			this->DeepCopyIndividual(temp[i], this->individuals_[i]);
+		// Lambda function for using DeepCopyIndividual in parallel
+		// Input: id - index for individual to be copied from individuals_ and to temp
+		// Captures: temp - pointer to array of individuals to store in
+		//  		 this - current Population instance for using appropriate methods
+		auto copyInds = [this, temp](int id){
+			this->DeepCopyIndividual(temp[id], this->individuals_[id]);
 		};
 		
 		// for the elites, copy directly into new generation
@@ -112,6 +118,7 @@ public:
 			// Lambda function to ensure that generating random image is done in parallel
 			// Input: id - index for individual to be set
 			// Captures: temp - pointer to array of individuals to store new random genomes in
+			//  		 this - current Population instance for using appropriate methods
 			auto randInd = [temp, this](int id) {
 				temp[id].set_genome(this->GenerateRandomImage());
 			};
