@@ -55,7 +55,7 @@ bool uGA_Optimization::runOptimization() {
 			for (int indID = 0; indID < population->getSize(); indID++) {
 				this->ind_threads.push_back(thread(runInd, indID));
 			}
-			rejoinClear();
+			Utility::rejoinClear(this->ind_threads);
 
 			// Only create new geneartion and change exposure setting if the stop condition hasn't been reached yet
 			if (!this->stopConditionsMetFlag) {

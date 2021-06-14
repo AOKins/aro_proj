@@ -305,3 +305,13 @@ std::vector<std::string> Utility::seperateByDelim(std::string fullString, char d
 
 	return parts;
 }
+
+// [MULTITHREADING]
+// Rejoin all the threads and clear ind_threads vector for future use
+// Note: if a thread is stuck in an indefinite duration, this will lock out
+void Utility::rejoinClear(std::vector<std::thread> & myThreads) {
+	for (int i = 0; i < myThreads.size(); i++) {
+		myThreads[i].join();
+	}
+	myThreads.clear();
+}

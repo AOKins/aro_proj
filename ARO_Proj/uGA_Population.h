@@ -53,7 +53,7 @@ public:
 			// Keeping current best onto next generation
 		temp[4].set_genome(sorted_temp[4].genome());		// Doing here since it's just a simple assignment while other threads perform genInd()
 		
-		rejoinClear();	// rejoin
+		Utility::rejoinClear(this->ind_threads);	// rejoin
 
 		// Collect the resulting same_check values,
 		// if at least one is false (not similar) then the result is set to false
@@ -78,7 +78,7 @@ public:
 			for (int i = 0; i < 4; i++) {
 				this->ind_threads.push_back(thread(randInd, i));
 			}
-			rejoinClear();			// Rejoin
+			Utility::rejoinClear(this->ind_threads);			// Rejoin
 		}
 
 		delete[] same_check;

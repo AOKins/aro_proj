@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <thread>
 
 class Utility {
 public:
@@ -30,6 +31,9 @@ public:
 
 	// [STRING PROCCESSING]
 	static std::vector<std::string> seperateByDelim(std::string fullString, char delim);
+
+	// [MULTITHREADING]
+	static void rejoinClear(std::vector<std::thread>& myThreads);
 };
 
 #endif

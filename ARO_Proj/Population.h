@@ -1,6 +1,6 @@
 ////////////////////
 // Base class to encapsulate a population in a genetic algorithm and some of the micro-genetic behaviors
-// Last edited: 06/09/2021 by Andrew O'Kins
+// Last edited: 06/14/2021 by Andrew O'Kins
 ////////////////////
 #ifndef POPULATION_H_
 #define POPULATION_H_
@@ -14,7 +14,7 @@ using std::thread;
 ////
 // TODOs:	Consider update sortIndividuals to use more efficient algorithm
 //					(currently using insertion sort but with small size may not be needed/gain much)
-//			Consider how to handle possible case of elite_size exceeding pop_size (necessarry?) currently gives warning
+//			Consider how to handle possible case of elite_size exceeding pop_size (necessarry?) currently gives warning in console
 ////
 
 template <class T>
@@ -67,13 +67,13 @@ public:
 		for (int i = 0; i < this->pop_size_; i++){
 			this->ind_threads.push_back(thread(randInd, i));
 		}
-		rejoinClear();
+		Utility::rejoinClear(this->ind_threads);
 		Utility::printLine("INFO: Population created!");
 	}
 
 	//Destructor - delete individuals and call rejoinClear()
 	~Population() {
-		rejoinClear();
+		Utility::rejoinClear(this->ind_threads);
 		delete[] this->individuals_;
 	}
 
@@ -205,15 +205,6 @@ public:
 			(*temp_image1)[i] = (*temp_image2)[i];
 		}
 		to.set_genome(temp_image1);
-	}
-
-	// Rejoin all the threads and clear ind_threads vector for future use
-		// Note: if a thread is stuck in an indefinite duration, this will lock out
-	void rejoinClear() {
-		for (int i = 0; i < this->ind_threads.size(); i++) {
-			this->ind_threads[i].join();
-		}
-		this->ind_threads.clear();
 	}
 
 	// Perform the genetic algorithm to create new individuals for next gneeration

@@ -79,7 +79,7 @@ public:
 		for (int i = 0; i < (this->pop_size_ - this->elite_size_); i++) {
 			this->ind_threads.push_back(thread(genInd, i));
 		}
-		rejoinClear();		// Rejoin
+		Utility::rejoinClear(this->ind_threads);		// Rejoin
 
 		// Lambda function for using DeepCopyIndividual in parallel
 		// Input: id - index for individual to be copied from individuals_ and to temp
@@ -94,7 +94,7 @@ public:
 		for (int id = (this->pop_size_ - this->elite_size_); id < this->pop_size_; id++) {
 			this->ind_threads.push_back(thread(copyInds, id));
 		}
-		rejoinClear();		// Rejoin
+		Utility::rejoinClear(this->ind_threads);		// Rejoin
 		
 	
 		// Collect the resulting same_check values,
@@ -119,7 +119,7 @@ public:
 			for (int i = 0; i < this->pop_size_ / 2; i++) {
 				this->ind_threads.push_back(thread(randInd, i));
 			}
-			rejoinClear();			// Rejoin
+			Utility::rejoinClear(this->ind_threads);			// Rejoin
 		}
 
 		delete[] same_check;

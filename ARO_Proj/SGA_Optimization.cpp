@@ -57,7 +57,7 @@ bool SGA_Optimization::runOptimization() {
 			for (int indID = 0; indID < population->getSize(); indID++) {
 				this->ind_threads.push_back(thread(runInd, indID));
             }
-			rejoinClear();
+			Utility::rejoinClear(this->ind_threads);
 		
 			// Create a more fit generation
 			population->nextGeneration();

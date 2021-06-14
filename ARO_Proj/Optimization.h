@@ -82,7 +82,6 @@ protected:
 	mutex hardwareLock; // Mutex to protect access to the hardware used in evaluating an individual (SLM, Camera, etc.)
 	mutex tfileLock, timeVsFitLock, efileLock, consoleLock, imageLock, imgDimLock, camDisplayLock;		// Mutex to protect access to i/o and lastImage dimension values
 	mutex stopFlagLock, exposureFlagLock; // Mutex to protect the flags just in case
-	void rejoinClear();
 public:
 	// Constructor
 	Optimization(MainDialog& dlg_, CameraController* cc, SLMController* sc);
