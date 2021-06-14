@@ -24,14 +24,14 @@ public:
 	// Starts next generation using fitness of individuals.
 	bool nextGeneration() {
 		// Setting individuals to sorted (best is at end of the array)
-		Individual<T>* sorted_temp = SortIndividuals(individuals_, this->pop_size_);
-		delete[] individuals_;
-		individuals_ = sorted_temp;
+		Individual<T>* sorted_temp = SortIndividuals(this->individuals_, this->pop_size_);
+		delete[] this->individuals_;
+		this->individuals_ = sorted_temp;
 
 		// calculate total fitness of all individuals (necessary for fitness proportionate selection)
 		double fitness_sum = 0;
 		for (int i = 0; i < this->pop_size_; i++) {
-			fitness_sum += individuals_[i].fitness();
+			fitness_sum += this->individuals_[i].fitness();
 		}
 
 		// Breeding
@@ -59,7 +59,7 @@ public:
 				j++;
 				temp_sum += this->individuals_[j].fitness();
 			}
-			shared_ptr<vector<T>> parent1 = this->individuals_[j].genome();
+			vector<T> * parent1 = this->individuals_[j].genome();
 
 			// Select second parent with fitness proportionate selection and store associated genome into temp_image2
 			selected = parent_selector() / divisor;
@@ -69,18 +69,11 @@ public:
 				j++;
 				temp_sum += this->individuals_[j].fitness();
 			}
-			shared_ptr<vector<T>> parent2 = this->individuals_[j].genome();
+			vector<T> * parent2 = this->individuals_[j].genome();
 
 			// perform crossover with mutation
 			temp[i].set_genome(Crossover(parent1, parent2, same_check[i], true));
 		}; // ... genInd(i)
-
-		// Simple lambda for parallel copy
-		// Input: to, from - individuals to copy to and from respectively
-		// Captures: this - current Population instance for using appropriate methods
-		auto copyInds = [this](Individual<T> & to, Individual<T> & from){
-			this->DeepCopyIndividual(to, from);
-		};
 
 		// for each new individual a thread with call to genInd()
 		for (int i = 0; i < (this->pop_size_ - this->elite_size_); i++) {

@@ -10,15 +10,13 @@
 #include "BetterRandom.h"
 #include <vector>
 using std::vector;
-#include <memory>
-using std::shared_ptr;
 
 template <class T>
 class Individual {
 private:
 
 	// The genome associated with the individual.
-	shared_ptr< vector<T> > genome_;
+	vector<T>* genome_;
 
 	// The fitness of the individual, this must be assigned with set_fitness
 	double fitness_;
@@ -31,22 +29,24 @@ public:
 
 	// Destructor
 	~Individual(){
+		delete this->genome_;
 	}
 
 	// Returns the array(genome) associated with the individual.
-	shared_ptr< vector<T> > genome() {
-		return genome_;
+	vector<T>* genome() {
+		return this->genome_;
 	}
 
 	// Returns the fitness associated with the individual.
 	double fitness(){
-		return fitness_;
+		return this->fitness_;
 	}
 
 	// Sets the genome to be associated with the individual.
 	// @param new_genome -> genome to be associated
-	void set_genome(shared_ptr< vector<T> > new_genome) {
-		genome_ = new_genome;
+	void set_genome(vector<T> * new_genome) {
+		delete this->genome_;
+		this->genome_ = new_genome;
 	}
 
 	// Sets fitness to be associated with the individual.

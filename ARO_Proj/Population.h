@@ -21,7 +21,7 @@ template <class T>
 class Population {
 protected:
 	// The array of individuals in the population.
-	shared_ptr<Individual<T>> individuals_;
+	Individual<T>* individuals_;
 	// Number of individuals in the population.
 	int pop_size_;
 	// Number of individuals in the population that are to be kept as elite.
@@ -77,8 +77,8 @@ public:
 
 	//Destructor - delete individuals and call rejoinClear()
 	~Population() {
-		delete[] this->individuals_;
 		rejoinClear();
+		delete[] this->individuals_;
 	}
 
 	// Get number of individuals in population
@@ -93,9 +93,9 @@ public:
 
 	// Generates a random image using BetterRandom
 	// Output: a randomly generated image that has size of genome_length for Population
-	shared_ptr< vector<T> > GenerateRandomImage() {
+	vector<T>* GenerateRandomImage() {
 		static BetterRandom ran(256);
-		shared_ptr< vector<T>> image = std::make_shared<vector<T>>(this->genome_length_,0);
+		vector<T> * image = new vector<T>(this->genome_length_,0);
 		for (int j = 0; j < this->genome_length_; j++) {
 			(*image)[j] = (T)ran();
 		} // ... for each pixel in image
@@ -105,7 +105,7 @@ public:
 	// Getter for image of individual at inputted index
 	// Input: i - individual at given index (population not guranteed sorted)
 	// Output: the image for the individual
-	shared_ptr< vector<T>> getImage(int i){
+	vector<T>* getImage(int i) {
 		return this->individuals_[i].genome();
 	}
 
@@ -125,8 +125,8 @@ public:
 	//	same_check - boolean will be set to false if the arrays are different.
 	//  useMutation - boolean set if to perform mutation or not, defaults to true (enable).
 	// Output: returns new individual as result of crossover algorithm
-	shared_ptr< vector<T>> Crossover(shared_ptr< vector<T>> a, shared_ptr< vector<T>> b, bool& same_check, bool useMutation = true) {
-		shared_ptr< vector<T>> temp = std::make_shared<vector<T>>(this->genome_length_, 0);
+	vector<T> * Crossover(vector<T> * a, vector<T> * b, bool& same_check, bool useMutation = true) {
+		vector<T> * temp = new vector<T>(this->genome_length_, 0);
 		double same_counter = 0; // counter keeping track of how many indices in the genomes are the same
 		static BetterRandom ran(100);
 		static BetterRandom mut(200);
@@ -165,9 +165,9 @@ public:
 	//	to_sort - the individuals to be sorted
 	//	size - the size of the array to_sort
 	// Output: returns sorted pointer array of individuals originating from to_sort
-	Individual<T>* SortIndividuals(Individual<T> *to_sort, int size) {
+	Individual<T>* SortIndividuals(Individual<T>* to_sort, int size) {
 		bool found = false;
-		Individual<T> *temp = new Individual<T>[size];
+		Individual<T> * temp = new Individual<T>[size];
 		DeepCopyIndividual(temp[0], to_sort[0]);
 		for (int i = 1; i < size; i++) {
 			for (int j = 0; j < i; j++)	{
@@ -203,8 +203,8 @@ public:
 	// Output: to is contains deep copy of from
 	void DeepCopyIndividual(Individual<T> &to, Individual<T> &from) {
 		to.set_fitness(from.fitness());
-		shared_ptr< vector<T>> temp_image1 = std::make_shared<vector<T>>(this->genome_length_, 0);
-		shared_ptr< vector<T>> temp_image2 = from.genome();
+		vector<T> * temp_image1 = new vector<T>(this->genome_length_, 0);
+		vector<T> * temp_image2 = from.genome();
 		for (int i = 0; i < this->genome_length_; i++) {
 			(*temp_image1)[i] = (*temp_image2)[i];
 		}

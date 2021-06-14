@@ -19,7 +19,6 @@
 
 #include <cstdlib>
 #include <chrono>
-#include <memory>
 
 using namespace cv;
 
@@ -87,7 +86,7 @@ bool SGA_Optimization::runOptimization() {
 //     stopConditionsMetFlag is set to true if conditions met
 bool SGA_Optimization::runIndividual(int indID) {
 	//Apply LUT/Binning to randomly the generated individual's image
-	std::shared_ptr<std::vector<int>> tempptr = population->getImage(indID); // Get the image for the individual
+	std::shared_ptr<std::vector<int>> tempptr(population->getImage(indID)); // Get the image for the individual
 	scaler->TranslateImage(tempptr, aryptr); // Scale the individual's image to SLM size
 
 	// Write translated image to SLM boards //TODO: modify as it assumes boards get the same image and have same size
@@ -217,7 +216,7 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	cv::imwrite("logs/" + curTime + "_SGA_Optimized.bmp", Opt_ary);
 
 	// Save final (most fit SLM image)
-	std::shared_ptr<std::vector<int>> tempptr = (population->getImage(population->getSize() - 1)); // Get the image for the individual (most fit)
+	std::shared_ptr<std::vector<int>> tempptr(population->getImage(population->getSize() - 1)); // Get the image for the individual (most fit)
 	this->scaler->TranslateImage(tempptr, aryptr);
 	Mat m_ary = Mat(512, 512, CV_8UC1, aryptr);
 	cv::imwrite("logs/" + curTime + "_SGA_phaseopt.bmp", m_ary);

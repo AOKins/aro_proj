@@ -9,7 +9,6 @@
 
 ////
 // TODOs:	Verify/Debug uGA implementation
-//			Consider possible race condition issues
 
 template <class T>
 class uGAPopulation : public Population<T> {
@@ -25,7 +24,7 @@ public:
 	// Starts next generation using fitness of individuals.
 	bool nextGeneration() {
 		// temp for storing sorted current population
-		Individual<T>* sorted_temp = SortIndividuals(individuals_, this->pop_size_);
+		Individual<T>* sorted_temp = this->SortIndividuals(this->individuals_, this->pop_size_);
 		bool * same_check = new bool[(this->pop_size_ - this->elite_size_)];
 		// temp for storing new population before storing into this->individuals_
 		Individual<T>* temp = new Individual<T>[this->pop_size_];
@@ -84,8 +83,8 @@ public:
 
 		delete[] same_check;
 		// Assign new population to individuals_
-		delete[] individuals_;
-		individuals_ = temp;
+		delete[] this->individuals_;
+		this->individuals_ = temp;
 		return true; // No issues!
 	}	// ... Function nextGeneration
 }; // ... class uGAPopulation
