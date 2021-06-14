@@ -180,9 +180,9 @@ bool SGA_Optimization::runIndividual(int indID) {
 	// Check stop conditions and set the flag if so
 	bool stopFlag = stopConditionsReached((fitness*exposureTimesRatio), timestamp->S_SinceStart(), curr_gen + 1);
 	if (stopFlag == true) {
-		this->stopFlagLock.lock;
+		this->stopFlagLock.lock();
 		this->stopConditionsMetFlag = true;
-		this->stopFlagLock.unlock;
+		this->stopFlagLock.unlock();
 	}
 
 	// Update fitness for this individual

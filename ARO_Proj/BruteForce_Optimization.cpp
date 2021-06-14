@@ -33,7 +33,7 @@ bool BruteForce_Optimization::runOptimization() {
 	}
 
 	//Declare variables
-		// TODO: which of these can be combined which can be deleted or implified ALSO make them understandable!
+	// TODO: which of these can be combined which can be deleted or implified ALSO make them understandable!
 	double dblN;
 	int ii, jj, nn, mm, iMax, jMax, ll, lMax, kk;
 	int bin, dphi;
