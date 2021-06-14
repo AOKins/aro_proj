@@ -128,7 +128,7 @@ void ImageScaler::TranslateImage(int* input_image, unsigned char* output_image)
 // Takes an array holding values for each bin and fills an image with those values
 // @param input_image -> the array holding all the bin values
 // @param output_image -> the array holding the output image	
-void ImageScaler::TranslateImage(std::shared_ptr<std::vector<int>> input_image, unsigned char* output_image) {
+void ImageScaler::TranslateImage(std::vector<int> * input_image, unsigned char* output_image) {
 	if (requirement_set_bin_size_ && requirement_set_used_bins_ && requirement_set_lut_) {
 		// prevent action if all steps to set up image scaling have not been completed
 		int start_point = top_remainder_y_ + left_remainder_x_;

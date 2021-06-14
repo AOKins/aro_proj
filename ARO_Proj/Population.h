@@ -68,11 +68,7 @@ public:
 			this->ind_threads.push_back(thread(randInd, i));
 		}
 		rejoinClear();
-		/*/
-		for (int i = 0; i < this->pop_size_; i++){
-			this->individuals_[i].set_genome(this->GenerateRandomImage());
-		}
-		/*/
+		Utility::printLine("INFO: Population created!");
 	}
 
 	//Destructor - delete individuals and call rejoinClear()
@@ -201,7 +197,7 @@ public:
 	//	to - the individual to be copied to
 	//	from - the individual copied
 	// Output: to is contains deep copy of from
-	void DeepCopyIndividual(Individual<T> &to, Individual<T> &from) {
+	void DeepCopyIndividual(Individual<T> & to, Individual<T> & from) {
 		to.set_fitness(from.fitness());
 		vector<T> * temp_image1 = new vector<T>(this->genome_length_, 0);
 		vector<T> * temp_image2 = from.genome();

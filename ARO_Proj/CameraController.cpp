@@ -45,7 +45,7 @@ bool CameraController::setupCamera() {
 	
 	if (!ConfigureCustomImageSettings())
 		return false;
-	Utility::printLine("INFO: configured imae settings on camera!");
+	Utility::printLine("INFO: configured image settings on camera!");
 	
 	if (!ConfigureExposureTime())
 		return false;
@@ -58,7 +58,7 @@ bool CameraController::setupCamera() {
 bool CameraController::startCamera() {
 	try	{
 		INodeMap &nodeMap = cam->GetNodeMap();
-
+		INodeMap &TLnodeMap = cam->GetTLStreamNodeMap();
 		// Set acquisition mode to singleframe
 		// - retrieve enumerationg node to set
 		CEnumerationPtr ptrAcquisitionMode = nodeMap.GetNode("AcquisitionMode"); 
@@ -79,8 +79,15 @@ bool CameraController::startCamera() {
 
 		// Setting buffer handler
 		//		Spinnaker defaults to OldestFirst, changed to NewestOnly as we are only interested in current image for individual being run
-		cam->TLStream.StreamBufferHandlingMode = StreamBufferHandlingMode_NewestOnly;
-		Utility::printLine("INFO: Camera buffer set to 'NewestOnly'!");
+		CEnumerationPtr ptrSBufferHandler = TLnodeMap.GetNode("StreamBufferHandlingMode");
+		if (!IsAvailable(ptrSBufferHandler) || !IsWritable(ptrSBufferHandler)) {
+			Utility::printLine("Unable to set acquisition mode (enum retrieval).");
+			return false;
+		}
+		else {
+			ptrSBufferHandler->SetIntValue(StreamBufferHandlingMode_NewestOnly);
+			Utility::printLine("INFO: Camera buffer set to 'NewestOnly'!");
+		}
 		
 		//Begin Aquisition
 		cam->BeginAcquisition();

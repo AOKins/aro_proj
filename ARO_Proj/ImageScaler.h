@@ -1,6 +1,6 @@
 #ifndef IMAGE_SCALER_H_
 #define IMAGE_SCALER_H_
-#include <memory>
+
 #include <vector>
 class ImageScaler{
 private:
@@ -21,7 +21,7 @@ public:
 	int GetTotalBinNum();
 	void SetLUT(unsigned short* lut);
 	void TranslateImage(int* input_image, unsigned char* output_image);
-	void TranslateImage(std::shared_ptr<std::vector<int>> input_image, unsigned char* output_image);
+	void TranslateImage(std::vector<int> * input_image, unsigned char* output_image);
 	void ZeroOutputImage(unsigned char* output_image);
 	void UpdateSelectedBin(unsigned char* image, int x_bin, int y_bin, int value);
 	void UpdateSelectedBin(unsigned char* image, int bin, int value);

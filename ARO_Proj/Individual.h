@@ -25,6 +25,7 @@ public:
 
 	// Constructor
 	Individual(){
+		this->genome_ = NULL;
 	}
 
 	// Destructor
@@ -45,7 +46,9 @@ public:
 	// Sets the genome to be associated with the individual.
 	// @param new_genome -> genome to be associated
 	void set_genome(vector<T> * new_genome) {
-		delete this->genome_;
+		if (this->genome_ != NULL) {
+			delete this->genome_;
+		}
 		this->genome_ = new_genome;
 	}
 
