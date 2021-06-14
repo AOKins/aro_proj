@@ -144,13 +144,9 @@ bool CameraController::saveImage(ImagePtr curImage, int curGen) {
 
 //AcquireImages: get one image from the camera
 void CameraController::AcquireImages(ImagePtr& curImage, ImagePtr& convertedImage) {
-	Utility::printLine("Aquire Images _ 2", true);
-
 	convertedImage = Image::Create();
-	Utility::printLine("Aquire Images _ 3", true);
 
 	try {
-		Utility::printLine("Aquire Images _ 5", true);
 		// Retrieve next received image
 		curImage = cam->GetNextImage();
 
@@ -162,12 +158,9 @@ void CameraController::AcquireImages(ImagePtr& curImage, ImagePtr& convertedImag
 		//Print The dimensions of the image (should be XX by YY)
 		//Utility::printLine("Current Image Dimensions : " + std::to_string(pResultImage->GetWidth()) + " by " + std::to_string(pResultImage->GetHeight()));
 
-		Utility::printLine("Aquire Images _ 7", true);
-
 		//copy image to pImage pointer
 		convertedImage = curImage->Convert(PixelFormat_Mono8); // TODO try see if there is any performance gain if use -> , HQ_LINEAR);
 
-		Utility::printLine("Aquire Images _ 8", true);
 	}
 	catch (Spinnaker::Exception &e) {
 		Utility::printLine("ERROR: " + std::string(e.what()));

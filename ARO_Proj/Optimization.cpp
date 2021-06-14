@@ -22,6 +22,7 @@ Optimization::Optimization(MainDialog& dlg_, CameraController* cc, SLMController
 		Utility::printLine("WARNING: invalid camera controller passed to optimization!");
 	this->cc = cc;
 	this->sc = sc;
+	this->ind_threads.clear();
 }
 
 // [SETUP]
@@ -154,4 +155,13 @@ bool Optimization::stopConditionsReached(double curFitness, double curSecPassed,
 		return true;
 	}
 	return false;
+}
+
+void Optimization::rejoinClear() {
+	// Rejoin all the threads and clear ind_threads vector for future use
+	// Note: if a thread is stuck in an indefinite duration, this will lock out
+	for (int i = 0; i < this->ind_threads.size(); i++) {
+		this->ind_threads[i].join();
+	}
+	this->ind_threads.clear();
 }

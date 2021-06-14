@@ -11,6 +11,12 @@ class TimeStampGenerator;
 #include <string>
 #include <fstream>				// used to export information to file for debugging
 using std::ofstream;
+#include <vector> // For managing ind_threads
+using std::vector;
+#include <thread> // For ind_threads used in runOptimization
+using std::thread;
+#include <mutex> // For protecting critical sections used in runOptimization
+using std::mutex;
 
 #include "Spinnaker.h"
 #include "SpinGenApi\SpinnakerGenApi.h"
@@ -46,13 +52,11 @@ protected:
 	int eliteSize;		// Number of elite individuals within the population (should be less than populationSize)
 	int slmLength;		// Size of images for sc
 	int imageLength;	// Size of images from cc
-	unsigned char *aryptr; // Char array for writing SLM images
 	unsigned char *camImg; // Char array to store resulting camera image
 	bool shortenExposureFlag;   // Set to true by individual if fitness is too high
 	bool stopConditionsMetFlag; // Set to true if a stop condition was reached by one of the individuals
 	CameraDisplay * camDisplay; // Display for camera
 	CameraDisplay * slmDisplay; // Display for SLM
-	ImageScaler * scaler;		// Image scaler
 	int curr_gen;				// Current generation being evaluated (start at 0)
 	ImagePtr curImage, convImage;	// pointers to current image
 	TimeStampGenerator * timestamp; // Timer to track and store elapsed time as the algorithm executes
@@ -73,6 +77,12 @@ protected:
 	virtual bool setupInstanceVariables() = 0;		 // Setting up properties used in runOptimization()
 	virtual bool shutdownOptimizationInstance() = 0; // Cleaning up properties as well as final saving for runOptimization()
 	virtual bool runIndividual(int indID) = 0;		 // Method for handling the execution of an individual
+
+	vector<thread> ind_threads; // Vector hold threads
+	mutex hardwareLock; // Mutex to protect access to the hardware used in evaluating an individual (SLM, Camera, etc.)
+	mutex tfileLock, timeVsFitLock, efileLock, consoleLock, imageLock, imgDimLock, camDisplayLock;		// Mutex to protect access to i/o and lastImage dimension values
+	mutex stopFlagLock, exposureFlagLock; // Mutex to protect the flags just in case
+	void rejoinClear();
 public:
 	// Constructor
 	Optimization(MainDialog& dlg_, CameraController* cc, SLMController* sc);
