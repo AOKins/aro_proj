@@ -47,16 +47,10 @@ bool SGA_Optimization::runOptimization() {
 		this->timestamp = new TimeStampGenerator();		// Starting time stamp to track elapsed time
 		// Optimization loop for each generation
 		for (this->curr_gen = 0; this->curr_gen < maxGenenerations && !stopConditionsMetFlag; this->curr_gen++) {
-			// Lambda method for running runIndividual in parallel
-			// Input: id - index for individual to run (and thread ID)
-			// Captures: this - pointer to current instance of optimization to access runIndividual()
-			auto runInd = [this](int id) {
-				this->runIndividual(id);
-			};
 			// Run each individual, giving them all fitness values as a result of their genome
 			for (int indID = 0; indID < population->getSize(); indID++) {
-				this->ind_threads.push_back(thread(runInd, indID));
-            }
+				this->runIndividual(indID);
+			}
 			Utility::rejoinClear(this->ind_threads);
 		
 			// Create a more fit generation
@@ -91,110 +85,65 @@ bool SGA_Optimization::runOptimization() {
 //     stopConditionsMetFlag is set to true if conditions met
 bool SGA_Optimization::runIndividual(int indID) {
 	//Apply LUT/Binning to randomly the generated individual's image
-	std::vector<int> * tempptr = population->getImage(indID); // Get the image for the individual
-	unsigned char * aryptr = new unsigned char[slmLength]; // Char array for writing SLM images
-	// Scaler Setup and usage
-	ImageScaler * scaler = setupScaler(aryptr);
+	std::vector<int> * tempptr = (population->getImage(indID)); // Get the image for the individual
 	scaler->TranslateImage(tempptr, aryptr); // Scale the individual's image to SLM size
-
-	//////////
-	// Locking //
-	this->hardwareLock.lock();
 
 	// Write translated image to SLM boards //TODO: modify as it assumes boards get the same image and have same size
 	for (int i = 1; i <= sc->boards.size(); i++) {
-		this->sc->blink_sdk->Write_image(i, aryptr, sc->getBoardHeight(i-1), false, false, 0.0);
+		sc->blink_sdk->Write_image(i, aryptr, sc->getBoardHeight(i - 1), false, false, 0.0);
 	}
 	// Acquire images // - take image
-	this->cc->AcquireImages(this->curImage, this->convImage);
-	
-	// Receving info from convImage may be able to be done outside of the hardware lock (after curImage->Release()), but not sure since related to curImage
+	cc->AcquireImages(curImage, convImage);
 	// Getting the image dimensions and raw data
-	int imgWidth = this->convImage->GetWidth();
-	int imgHeight = this->convImage->GetHeight();
-	unsigned char * ind_camImage = static_cast<unsigned char*>(this->convImage->GetData()); // Camera image for this individual
-
-	//Save elite info of last generation
-	if (saveImages && indID == (this->population->getSize() - 1)) {
-		this->imageLock.lock();
-		cc->saveImage(this->convImage, (this->curr_gen + 1));
-		this->imageLock.unlock();
-	}
-
-	try {
-		this->curImage->Release(); //important to not fill camera buffer
-	}
-	catch (Spinnaker::Exception &e) {
-		this->consoleLock.lock();
-		Utility::printLine("WARNING: current image release failed. no need to release image at this point");
-		this->consoleLock.unlock();
-	}
-
-	// Unlocking now that we are done with the hardware //
-	this->hardwareLock.unlock();
-	//////////
+	int imgWidth = convImage->GetWidth();
+	int imgHeight = convImage->GetHeight();
+	camImg = static_cast<unsigned char*>(convImage->GetData());
 
 	// Giving error and ends early if there is no data
-	if (ind_camImage == NULL) { // TODO: I think this is dangerous as Individual does not have default fitness if left unevaluated
-		this->consoleLock.lock();
+	if (camImg == NULL) { // TODO: I think this is dangerous as Individual does not have default fitness if left unevaluated
 		Utility::printLine("ERROR: Image Acquisition has failed!");
-		this->consoleLock.unlock();
-		delete[] aryptr;
 		return false;
 	}
 	// Get current exposure setting of camera (relative to initial)
-	double exposureTimesRatio = this->cc->GetExposureRatio();	// needed for proper fitness value across changing exposure time
+	double exposureTimesRatio = cc->GetExposureRatio();	// needed for proper fitness value across changing exposure time
 	// Determine the fitness by intensity of the image within circle of target radius
-	double fitness = Utility::FindAverageValue(ind_camImage, imgWidth, imgHeight, this->cc->targetRadius);
+	double fitness = Utility::FindAverageValue(camImg, imgWidth, imgHeight, cc->targetRadius);
 
 	// Setting last height and width info to current
-	this->imgDimLock.lock();
 	this->lastImgHeight = imgWidth;
-	this->lastImgWidth  = imgHeight;
-	this->imgDimLock.unlock();
+	this->lastImgWidth = imgHeight;
 
 	// Display first individual
-	if (indID == 0 && this->displayCamImage) {
-		this->camDisplayLock.lock();
-		this->camDisplay->UpdateDisplay(ind_camImage);
-		this->camDisplayLock.unlock();
+	if (indID == 0 && displayCamImage) {
+		camDisplay->UpdateDisplay(camImg);
 	}
 	// Record values for the top six individuals in each generation
 	if (indID > 23) {
-		this->timeVsFitLock.lock();
-		this->timeVsFitnessFile << timestamp->MS_SinceStart() << "," << fitness*exposureTimesRatio << "," << this->cc->finalExposureTime << "," << exposureTimesRatio << std::endl;
-		this->timeVsFitLock.unlock();
+		this->timeVsFitnessFile << timestamp->MS_SinceStart() << "," << fitness*exposureTimesRatio << "," << cc->finalExposureTime << "," << exposureTimesRatio << std::endl;
 	}
-	if (indID == (this->population->getSize() - 1)) {
-		this->tfileLock.lock();
+	//Save elite info of last generation
+	if (indID == (population->getSize() - 1)) {
 		this->tfile << "SGA GENERATION," << curr_gen << "," << fitness*exposureTimesRatio << std::endl;
-		this->tfileLock.unlock();
-		// Setting elite camera image info
-		this->camImg = ind_camImage;
-		this->lastImgHeight = imgHeight;
-		this->lastImgHeight = imgWidth;
+		if (saveImages) {
+			cc->saveImage(convImage, (curr_gen + 1));
+		}
 	}
-	else { // We are no longer interested in the cam image data if not elite
-		delete[] ind_camImage;
+	try {
+		curImage->Release(); //important to not fill camera buffer
 	}
-	// Check stop conditions and set the flag if so
-	bool stopFlag = stopConditionsReached((fitness*exposureTimesRatio), timestamp->S_SinceStart(), curr_gen + 1);
-	if (stopFlag == true) {
-		this->stopFlagLock.lock();
-		this->stopConditionsMetFlag = true;
-		this->stopFlagLock.unlock();
+	catch (Spinnaker::Exception &e) {
+		Utility::printLine("WARNING: current image release failed. no need to release image at this point");
 	}
 
+	// Check stop conditions
+	stopConditionsMetFlag = stopConditionsReached((fitness*exposureTimesRatio), timestamp->S_SinceStart(), curr_gen + 1);
+
 	// Update fitness for this individual
-	this->population->setFitness(indID, fitness * exposureTimesRatio);
+	population->setFitness(indID, fitness * exposureTimesRatio);
 	// If the fitness value is too high, flag that the exposure needs to be shortened
-	if (fitness > this->maxFitnessValue) {
-		this->exposureFlagLock.lock();
+	if (fitness > maxFitnessValue) {
 		this->shortenExposureFlag = true;
-		this->exposureFlagLock.unlock();
 	}
-	delete[] aryptr;
-	delete scaler;
 	return true;
 }
 
@@ -234,6 +183,9 @@ bool SGA_Optimization::setupInstanceVariables() {
 	if (this->displaySLMImage) {
 		this->slmDisplay->OpenDisplay();
 	}
+	this->aryptr = new unsigned char[slmLength]; // Char array for writing SLM images
+	// Scaler Setup (using base class)
+	this->scaler = setupScaler(aryptr);
 
 	// Start up the camera
 	this->cc->startCamera();
@@ -263,13 +215,13 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	cv::imwrite("logs/" + curTime + "_SGA_Optimized.bmp", Opt_ary);
 
 	// Save final (most fit SLM image)
-	unsigned char * aryptr = new unsigned char[this->slmLength]; // Char array for writing SLM images
-	ImageScaler * scaler = setupScaler(aryptr);
 	std::vector<int> * tempptr = this->population->getImage(this->population->getSize() - 1); // Get the image for the individual (most fit)
 
 	scaler->TranslateImage(tempptr, aryptr);
 	Mat m_ary = Mat(512, 512, CV_8UC1, aryptr);
 	cv::imwrite("logs/" + curTime + "_SGA_phaseopt.bmp", m_ary);
+
+
 
 	// Generic file renaming to have time stamps of run
 	std::rename("logs/SGA_functionEvals_vs_fitness.txt", ("logs/" + curTime + "_SGA_functionEvals_vs_fitness.txt").c_str());
@@ -286,11 +238,12 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	// - pointers
 	delete this->camDisplay;
 	delete this->slmDisplay;
-	delete[] aryptr;
+	delete[] this->aryptr;
 	delete this->population;
 	delete this->timestamp;
-	delete scaler;
+	delete this->scaler;
 	delete[] this->camImg;
+	delete tempptr;
 
 	return true;
 }

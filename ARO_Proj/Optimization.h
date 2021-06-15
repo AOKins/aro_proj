@@ -52,6 +52,7 @@ protected:
 	int eliteSize;		// Number of elite individuals within the population (should be less than populationSize)
 	int slmLength;		// Size of images for sc
 	int imageLength;	// Size of images from cc
+	unsigned char *aryptr;
 	unsigned char *camImg; // Char array to store resulting camera image
 	bool shortenExposureFlag;   // Set to true by individual if fitness is too high
 	bool stopConditionsMetFlag; // Set to true if a stop condition was reached by one of the individuals
@@ -61,7 +62,8 @@ protected:
 	ImagePtr curImage, convImage;	// pointers to current image
 	TimeStampGenerator * timestamp; // Timer to track and store elapsed time as the algorithm executes
 	int lastImgHeight, lastImgWidth;// dimensions of last image taken from camera
-
+	
+	ImageScaler * scaler;
 	// Output debug streams // TODO at finished state may seek to change/remove these to improve performance
 	ofstream tfile;				// Record elite individual progress over generations
 	ofstream timeVsFitnessFile;	// Recoding general fitness progress

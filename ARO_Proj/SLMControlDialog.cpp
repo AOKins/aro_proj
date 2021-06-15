@@ -21,13 +21,6 @@ SLMControlDialog::SLMControlDialog(CWnd* pParent /*=NULL*/)
 	: CDialogEx(SLMControlDialog::IDD, pParent)
 {
 	this->slmCtrl = new SLMController();
-	// Populate drop down menu with numbers for each SLM
-	for (int i = 0; i < this->slmCtrl->boards.size(); i++) {
-		CString strI(std::to_string(i + 1).c_str());
-		LPCTSTR lpstrI(strI);
-		this->slmSelection_.AddString(lpstrI);
-	}
-
 }
 
 SLMControlDialog::~SLMControlDialog()
@@ -163,4 +156,14 @@ void SLMControlDialog::OnBnClickedDualSLM()
 void SLMControlDialog::OnCbnSelchangeSlmSelect()
 {
 	// TODO: Add your control notification handler code here
+}
+
+void SLMControlDialog::populateSLMlist()
+{
+	// Populate drop down menu with numbers for each SLM
+	for (int i = 0; i < this->slmCtrl->boards.size(); i++) {
+		CString strI(std::to_string(i + 1).c_str());
+		LPCTSTR lpstrI(strI);
+		this->slmSelection_.AddString(lpstrI);
+	}
 }

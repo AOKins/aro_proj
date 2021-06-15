@@ -29,6 +29,8 @@ public:
 	SLMController* getSLMCtrl();
 	afx_msg void OnBnClickedDualSLM();
 	afx_msg void OnCbnSelchangeSlmSelect();
+	void populateSLMlist();
+
 	// Selection List for current SLM to set LUT and WFC files
 	CComboBox slmSelection_;
 	// If true, then running optimization with dual SLM configuration
