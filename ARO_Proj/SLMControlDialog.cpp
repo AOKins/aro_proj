@@ -8,6 +8,8 @@
 #include "Utility.h"
 #include "afxdialogex.h"
 
+#include <string>
+
 #define MAX_CFileDialog_FILE_COUNT 99
 #define FILE_LIST_BUFFER_SIZE ((MAX_CFileDialog_FILE_COUNT * (MAX_PATH + 1)) + 1)
 
@@ -19,6 +21,13 @@ SLMControlDialog::SLMControlDialog(CWnd* pParent /*=NULL*/)
 	: CDialogEx(SLMControlDialog::IDD, pParent)
 {
 	this->slmCtrl = new SLMController();
+	// Populate drop down menu with numbers for each SLM
+	for (int i = 0; i < this->slmCtrl->boards.size(); i++) {
+		CString strI(std::to_string(i + 1).c_str());
+		LPCTSTR lpstrI(strI);
+		this->slmSelection_.AddString(lpstrI);
+	}
+
 }
 
 SLMControlDialog::~SLMControlDialog()
@@ -30,12 +39,16 @@ void SLMControlDialog::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_SLM_PWR_BUTTON, m_SlmPwrButton);
+	DDX_Control(pDX, ID_SLM_SELECT, slmSelection_);
+	DDX_Control(pDX, IDC_SLM_DUAL, dualEnable);
 }
 
 BEGIN_MESSAGE_MAP(SLMControlDialog, CDialogEx)
 	ON_BN_CLICKED(IDC_SLM_PWR_BUTTON, &SLMControlDialog::OnBnClickedSlmPwrButton)
 	ON_BN_CLICKED(IDC_SETLUT, &SLMControlDialog::OnBnClickedSetlut)
 	ON_BN_CLICKED(IDC_SETWFC, &SLMControlDialog::OnBnClickedSetwfc)
+	ON_BN_CLICKED(IDC_SLM_DUAL, &SLMControlDialog::OnBnClickedDualSLM)
+	ON_CBN_SELCHANGE(ID_SLM_SELECT, &SLMControlDialog::OnCbnSelchangeSlmSelect)
 END_MESSAGE_MAP()
 
 // SLMControlDialog message handlers
@@ -61,6 +74,7 @@ void SLMControlDialog::OnBnClickedSlmPwrButton() {
 void SLMControlDialog::OnBnClickedSetlut() {
 	bool tryAgain;
 	CString fileName;
+	std::string filePath;
 	do {
 		tryAgain = false;
 		LPWSTR p = fileName.GetBuffer(FILE_LIST_BUFFER_SIZE);
@@ -74,16 +88,19 @@ void SLMControlDialog::OnBnClickedSetlut() {
 			fileName = dlgFile.GetPathName();
 			fileName.ReleaseBuffer();
 		}
+		filePath = CT2A(fileName);
 
-		std::string file = CT2A(fileName);
+		// Get the SLM being assinged the LUT file, asssumes the index poistion of the selection is consistent with board selection
+		//		for example if the user selects 1 (out of 2) the value should be 0.  This is done currently (June 15th as a shortcut instead of parsing text of selection)
+		int slmNum = this->slmSelection_.GetCurSel();
 		// Assigning LUT file with given file path, and if error give message box to try again
-		if (!this->slmCtrl->AssignLUTFile(0, file)) {
+		if (!this->slmCtrl->AssignLUTFile(slmNum, filePath)) {
 			// Notify user of error in LUT file loading and get response action
-			Utility::printLine("ERROR: Failed to assign given file " + file + " to board 0!");
+			Utility::printLine("ERROR: Failed to assign given file " + filePath + " to board " + std::to_string(slmNum) + "!");
 			// Resource: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-messagebox
 			int err_response = MessageBox(
 				(LPCWSTR)L"ERROR in file load!",
-				(LPCWSTR)L"Failed to load LUT file\nTry Again? Canceling may leave undefined issues with SLM",
+				(LPCWSTR)L"Failed to load LUT file\nTry Again? Canceling may leave with undefined issues with SLM",
 				MB_ICONERROR | MB_RETRYCANCEL
 			);
 			// Respond to decision
@@ -94,6 +111,9 @@ void SLMControlDialog::OnBnClickedSetlut() {
 				default: // Cancel or other unknown response will not have try again to make sure not stuck in undesired loop
 					tryAgain = false;
 			}
+		}
+		else {
+			Utility::printLine("INFO: Assigned the following file to board " + std::to_string(slmNum) + ": " + filePath);
 		}
 	} while (tryAgain);
 }
@@ -113,7 +133,7 @@ void SLMControlDialog::OnBnClickedSetwfc()
 		fileName = dlgFile.GetPathName();
 		fileName.ReleaseBuffer();
 	}
-
+	// TODO: Support more than one board
 	SLM_Board * board = slmCtrl->boards[0];
 	std::string file = CT2A(fileName);
 	board->PhaseCompensationFileName = file;
@@ -122,3 +142,25 @@ void SLMControlDialog::OnBnClickedSetwfc()
 
 
 SLMController* SLMControlDialog::getSLMCtrl() { return this->slmCtrl; }
+
+
+void SLMControlDialog::OnBnClickedDualSLM()
+{
+	// When attempting to enable Dual SLM setup, will confirm that there are enough boards
+	if (this->dualEnable.GetCheck() == BST_CHECKED && this->slmCtrl->boards.size() < 2) {
+		// If not possible, will give warning in console and window along with undoing the selection
+		Utility::printLine("WARNING: Dual SLM was enabled but there aren't enough boards!  Disabling check.");
+		MessageBox(
+			(LPCWSTR)L"Dual SLM ERROR",
+			(LPCWSTR)L"You have attempted to enable Dual SLM but not enough boards were found! Disabling selection.",
+			MB_ICONWARNING | MB_OK
+			);
+		this->dualEnable.SetCheck(BST_UNCHECKED);
+	}
+}
+
+
+void SLMControlDialog::OnCbnSelchangeSlmSelect()
+{
+	// TODO: Add your control notification handler code here
+}

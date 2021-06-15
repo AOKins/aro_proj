@@ -165,7 +165,7 @@ BOOL MainDialog::OnInitDialog()
 	m_aoiControlDlg.m_widthInput.SetWindowTextW(_T("64"));
 	m_aoiControlDlg.m_heightInput.SetWindowTextW(_T("64"));
 	m_slmControlDlg.m_SlmPwrButton.SetWindowTextW(_T("Turn power ON")); // - power button (TODO: determine if SLM is actually off at start)
-	
+
 	//GetCheck() Retrieves BST_CHECKED if checked & BST_UNCHECKED if not checked
 	//Line currently commented out to identify if cause of assert failure m_optimizationControlDlg.m_SampleCheckmark.GetCheck();  
 
@@ -394,6 +394,15 @@ void MainDialog::OnBnClickedUgaButton()
 void MainDialog::OnBnClickedSgaButton()
 {
 	Utility::printLine("INFO: SGA optimization started!");
+
+	bool enableDual = this->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED;
+	if (enableDual) {
+		Utility::printLine("INFO: Dual SLM has been set to TRUE!  Currently feature is not implemented");
+	}
+	else {
+		Utility::printLine("INFO: Dual SLM has been set to FALSE!");
+	}
+
 	SGA_Optimization opt((*this), camCtrl, slmCtrl);
 	if (!opt.runOptimization()) {
 		Utility::printLine("ERROR: SGA optimization failed!");

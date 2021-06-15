@@ -1,6 +1,6 @@
 ////////////////////
 // Population handler for standard genetic algorithm that inherits from base Population
-// Last edited: 06/09/2021 by Andrew O'Kins
+// Last edited: 06/14/2021 by Andrew O'Kins
 ////////////////////
 #ifndef SGAPOPULATION_H_
 #define SGAPOPULATION_H_
@@ -9,6 +9,7 @@
 
 ////
 // TODOs:	Debug mulithreading in StartNextGeneration
+//			General code polishin
 
 template <class T>
 class SGAPopulation : public Population<T> {
