@@ -384,7 +384,17 @@ void MainDialog::OnCompensatePhaseCheckbox()
 void MainDialog::OnBnClickedUgaButton()
 {
 	Utility::printLine("INFO: uGA optimization started!");
+
+	bool enableDual = this->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED;
+	if (enableDual) {
+		Utility::printLine("INFO: Dual SLM has been set to TRUE!  Currently feature is not implemented");
+	}
+	else {
+		Utility::printLine("INFO: Dual SLM has been set to FALSE!");
+	}
+
 	uGA_Optimization opt((*this), camCtrl, slmCtrl);
+
 	if (!opt.runOptimization()) {
 		Utility::printLine("ERROR: uGA optimization failed!");
 	}
@@ -413,6 +423,15 @@ void MainDialog::OnBnClickedSgaButton()
 void MainDialog::OnBnClickedOptButton()
 {
 	Utility::printLine("INFO: OPT5 optimization started!");
+
+	bool enableDual = this->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED;
+	if (enableDual) {
+		Utility::printLine("INFO: Dual SLM has been set to TRUE!  Currently feature is not implemented");
+	}
+	else {
+		Utility::printLine("INFO: Dual SLM has been set to FALSE!");
+	}
+
 	BruteForce_Optimization opt((*this), camCtrl, slmCtrl);
 	if (!opt.runOptimization()) {
 		Utility::printLine("ERROR: OPT 5 optimization failed!");
