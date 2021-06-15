@@ -28,11 +28,14 @@ public:
 	CButton m_SlmPwrButton;
 	SLMController* getSLMCtrl();
 	afx_msg void OnBnClickedDualSLM();
-	afx_msg void OnCbnSelchangeSlmSelect();
+	afx_msg void OnCbnChangeSlmAll();
 	void populateSLMlist();
-
+	bool attemptLUTload(int i, std::string filePath);
+	bool attemptWFCload(int i, std::string filePath);
 	// Selection List for current SLM to set LUT and WFC files
 	CComboBox slmSelection_;
 	// If true, then running optimization with dual SLM configuration
 	CButton dualEnable;
+	// If TRUE then treat all the SLMs as the same rather than distinct
+	CButton SLM_SetALLSame_;
 };

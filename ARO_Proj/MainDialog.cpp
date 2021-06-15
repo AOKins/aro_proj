@@ -172,7 +172,7 @@ BOOL MainDialog::OnInitDialog()
 	// - get reference to slm controller
 	slmCtrl = m_slmControlDlg.getSLMCtrl();
 	slmCtrl->SetMainDlg(this);
-	m_slmControlDlg.populateSLMlist();
+	m_slmControlDlg.populateSLMlist(); // Simple method to setup the list of selections
 	Utility::printLine("INFO: Accessed slm controller!");
 
 	//Show the default tab (optimizations settings)
