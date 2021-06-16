@@ -457,19 +457,19 @@ void MainDialog::disableMainUI(bool isMainEnabled)
 	m_uGAButton.EnableWindow(isMainEnabled);
 	m_SGAButton.EnableWindow(isMainEnabled);
 	m_OptButton.EnableWindow(isMainEnabled);
-
-
-	//Stop button always enabled when everything is disabled
-	//TODO: add and implement a stop button
 }
 
+// Worker thread process for running optimization
+UINT __cdecl optThreadMethod(LPVOID instance) {
+	MainDialog * dlg = (MainDialog*)instance;
+	dlg->disableMainUI(false); // Disable main UI (except for Start/Stop Button)
 
-void MainDialog::OnBnClickedStartStopButton()
-{
-	bool success;
-	disableMainUI(false);
-
-	bool enableDual = this->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED;
+	// Setting that we are now runnign an optimization
+	dlg->runOptBoolLock.lock();
+	dlg->running_optimization_ = true;	// Change label of this button to START now that the optimization is over
+	dlg->m_StartStopButton.SetWindowTextW(L"STOP");
+	dlg->runOptBoolLock.unlock();
+	bool enableDual = dlg->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED;
 	if (enableDual) {
 		Utility::printLine("INFO: Dual SLM has been set to TRUE!  Currently feature is not implemented");
 	}
@@ -477,28 +477,54 @@ void MainDialog::OnBnClickedStartStopButton()
 		Utility::printLine("INFO: Dual SLM has been set to FALSE!");
 	}
 
-	// Change label of this button to STOP
-	this->m_StartStopButton.SetWindowTextW(L"STOP");
-
-	// Perform the operation depending on selection
-	if (this->opt_selection_ == OptType::OPT5) {
-		BruteForce_Optimization opt((*this), camCtrl, slmCtrl);
-		success = opt.runOptimization();
+	// Perform the optimzation operation depending on selection
+	if (dlg->opt_selection_ == dlg->OptType::OPT5) {
+		BruteForce_Optimization opt((*dlg), dlg->camCtrl, dlg->slmCtrl);
+		dlg->opt_success = opt.runOptimization();
 	}
-	else if (this->opt_selection_ == OptType::SGA) {
-		SGA_Optimization opt((*this), camCtrl, slmCtrl);
-		success = opt.runOptimization();
+	else if (dlg->opt_selection_ == dlg->OptType::SGA) {
+		SGA_Optimization opt((*dlg), dlg->camCtrl, dlg->slmCtrl);
+		dlg->opt_success = opt.runOptimization();
 	}
-	else if (this->opt_selection_ == OptType::uGA) {
-		uGA_Optimization opt((*this), camCtrl, slmCtrl);
-		success = opt.runOptimization();
+	else if (dlg->opt_selection_ == dlg->OptType::uGA) {
+		uGA_Optimization opt((*dlg), dlg->camCtrl, dlg->slmCtrl);
+		dlg->opt_success = opt.runOptimization();
 	}
 	else {
 		Utility::printLine("ERROR: No optimization method selected!");
-		success = false;
+		dlg->opt_success = false;
 	}
-	if (!success) {
+	if (!dlg->opt_success) {
 		Utility::printLine("ERROR: Optimization failed!");
 	}
+	// Setting that we are no longer running an optimization
+	dlg->runOptBoolLock.lock();
+	dlg->running_optimization_ = false;
+	// Change label of this button to START now that the optimization is over
+	dlg->m_StartStopButton.SetWindowTextW(L"START");
+	dlg->runOptBoolLock.unlock();
+
+	// Update UI
+	dlg->disableMainUI(true);
+	Utility::printLine("INFO: End of worker optimization thread!");
+}
+
+void MainDialog::OnBnClickedStartStopButton()
+{
+	this->runOptBoolLock.lock();
+	if (this->running_optimization_ == true) {
+		this->runOptBoolLock.unlock();
+		Utility::printLine("INFO: Optimization currently running, attempting to stop safely");
+		this->stopFlag = true;
+
+	}
+	else {
+		this->runOptBoolLock.unlock();
+		Utility::printLine("INFO: No optimization currently running, attempting to start depending on selection");
+		this->stopFlag = false;
+		this->runOptThread = AfxBeginThread(optThreadMethod, LPVOID(this));
+		this->runOptThread->m_bAutoDelete = true; // Setting for auto delete
+	}
+
 }
 

@@ -21,6 +21,8 @@ class CameraController;
 #include "AOIControlDialog.h"
 #include "afxcmn.h"
 
+#include <thread>
+#include <mutex>
 
 
 class MainDialog : public CDialog
@@ -46,13 +48,7 @@ public:
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
-	// Enumeration for type of optimizations to select
-	enum OptType {
-		OPT5,
-		SGA,
-		uGA
-	};
-	OptType opt_selection_;
+
 protected:
 	HICON m_hIcon;
 
@@ -76,6 +72,8 @@ public:
 	CEdit m_MFEdit;
 	CEdit m_MSEEdit;
 	CEdit m_MFEEdit;
+	std::mutex runOptBoolLock;
+	CWinThread* runOptThread; // Thread to run the optimization algorithm through
 
 protected:
 	afx_msg void OnSlmPwrButton();
@@ -99,6 +97,16 @@ public:
 	CTabCtrl m_TabControl;
 	afx_msg void OnTcnSelchangeTab1(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnBnClickedStartStopButton();
+	bool stopFlag = false;
+	bool running_optimization_;
+	bool opt_success;
+	// Enumeration for type of optimizations to select
+	enum OptType {
+		OPT5,
+		SGA,
+		uGA
+	};
+	OptType opt_selection_;
 };
 
 #endif

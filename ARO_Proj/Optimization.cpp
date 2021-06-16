@@ -151,7 +151,7 @@ void Optimization::saveParameters(std::string time, std::string optType) {
 
 //[CHECKS]
 bool Optimization::stopConditionsReached(double curFitness, double curSecPassed, double curGenerations) {
-	if (curFitness > this->fitnessToStop && curSecPassed > this->secondsToStop && curGenerations > this->genEvalToStop) {
+	if (curFitness > this->fitnessToStop && curSecPassed > this->secondsToStop && curGenerations > this->genEvalToStop && dlg.stopFlag == false) {
 		return true;
 	}
 	return false;
