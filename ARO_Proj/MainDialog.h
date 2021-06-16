@@ -22,6 +22,7 @@ class CameraController;
 #include "afxcmn.h"
 
 
+
 class MainDialog : public CDialog
 {
 public:
@@ -45,7 +46,13 @@ public:
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
-
+	// Enumeration for type of optimizations to select
+	enum OptType {
+		OPT5,
+		SGA,
+		uGA
+	};
+	OptType opt_selection_;
 protected:
 	HICON m_hIcon;
 

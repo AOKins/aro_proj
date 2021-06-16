@@ -376,62 +376,40 @@ void MainDialog::OnCompensatePhaseCheckbox()
 	OnSelchangeImageListbox();
 }
 
-//OnBnClickedUgaButton: Performs the uGA Algorithm Button Press Action
+//OnBnClickedUgaButton: Select the uGA Algorithm Button
 void MainDialog::OnBnClickedUgaButton()
 {
-	Utility::printLine("INFO: uGA optimization started!");
+	this->opt_selection_ = OptType::uGA;
+	Utility::printLine("INFO: uGA optimization selected!");
 
-	bool enableDual = this->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED;
-	if (enableDual) {
-		Utility::printLine("INFO: Dual SLM has been set to TRUE!  Currently feature is not implemented");
-	}
-	else {
-		Utility::printLine("INFO: Dual SLM has been set to FALSE!");
-	}
-
-	uGA_Optimization opt((*this), camCtrl, slmCtrl);
-
-	if (!opt.runOptimization()) {
-		Utility::printLine("ERROR: uGA optimization failed!");
-	}
+	this->m_uGAButton.EnableWindow(false);
+	this->m_SGAButton.EnableWindow(true);
+	this->m_OptButton.EnableWindow(true);
+	this->m_StartStopButton.EnableWindow(true);
 }
 
-//OnBnClickedSgaButton: Performs the SGA Algorithm Button Press Action
+//OnBnClickedSgaButton: Select the SGA Algorithm Button
 void MainDialog::OnBnClickedSgaButton()
 {
-	Utility::printLine("INFO: SGA optimization started!");
+	Utility::printLine("INFO: SGA optimization selected!");
+	this->opt_selection_ = OptType::SGA;
 
-	bool enableDual = this->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED;
-	if (enableDual) {
-		Utility::printLine("INFO: Dual SLM has been set to TRUE!  Currently feature is not implemented");
-	}
-	else {
-		Utility::printLine("INFO: Dual SLM has been set to FALSE!");
-	}
-
-	SGA_Optimization opt((*this), camCtrl, slmCtrl);
-	if (!opt.runOptimization()) {
-		Utility::printLine("ERROR: SGA optimization failed!");
-	}
+	this->m_SGAButton.EnableWindow(false);
+	this->m_uGAButton.EnableWindow(true);
+	this->m_OptButton.EnableWindow(true);
+	this->m_StartStopButton.EnableWindow(true);
 }
 
-//OnBnClickedOptButton: Performs the OPT5 Algorithm Button Press Action
+//OnBnClickedOptButton: Select the OPT5 Algorithm Button
 void MainDialog::OnBnClickedOptButton()
 {
-	Utility::printLine("INFO: OPT5 optimization started!");
+	Utility::printLine("INFO: OPT5 optimization selected!");
+	this->opt_selection_ = OptType::OPT5;
 
-	bool enableDual = this->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED;
-	if (enableDual) {
-		Utility::printLine("INFO: Dual SLM has been set to TRUE!  Currently feature is not implemented");
-	}
-	else {
-		Utility::printLine("INFO: Dual SLM has been set to FALSE!");
-	}
-
-	BruteForce_Optimization opt((*this), camCtrl, slmCtrl);
-	if (!opt.runOptimization()) {
-		Utility::printLine("ERROR: OPT 5 optimization failed!");
-	}
+	this->m_OptButton.EnableWindow(false);
+	this->m_SGAButton.EnableWindow(true);
+	this->m_uGAButton.EnableWindow(true);
+	this->m_StartStopButton.EnableWindow(true);
 }
 
 //OnTcnSelchangeTab1: changes the shown dialog when a new tab is selected
@@ -488,7 +466,39 @@ void MainDialog::disableMainUI(bool isMainEnabled)
 
 void MainDialog::OnBnClickedStartStopButton()
 {
-	// TODO: Add your control notification handler code here
-	Utility::printLine("INFO: STOP BUTTON PRESSED BUT CURRENTLY NO IMPLEMENTATION");
+	bool success;
+	disableMainUI(false);
+
+	bool enableDual = this->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED;
+	if (enableDual) {
+		Utility::printLine("INFO: Dual SLM has been set to TRUE!  Currently feature is not implemented");
+	}
+	else {
+		Utility::printLine("INFO: Dual SLM has been set to FALSE!");
+	}
+
+	// Change label of this button to STOP
+	this->m_StartStopButton.SetWindowTextW(L"STOP");
+
+	// Perform the operation depending on selection
+	if (this->opt_selection_ == OptType::OPT5) {
+		BruteForce_Optimization opt((*this), camCtrl, slmCtrl);
+		success = opt.runOptimization();
+	}
+	else if (this->opt_selection_ == OptType::SGA) {
+		SGA_Optimization opt((*this), camCtrl, slmCtrl);
+		success = opt.runOptimization();
+	}
+	else if (this->opt_selection_ == OptType::uGA) {
+		uGA_Optimization opt((*this), camCtrl, slmCtrl);
+		success = opt.runOptimization();
+	}
+	else {
+		Utility::printLine("ERROR: No optimization method selected!");
+		success = false;
+	}
+	if (!success) {
+		Utility::printLine("ERROR: Optimization failed!");
+	}
 }
 

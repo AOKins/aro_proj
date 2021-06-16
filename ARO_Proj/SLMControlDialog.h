@@ -3,6 +3,7 @@
 #include "resource.h"
 #include "afxwin.h"
 
+#include <string>
 // SLMControlDialog dialog
 
 class SLMControlDialog : public CDialogEx
