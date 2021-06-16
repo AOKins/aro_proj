@@ -507,6 +507,7 @@ UINT __cdecl optThreadMethod(LPVOID instance) {
 	// Update UI
 	dlg->disableMainUI(true);
 	Utility::printLine("INFO: End of worker optimization thread!");
+	return 0;
 }
 
 void MainDialog::OnBnClickedStartStopButton()

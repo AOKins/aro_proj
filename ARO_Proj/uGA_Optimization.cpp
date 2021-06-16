@@ -49,16 +49,13 @@ bool uGA_Optimization::runOptimization() {
 			for (int indID = 0; indID < this->population->getSize(); indID++) {
 				runIndividual(indID);
 			}
-			// Only create new geneartion and change exposure setting if the stop condition hasn't been reached yet
-			if (!this->stopConditionsMetFlag) {
-				// Create a more fit generation
-				this->population->nextGeneration();
-				// Half exposure time if fitness value is too high
-				if (this->shortenExposureFlag) {
-					this->cc->HalfExposureTime();
-					this->shortenExposureFlag = false;
-					this->efile << "Exposure shortened after gen: " << this->curr_gen + 1 << " with new ratio " << this->cc->GetExposureRatio() << std::endl;
-				}
+			// Create a more fit generation
+			population->nextGeneration();
+			// Half exposure time if fitness value is too high
+			if (this->shortenExposureFlag) {
+				this->cc->HalfExposureTime();
+				this->shortenExposureFlag = false;
+				this->efile << "Exposure shortened after gen: " << this->curr_gen + 1 << " with new ratio " << this->cc->GetExposureRatio() << std::endl;
 			}
 		}
 		// Cleanup & Save resulting instance

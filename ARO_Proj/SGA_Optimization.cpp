@@ -217,8 +217,8 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	// Save final (most fit SLM image)
 	std::vector<int> * tempptr = this->population->getImage(this->population->getSize() - 1); // Get the image for the individual (most fit)
 
-	scaler->TranslateImage(tempptr, aryptr);
-	Mat m_ary = Mat(512, 512, CV_8UC1, aryptr);
+	scaler->TranslateImage(tempptr, this->aryptr);
+	Mat m_ary = Mat(512, 512, CV_8UC1, this->aryptr);
 	cv::imwrite("logs/" + curTime + "_SGA_phaseopt.bmp", m_ary);
 
 
@@ -239,11 +239,10 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	delete this->camDisplay;
 	delete this->slmDisplay;
 	delete[] this->aryptr;
+	delete[] this->camImg;
 	delete this->population;
 	delete this->timestamp;
 	delete this->scaler;
-	delete[] this->camImg;
-	delete tempptr;
 
 	return true;
 }
