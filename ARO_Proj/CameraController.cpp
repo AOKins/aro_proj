@@ -26,6 +26,12 @@ CameraController::~CameraController() {
 // [CAMERA CONTROL]
 bool CameraController::setupCamera() {
 	Utility::printLine();
+	
+	// Connect to the camera if the cam pointer is null
+	if (cam == NULL) {
+		//Camera access
+		UpdateConnectedCameraInfo();
+	}
 
 	// Quit if don't have a reference to UI (latest parameters)
 	if (!dlg)
