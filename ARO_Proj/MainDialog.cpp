@@ -56,6 +56,7 @@ void MainDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_UGA_BUTTON, m_uGAButton);
 	DDX_Control(pDX, IDC_SGA_BUTTON, m_SGAButton);
 	DDX_Control(pDX, IDC_OPT_BUTTON, m_OptButton);
+	DDX_Control(pDX, IDC_START_STOP_BUTTON, m_StartStopButton);
 	DDX_Control(pDX, IDC_TAB1, m_TabControl);
 }
 
@@ -72,6 +73,7 @@ BEGIN_MESSAGE_MAP(MainDialog, CDialog)
 	ON_BN_CLICKED(IDC_SGA_BUTTON, &MainDialog::OnBnClickedSgaButton)
 	ON_BN_CLICKED(IDC_OPT_BUTTON, &MainDialog::OnBnClickedOptButton)
 	ON_NOTIFY(TCN_SELCHANGE, IDC_TAB1, &MainDialog::OnTcnSelchangeTab1)
+	ON_BN_CLICKED(IDC_START_STOP_BUTTON, &MainDialog::OnBnClickedStartStopButton)
 END_MESSAGE_MAP()
 
 //////////////////////////////////////////////////////////////
@@ -307,13 +309,6 @@ void MainDialog::OnSelchangeImageListbox()
 	slmCtrl->ImageListBoxUpdate(sel);
 }
 
-//OnStartStopButton: performs stop button action
-void MainDialog::OnStartStopButton()
-{
-	//LARGE TODO: allow to stop execution by pressing stop HERE
-
-}
-
 /////////////////////////////////////////////////
 //
 //   OnClose()
@@ -485,90 +480,15 @@ void MainDialog::disableMainUI(bool isMainEnabled)
 	m_SGAButton.EnableWindow(isMainEnabled);
 	m_OptButton.EnableWindow(isMainEnabled);
 
+
 	//Stop button always enabled when everything is disabled
 	//TODO: add and implement a stop button
 }
 
-///////////////////////////////////////////////////////////////////////////////////////
-//FUNCTIONS THAT MIGHT BE NEEDED IN THE FUTURE
-///* OnTimer: This function is called periodically after the user has started the
-// * software sequencing through the images in the image list. This is
-// * used to update the dialog with the current state of the hardware.
-// * If the hardware is displaying image 1 on the SLM, that image will be
-// * selected in the listbox. */
-//void MainDialog::OnTimer(UINT_PTR nIDEvent)
-//{
-//	//take picture
-//
-//	//retrieve singleton reference to system object
-//	SystemPtr system = System::GetInstance();
-//	//retrieve list of cameras from the system
-//	CameraList camList = system->GetCameras();
-//	unsigned int numCameras = camList.GetSize();
-//	//make an image pointer
-//	ImagePtr pImage = Image::Create();
-//	//finish if there are no cameras
-//	if (numCameras == 0)
-//	{
-//		//clear camera list before releasing system
-//		camList.Clear();
-//		system->ReleaseInstance();
-//		Utility::printLine("Only ONE camera, please!");
-//	}
-//	int result = 0;
-//	int err = 0;
-//	try
-//	{
-//		//create a shared pointer to the camera--the pointer will automatically clean up after the try
-//		pCam = camList.GetByIndex(0);
-//		INodeMap &nodeMapTLDevice = pCam->GetTLDeviceNodeMap();
-//		pCam->Init();
-//		INodeMap &nodeMap = pCam->GetNodeMap();
-//
-//		err = ConfigureExposure(nodeMap, exposureTime);
-//		if (err < 0)
-//		{
-//			MessageBox(_T("Could not configure exposure"), _T("ERROR"), MB_ICONERROR);
-//		}
-//
-//		pImage = AcquireImages(pCam, nodeMap, nodeMapTLDevice);
-//		pCam->DeInit();
-//
-//	}
-//	catch (Spinnaker::Exception &e)
-//	{
-//		Utility::printLine("ERROR: " + string(e.what()));
-//	}
-//	//save image to char vector
-//	width = pImage->GetWidth();
-//	height = pImage->GetHeight();
-//	camImage = static_cast<unsigned char*>(pImage->GetData());
-//	//clear the cam list, and release the memory and system
-//	pCam = NULL;
-//	camList.Clear();
-//	pImage->Release();
-//	system->ReleaseInstance();
-//
-//	//find fitness
-//	double fitness = FindAverageValue(camImage, targetMatrix, width, height);
-//	populationPointer->SetFitness(fitness);
-//	rtime << fitness << endl;
-//	camDisplay->UpdateDisplay(camImage);
-//
-//	if (populationCounter < 5) populationCounter++;
-//	else
-//	{
-//		populationCounter = 1;
-//		populationPointer->NextGeneration(0);
-//	}
-//
-//	//send the data of the currently selected image in the sequence list out to the SLM
-//	ImgScaleMngr->TranslateImage(populationPointer->GetImage(), ary);
-//	for (int blist = 0; blist < numBoards; blist++)
-//	{
-//		int board = blist + 1; //sdk uses 1-based index for boards
-//		blink_sdk->Write_image(board, ary, 512, false, false, 0.0);
-//	}
-//
-//	CDialog::OnTimer(nIDEvent);
-//}
+
+void MainDialog::OnBnClickedStartStopButton()
+{
+	// TODO: Add your control notification handler code here
+	Utility::printLine("INFO: STOP BUTTON PRESSED BUT CURRENTLY NO IMPLEMENTATION");
+}
+

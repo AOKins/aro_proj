@@ -62,6 +62,7 @@ public:
 	CButton m_uGAButton;
 	CButton m_SGAButton;
 	CButton m_OptButton;
+	CButton m_StartStopButton;
 	CEdit m_BSEdit;
 	CEdit m_NBEdit;
 	CEdit m_IREdit;
@@ -72,7 +73,6 @@ public:
 protected:
 	afx_msg void OnSlmPwrButton();
 	afx_msg void OnSelchangeImageListbox();
-	afx_msg void OnStartStopButton();
 	virtual void OnOK();
 	//afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnClose();
@@ -91,6 +91,7 @@ public:
 	CWnd* m_pwndShow;
 	CTabCtrl m_TabControl;
 	afx_msg void OnTcnSelchangeTab1(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnBnClickedStartStopButton();
 };
 
 #endif

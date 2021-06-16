@@ -95,11 +95,11 @@ bool SLMControlDialog::attemptLUTload(int slmNum, std::string filePath) {
 			);
 		// Respond to decision
 		switch (err_response) {
-		case IDRETRY:
-			noErrors = false;
-			break;
-		default: // Cancel or other unknown response will not have try again to make sure not stuck in undesired loop
-			noErrors = true;
+			case IDRETRY:
+				noErrors = false;
+				break;
+			default: // Cancel or other unknown response will not have try again to make sure not stuck in undesired loop
+				noErrors = true;
 		}
 	}
 	else {
@@ -149,7 +149,7 @@ void SLMControlDialog::OnBnClickedSetlut() {
 // Input:
 //		slmNum - the board being assigned (0 based index)
 //		filePath - string to path of the LUT file being loaded
-// Output: returns true if error occurs and user selects retry, false otherwise
+// Output: returns true if error occurs and user does not select retry, false otherwise
 //		When an error occurs in loading LUT file, gives message box with option to retry or cancel
 bool SLMControlDialog::attemptWFCload(int slmNum, std::string filePath) {
 	bool noErrors = true;
@@ -188,12 +188,12 @@ bool SLMControlDialog::attemptWFCload(int slmNum, std::string filePath) {
 }
 
 
-void SLMControlDialog::OnBnClickedSetwfc()
-{
+void SLMControlDialog::OnBnClickedSetwfc() {
 	bool tryAgain;
 	CString fileName;
 	std::string filePath;
 	do {
+		// Attempt to select WFC file
 		tryAgain = false;
 		LPWSTR p = fileName.GetBuffer(FILE_LIST_BUFFER_SIZE);
 		CFileDialog dlgFile(TRUE);
@@ -201,15 +201,15 @@ void SLMControlDialog::OnBnClickedSetwfc()
 		ofn.lpstrFile = p;
 		ofn.nMaxFile = FILE_LIST_BUFFER_SIZE;
 
-		if (dlgFile.DoModal() == IDOK)
-		{
+		if (dlgFile.DoModal() == IDOK)	{
 			fileName = dlgFile.GetPathName();
 			fileName.ReleaseBuffer();
 		}
 		filePath = CT2A(fileName);
 		int slmNum;
+		// If not set to set all SLMs, then get current selection and set only that one
 		if (this->SLM_SetALLSame_.GetCheck() == BST_UNCHECKED) {
-			slmNum = this->slmSelection_.GetCurSel();
+			slmNum = this->slmSelection_.GetCurSel(); // NOTE: GetCurSel is index of selection and doesn't refer to "face value" of the selection
 			tryAgain = !attemptWFCload(slmNum, filePath);
 		}
 		else {
@@ -224,13 +224,12 @@ void SLMControlDialog::OnBnClickedSetwfc()
 SLMController* SLMControlDialog::getSLMCtrl() { return this->slmCtrl; }
 
 
-void SLMControlDialog::OnBnClickedDualSLM()
-{
+void SLMControlDialog::OnBnClickedDualSLM() {
 	// When attempting to enable Dual SLM setup, will confirm that there are enough boards
 	if (this->dualEnable.GetCheck() == BST_CHECKED) {
 		if (this->slmCtrl->boards.size() < 2) {
 			// If not possible, will give warning in console and window along with undoing the selection
-			Utility::printLine("WARNING: Dual SLM was enabled but there aren't enough boards!  Disabling check.");
+			Utility::printLine("WARNING: Dual SLM was enabled but there are 1 or fewer boards! Disabling check.");
 			MessageBox(
 				(LPCWSTR)L"Dual SLM ERROR",
 				(LPCWSTR)L"You have attempted to enable Dual SLM but not enough boards were found! Disabling selection.",
