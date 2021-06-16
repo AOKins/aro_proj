@@ -71,8 +71,8 @@ bool SGA_Optimization::runOptimization() {
 		Utility::printLine("ERROR: " + string(e.what()));
 	}
     //Reset UI State
-	isWorking = false;
-	dlg.disableMainUI(!isWorking);
+	this->isWorking = false;
+	this->dlg.disableMainUI(!isWorking);
 	return true;
 }
 
@@ -238,10 +238,10 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	// - pointers
 	delete this->camDisplay;
 	delete this->slmDisplay;
-	delete[] this->aryptr;
 	delete[] this->camImg;
 	delete this->population;
 	delete this->timestamp;
+	delete[] this->aryptr;
 	delete this->scaler;
 
 	return true;
