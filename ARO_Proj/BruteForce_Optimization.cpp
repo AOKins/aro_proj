@@ -82,15 +82,15 @@ bool BruteForce_Optimization::runOptimization() {
 	try	{
 		this->timestamp = new TimeStampGenerator();
 		// Iterate over bins
-		for (ii = 0; ii < iMax; ii += bin) {
-			for (jj = 0; jj < jMax; jj += bin)	{
+		for (ii = 0; ii < iMax && this->dlg.stopFlag != true; ii += bin) {
+			for (jj = 0; jj < jMax && this->dlg.stopFlag != true; jj += bin)	{
 				lMax = 0;
 				rMax = 0;
 				//find max phase for bin
-				for (ll = 0; ll < 256; ll += dphi)	{
+				for (ll = 0; ll < 256 && this->dlg.stopFlag != true; ll += dphi)	{
 					//bin phase
-					for (nn = 0; nn < bin; nn++) {
-						for (mm = 0; mm < bin; mm++) {
+					for (nn = 0; nn < bin && this->dlg.stopFlag != true; nn++) {
+						for (mm = 0; mm < bin && this->dlg.stopFlag != true; mm++) {
 							kk = (ii + nn) * iMax + (mm + jj);
 							aryptr[kk] = ll;
 						}
@@ -201,7 +201,7 @@ bool BruteForce_Optimization::runOptimization() {
 bool BruteForce_Optimization::setupInstanceVariables() {
 	this->slmLength = this->sc->getBoardWidth(0) * this->sc->getBoardHeight(0) * 1;
 	// Allocate memory to store used images
-	this->camImg = new unsigned char;
+	//this->camImg = new unsigned char;
 
 	this->cc->startCamera();
 

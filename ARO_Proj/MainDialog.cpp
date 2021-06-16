@@ -523,6 +523,9 @@ void MainDialog::OnBnClickedStartStopButton()
 		this->runOptBoolLock.unlock();
 		Utility::printLine("INFO: No optimization currently running, attempting to start depending on selection");
 		this->stopFlag = false;
+		if (this->runOptThread != NULL) {
+			Utility::printLine("WARNING: Optimization worker thread is not null but creating another thread");
+		}
 		this->runOptThread = AfxBeginThread(optThreadMethod, LPVOID(this));
 		this->runOptThread->m_bAutoDelete = true; // Setting for auto delete
 	}

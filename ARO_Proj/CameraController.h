@@ -53,7 +53,7 @@ public:
 
 	bool setupCamera();
 	bool startCamera();
-	bool saveImage(ImagePtr curImage, int curGen);
+	bool saveImage(ImagePtr& curImage, int curGen);
 	void AcquireImages(ImagePtr& curImage, ImagePtr& convertedImage);
 	bool stopCamera();
 	bool shutdownCamera();

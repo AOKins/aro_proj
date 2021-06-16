@@ -162,7 +162,7 @@ bool uGA_Optimization::setupInstanceVariables() {
 	this->population = new uGAPopulation<int>(this->cc->numberOfBinsY * this->cc->numberOfBinsX * this->cc->populationDensity, this->populationSize, this->eliteSize, this->acceptedSimilarity);
 
 	this->aryptr = new unsigned char[slmLength]; // Char array for writing SLM images
-	this->camImg = new unsigned char; // Char array to store resulting camera image
+	//this->camImg = new unsigned char; // Char array to store resulting camera image
 
 	this->shortenExposureFlag = false; // Set to true by individual if fitness is too high
 	this->stopConditionsMetFlag = false; // Set to true if a stop condition was reached by one of the individuals

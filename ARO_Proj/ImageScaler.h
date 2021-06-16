@@ -15,6 +15,7 @@ private:
 	unsigned char* wavefront_correction_hack_;
 public:
 	ImageScaler(int output_image_width, int output_image_height, int output_image_depth, unsigned char* wavefront_correction_hack);
+	~ImageScaler();
 	void SetBinSize(int bin_size_x, int bin_size_y);
 	void GetMaxBins(int &max_bins_x, int &max_bins_y);
 	void SetUsedBins(int used_bins_x, int used_bins_y);

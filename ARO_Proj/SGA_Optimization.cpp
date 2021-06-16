@@ -168,8 +168,6 @@ bool SGA_Optimization::setupInstanceVariables() {
 	// Setting population
 	this->population = new SGAPopulation<int>(this->cc->numberOfBinsY * this->cc->numberOfBinsX * this->cc->populationDensity, this->populationSize, this->eliteSize, this->acceptedSimilarity);
 
-	this->camImg = new unsigned char;			 // Char array to store resulting camera image
-
 	this->shortenExposureFlag = false;		// Set to true by individual if fitness is too high
 	this->stopConditionsMetFlag = false;	// Set to true if a stop condition was reached by one of the individuals
 
@@ -191,7 +189,7 @@ bool SGA_Optimization::setupInstanceVariables() {
 	this->cc->startCamera();
 
 	// Setup image pointers
-	this->curImage = Image::Create();
+	////this->curImage = Image::Create();
 	this->convImage = Image::Create();
 
 	//Open up files to which progress will be logged

@@ -20,6 +20,7 @@ CameraController::~CameraController() {
 		stopCamera();
 		shutdownCamera();
 	}
+	delete[] this->targetMatrix;
 	Utility::printLine("INFO: Finished shutting down camera!");
 }
 
@@ -132,7 +133,7 @@ bool CameraController::shutdownCamera()
 // [ACQUISITION]
 /*getImage: high level wrapper that allows to take an image if camera was started
 */
-bool CameraController::saveImage(ImagePtr curImage, int curGen) {
+bool CameraController::saveImage(ImagePtr& curImage, int curGen) {
 	if (!curImage.IsValid()) {
 		Utility::printLine("ERROR: Camera Aquisition resulted in a NULL image!");
 		return false;
@@ -150,7 +151,7 @@ bool CameraController::saveImage(ImagePtr curImage, int curGen) {
 
 //AcquireImages: get one image from the camera
 void CameraController::AcquireImages(ImagePtr& curImage, ImagePtr& convertedImage) {
-	convertedImage = Image::Create();
+	//convertedImage = Image::Create();
 
 	try {
 		// Retrieve next received image

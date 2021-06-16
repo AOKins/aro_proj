@@ -23,6 +23,11 @@ wavefront_correction_hack_(wavefront_correction_hack)
 	requirement_set_bin_size_ = requirement_set_used_bins_ = requirement_set_lut_ = false;
 }
 
+ImageScaler::~ImageScaler() {
+	delete this->lut_;
+	delete this->wavefront_correction_hack_;
+}
+
 // Set bin size
 // @param bin_size_x -> x dimension size of bins
 // @param bin_size_y -> y dimension size of bins
