@@ -205,14 +205,14 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 
 	// Save how final optimization looks through camera
 	std::string curTime = Utility::getCurTime();
-	Mat Opt_ary = Mat(this->lastImgHeight, this->lastImgWidth, CV_8UC1, camImg);
+	Mat Opt_ary = Mat(this->lastImgHeight, this->lastImgWidth, CV_8UC1, this->camImg);
 	imwrite("logs/" + curTime + "_uGA_Optimized.bmp", Opt_ary);
 
 	// Save final (most fit SLM image)
 	std::vector<int> * tempptr = this->population->getImage(this->population->getSize() - 1); // Get the image for the individual (most fit)
 
-	scaler->TranslateImage(tempptr, aryptr);
-	Mat m_ary = Mat(512, 512, CV_8UC1, aryptr);
+	scaler->TranslateImage(tempptr, this->aryptr);
+	Mat m_ary = Mat(512, 512, CV_8UC1, this->aryptr);
 	imwrite("logs/" + curTime + "_uGA_phaseopt.bmp", m_ary);
 
 	// Generic file renaming to have time stamps of run

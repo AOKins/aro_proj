@@ -221,8 +221,6 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	Mat m_ary = Mat(512, 512, CV_8UC1, this->aryptr);
 	cv::imwrite("logs/" + curTime + "_SGA_phaseopt.bmp", m_ary);
 
-
-
 	// Generic file renaming to have time stamps of run
 	std::rename("logs/SGA_functionEvals_vs_fitness.txt", ("logs/" + curTime + "_SGA_functionEvals_vs_fitness.txt").c_str());
 	std::rename("logs/SGA_time_vs_fitness.txt", ("logs/" + curTime + "_SGA_time_vs_fitness.txt").c_str());
@@ -238,7 +236,6 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	// - pointers
 	delete this->camDisplay;
 	delete this->slmDisplay;
-	delete[] this->camImg;
 	delete this->population;
 	delete this->timestamp;
 	delete[] this->aryptr;
