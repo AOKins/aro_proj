@@ -199,7 +199,7 @@ void SLMController::LoadSequence() {
 SLMController::~SLMController() {
 	//Poweroff and deallokate sdk functionality
 	blink_sdk->SLM_power(false);
-	//blink_sdk->~Blink_SDK();
+	blink_sdk->~Blink_SDK();
 
 	//De-allocate all memory allocated to store board information
 	for (int i = 0; i < boards.size(); i++)

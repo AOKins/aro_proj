@@ -93,8 +93,8 @@ bool SGA_Optimization::runIndividual(int indID) {
 	ImagePtr convImage;
 	ImagePtr curImage;
 
-	ImagePtr thisImage;
-	ImagePtr thisImageConvert;
+	ImagePtr thisImage = Image::Create();
+	ImagePtr thisImageConvert = Image::Create();
 
 	std::unique_lock<std::mutex>  consoleLock(consoleMutex, std::defer_lock);
 	std::unique_lock<std::mutex> hardwareLock(hardwareMutex, std::defer_lock);
@@ -186,14 +186,6 @@ bool SGA_Optimization::runIndividual(int indID) {
 		expsureFlagLock.unlock();
 	}
 
-	try {
-		thisImage->Release(); //Release no longer needed image
-	}
-	catch (Spinnaker::Exception &e) {
-		consoleLock.lock();
-		Utility::printLine("WARNING: current image copy release failed!");		
-		consoleLock.unlock();
-	}
 	return true; // No errors!
 }
 
