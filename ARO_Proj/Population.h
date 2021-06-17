@@ -17,11 +17,11 @@ using std::thread;
 //			Consider how to handle possible case of elite_size exceeding pop_size (necessarry?) currently gives warning in console
 ////
 
-template <class T>
+template <class T, class img>
 class Population {
 protected:
 	// The array of individuals in the population.
-	Individual<T>* individuals_;
+	Individual<T, img>* individuals_;
 	// Number of individuals in the population.
 	int pop_size_;
 	// Number of individuals in the population that are to be kept as elite.
@@ -52,17 +52,17 @@ public:
 			Utility::printLine("WARNING: Elite size (" + std::to_string(this->elite_size_) + ") of population exceeding population size (" + std::to_string(this->pop_size_) + ")!");
 		}
 
-		this->individuals_ = new Individual<T>[pop_size_];
+		this->individuals_ = new Individual<T, img>[pop_size_];
 
 		//initialize images for each individual
 		// Lambda function to ensure that generating random image is done in parallel
-			// Input: id - index for individual to be set
-			// Captures
-			//		individuals_ - pointer to array of individuals to store new random genomes in
+		// Input: id - index for individual to be set
+		// Captures
+		//		individuals_ - pointer to array of individuals to store new random genomes in
 		auto randInd = [this](int id) {
 			this->individuals_[id].set_genome(this->GenerateRandomImage());
 		};
-		
+
 		// Using multithreads for initializing each individual
 		for (int i = 0; i < this->pop_size_; i++){
 			this->ind_threads.push_back(thread(randInd, i));
@@ -87,6 +87,16 @@ public:
 		return this->elite_size_;
 	}
 
+	//
+	void setIndividualImageDetails(int id, T width, T height, img * data) {
+		this->individuals_[id].set_dimensions(width, height);
+		this->individuals_[id].set_image(data);
+	}
+
+	img * getIndvidualImage(int id) {
+		return this->individuals_[id].image();
+	}
+
 	// Generates a random image using BetterRandom
 	// Output: a randomly generated image that has size of genome_length for Population
 	vector<T>* GenerateRandomImage() {
@@ -101,7 +111,7 @@ public:
 	// Getter for image of individual at inputted index
 	// Input: i - individual at given index (population not guranteed sorted)
 	// Output: the image for the individual
-	vector<T>* getImage(int i) {
+	vector<T>* getGenome(int i) {
 		return this->individuals_[i].genome();
 	}
 
@@ -161,18 +171,18 @@ public:
 	//	to_sort - the individuals to be sorted
 	//	size - the size of the array to_sort
 	// Output: returns sorted pointer array of individuals originating from to_sort
-	Individual<T>* SortIndividuals(Individual<T>* to_sort, int size) {
+	Individual<T, img>* SortIndividuals(Individual<T, img>* to_sort, int size) {
 		bool found = false;
-		Individual<T> * temp = new Individual<T>[size];
+		Individual<T, img> * temp = new Individual<T, img>[size];
 		DeepCopyIndividual(temp[0], to_sort[0]);
 		for (int i = 1; i < size; i++) {
 			for (int j = 0; j < i; j++)	{
 				if (to_sort[i].fitness() < temp[j].fitness()) {
 					found = true;
 					// insert individual
-					Individual<T> holder1;
+					Individual<T, img> holder1;
 					DeepCopyIndividual(holder1, to_sort[i]);
-					Individual<T> holder2;
+					Individual<T, img> holder2;
 					for (int k = j; k < i; k++)	{
 						DeepCopyIndividual(holder2, temp[k]);
 						DeepCopyIndividual(temp[k], holder1);
@@ -197,7 +207,7 @@ public:
 	//	to - the individual to be copied to
 	//	from - the individual copied
 	// Output: to is contains deep copy of from
-	void DeepCopyIndividual(Individual<T> & to, Individual<T> & from) {
+	void DeepCopyIndividual(Individual<T, img> & to, Individual<T, img> & from) {
 		to.set_fitness(from.fitness());
 		vector<T> * temp_image1 = new vector<T>(this->genome_length_, 0);
 		vector<T> * temp_image2 = from.genome();

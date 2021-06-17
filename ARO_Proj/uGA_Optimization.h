@@ -29,7 +29,7 @@ class uGA_Optimization : public Optimization {
 
 	// Population that this optimization class uses
 	// Set here to prevent possible slicing if were instead using a base class pointer in base class of Optimization
-	uGAPopulation<int> * population;
+	uGAPopulation<int, ImagePtr> * population;
 public:
 	// Constructor - inherits from base class
 	uGA_Optimization(MainDialog& dlg, CameraController* cc, SLMController* sc) : Optimization(dlg, cc, sc){};

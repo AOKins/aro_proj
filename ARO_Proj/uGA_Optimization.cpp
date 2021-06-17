@@ -82,29 +82,32 @@ bool uGA_Optimization::runOptimization() {
 //     stopConditionsMetFlag is set to true if conditions met
 bool uGA_Optimization::runIndividual(int indID) {
 	//Apply LUT/Binning to randomly the generated individual's image
-	std::vector<int>* tempptr = (this->population->getImage(indID)); // Get the image for the individual
+	std::vector<int>* tempptr = (this->population->getGenome(indID)); // Get the image for the individual
 	this->scaler->TranslateImage(tempptr, aryptr);
 
+	ImagePtr convImage;
+	ImagePtr curImage;
+
+	this->hardwareLock.lock();
 	// Write translated image to SLM boards //TODO: modify as it assumes boards get the same image and have same size
 	for (int i = 1; i <= this->sc->boards.size(); i++) {
 		this->sc->blink_sdk->Write_image(i, aryptr, sc->getBoardHeight(i - 1), false, false, 0.0);
 	}
 	// Acquire images // - take image and determine fitness
-	this->cc->AcquireImages(this->curImage, this->convImage);
-	int imgWidth = this->convImage->GetWidth();
-	int imgHeight = this->convImage->GetHeight();
-	this->camImg = static_cast<unsigned char*>(convImage->GetData());
+	this->cc->AcquireImages(curImage, convImage);
+	this->hardwareLock.unlock(); // Now done with the hardware
 
-	if (this->camImg == NULL) { // TODO: I think this is dangerous as Individual does not have default fitness if left unevaluated
+	// Getting the image dimensions and data from resulting image
+	int imgWidth = convImage->GetWidth();
+	int imgHeight = convImage->GetHeight();
+	unsigned char * camImg = static_cast<unsigned char*>(convImage->GetData());
+
+	if (camImg == NULL) { // TODO: I think this is dangerous as Individual does not have default fitness if left unevaluated
 		Utility::printLine("ERROR: Image Acquisition has failed!");
 		return false;
 	}
 	double exposureTimesRatio = this->cc->GetExposureRatio();	// needed for proper fitness value across changing exposure time
-	double fitness = Utility::FindAverageValue(this->camImg, imgWidth, imgHeight, this->cc->targetRadius);
-
-	// Setting last height and width info to current
-	this->lastImgHeight = imgWidth;
-	this->lastImgWidth = imgHeight;
+	double fitness = Utility::FindAverageValue(camImg, imgWidth, imgHeight, this->cc->targetRadius);
 
 	// Display first individual
 	if (indID == 0 && this->displayCamImage) {
@@ -122,7 +125,7 @@ bool uGA_Optimization::runIndividual(int indID) {
 		}
 	}
 	try {
-		this->curImage->Release(); //important to not fill camera buffer
+		curImage->Release(); //important to not fill camera buffer
 	}
 	catch (Spinnaker::Exception &e) {
 		Utility::printLine("WARNING: current image release failed. no need to release image at this point");
@@ -133,6 +136,9 @@ bool uGA_Optimization::runIndividual(int indID) {
 
 	// Update fitness for this individual
 	this->population->setFitness(indID, fitness * exposureTimesRatio);
+	// Setting this individual to store it's resulting image data as well for possible future use
+	this->population->setIndividualImageDetails(indID, imgWidth, imgHeight, &convImage);
+
 	// If the fitness value is too high, flag that the exposure needs to be shortened
 	if (fitness > maxFitnessValue) {
 		this->shortenExposureFlag = true;
@@ -159,7 +165,7 @@ bool uGA_Optimization::setupInstanceVariables() {
 		return false;
 	}
 	// Setting population
-	this->population = new uGAPopulation<int>(this->cc->numberOfBinsY * this->cc->numberOfBinsX * this->cc->populationDensity, this->populationSize, this->eliteSize, this->acceptedSimilarity);
+	this->population = new uGAPopulation<int, ImagePtr>(this->cc->numberOfBinsY * this->cc->numberOfBinsX * this->cc->populationDensity, this->populationSize, this->eliteSize, this->acceptedSimilarity);
 
 	this->aryptr = new unsigned char[slmLength]; // Char array for writing SLM images
 	//this->camImg = new unsigned char; // Char array to store resulting camera image
@@ -182,11 +188,7 @@ bool uGA_Optimization::setupInstanceVariables() {
 
 	// Start up the camera
 	this->cc->startCamera();
-
-	// Setup image pointers
-	this->curImage = Image::Create();
-	this->convImage = Image::Create();
-
+	
 	//Open up files to which progress will be logged
 	this->tfile.open("logs/uGA_functionEvals_vs_fitness.txt", std::ios::app);
 	this->timeVsFitnessFile.open("logs/uGA_time_vs_fitness.txt", std::ios::app);
@@ -203,13 +205,19 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 	this->tfile.close();
 	this->efile.close();
 
+	ImagePtr eliteImage = this->population->getIndvidualImage(this->population->getSize() - 1);
+
+	int imgHeight = eliteImage->GetHeight();
+	int imgWidth = eliteImage->GetWidth();
+	unsigned char * camImg = static_cast<unsigned char*>(eliteImage->GetData());
+
 	// Save how final optimization looks through camera
 	std::string curTime = Utility::getCurTime();
-	Mat Opt_ary = Mat(this->lastImgHeight, this->lastImgWidth, CV_8UC1, this->camImg);
+	Mat Opt_ary = Mat(imgHeight, imgWidth, CV_8UC1, camImg);
 	imwrite("logs/" + curTime + "_uGA_Optimized.bmp", Opt_ary);
 
 	// Save final (most fit SLM image)
-	std::vector<int> * tempptr = this->population->getImage(this->population->getSize() - 1); // Get the image for the individual (most fit)
+	std::vector<int> * tempptr = this->population->getGenome(this->population->getSize() - 1); // Get the image for the individual (most fit)
 
 	scaler->TranslateImage(tempptr, this->aryptr);
 	Mat m_ary = Mat(512, 512, CV_8UC1, this->aryptr);

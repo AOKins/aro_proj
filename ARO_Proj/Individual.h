@@ -11,7 +11,7 @@
 #include <vector>
 using std::vector;
 
-template <class T>
+template <class T, class img>
 class Individual {
 private:
 
@@ -21,16 +21,20 @@ private:
 	// The fitness of the individual, this must be assigned with set_fitness
 	double fitness_;
 
+	int imgWidth_, imgHeight_; // The dimensions of the resulting image
+	img* resultImage_; // Pointer to content of the image
 public:
 
 	// Constructor
 	Individual(){
 		this->genome_ = NULL;
+		this->resultImage_ = NULL;
 	}
 
 	// Destructor
 	~Individual(){
 		delete this->genome_;
+		delete this->resultImage_;
 	}
 
 	// Returns the array(genome) associated with the individual.
@@ -50,6 +54,32 @@ public:
 			delete this->genome_;
 		}
 		this->genome_ = new_genome;
+	}
+
+	// Set the width and height of the image for this individual
+	void set_dimensions(int imgWidth, imgHeight) {
+		this->imgWidth_ = imgWidth;
+		this->imgHeight_ = imgHeight;
+	}
+
+	// Set the pointer to resulting image data
+	void set_image(img * image) {
+		if (this->resultImage_ _ != NULL) {
+			delete this->resultImage_;
+		}
+		this->resultImage_ = image;
+	}
+
+	img* image() {
+		return this->image;
+	}
+
+	int img_width() {
+		return this->imgWidth_;
+	}
+
+	int img_height() {
+		return this->imgHeight_;
 	}
 
 	// Sets fitness to be associated with the individual.

@@ -299,8 +299,7 @@ HCURSOR MainDialog::OnQueryDragIcon()
 //   Modifications:
 //
 //////////////////////////////////////////////
-void MainDialog::OnSelchangeImageListbox()
-{
+void MainDialog::OnSelchangeImageListbox() {
 	//Figure out which image in the list was just selected
 	int sel = m_ImageListBox.GetCurSel();
 	if (sel == LB_ERR){ //nothing selected
@@ -324,22 +323,33 @@ void MainDialog::OnSelchangeImageListbox()
 //   Modifications:
 //
 ///////////////////////////////////////////////////
-void MainDialog::OnClose()
-{
-	Utility::printLine("INFO: System begiinng to close closing!");
+void MainDialog::OnClose() {
+	// If optimization is running, give warning and prevent closing of application
+	this->runOptBoolLock.lock();
+	if (this->running_optimization_) {
+		this->runOptBoolLock.unlock();
+		Utility::printLine("WARNING: Optimization still running!");
+		MessageBox(
+			(LPCWSTR)L"Still running optimization!",
+			(LPCWSTR)L"The optimization is still running! Must wait to stop it first.",
+			MB_ICONWARNING | MB_OK
+			);
+	}
+	else {
+		this->runOptBoolLock.unlock();
+		Utility::printLine("INFO: System beginning to close closing!");
 
-	delete camCtrl;
+		delete this->camCtrl;
+		delete this->slmCtrl;
 
-	Utility::printLine("INFO: Camera was shut down!");
-
-	//Finish console output
-	fclose(fp);
-	if (!FreeConsole())
-		AfxMessageBox(L"Could not free the console!");
-	
-	Utility::printLine("INFO: Console realeased (why are you seeing this?)");
-
-	CDialog::OnClose();
+		//Finish console output
+		fclose(fp);
+		if (!FreeConsole()) {
+			AfxMessageBox(L"Could not free the console!");
+		}
+		Utility::printLine("INFO: Console realeased (why are you seeing this?)");
+		CDialog::OnClose();
+	}
 }
 
 /* OnOK: perfomrs enter key functions - used to prevent accidental exit of program and equipment damag e*/

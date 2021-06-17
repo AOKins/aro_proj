@@ -229,8 +229,6 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 	// - camera shutdown
 	this->cc->stopCamera();
 	this->cc->shutdownCamera();
-	this->curImage = Image::Create();
-	this->convImage = Image::Create();
 
 	// - memory deallocation
 	this->camDisplay->CloseDisplay();

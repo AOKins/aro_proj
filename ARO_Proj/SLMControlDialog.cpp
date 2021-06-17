@@ -79,7 +79,7 @@ bool SLMControlDialog::attemptLUTload(int slmNum, std::string filePath) {
 			(LPCWSTR)L"ERROR in SLM selection!",
 			(LPCWSTR)L"Failed to load WFC file as SLM selected is not in boards list.",
 			MB_ICONERROR | MB_OK
-			);
+		);
 		return noErrors;
 	}
 
@@ -92,7 +92,7 @@ bool SLMControlDialog::attemptLUTload(int slmNum, std::string filePath) {
 			(LPCWSTR)L"ERROR in file load!",
 			(LPCWSTR)L"Failed to load LUT file\nTry Again? Canceling may leave with undefined issues with SLM",
 			MB_ICONERROR | MB_RETRYCANCEL
-			);
+		);
 		// Respond to decision
 		switch (err_response) {
 			case IDRETRY:
@@ -143,7 +143,6 @@ void SLMControlDialog::OnBnClickedSetlut() {
 		}
 	} while (tryAgain);
 }
-
 
 // Method for encapsulating the UX of setting WFC file for given board and filepath
 // Input:
@@ -234,7 +233,7 @@ void SLMControlDialog::OnBnClickedDualSLM() {
 				(LPCWSTR)L"Dual SLM ERROR",
 				(LPCWSTR)L"You have attempted to enable Dual SLM but not enough boards were found! Disabling selection.",
 				MB_ICONWARNING | MB_OK
-				);
+			);
 			this->dualEnable.SetCheck(BST_UNCHECKED);
 		}
 		else {
@@ -248,8 +247,7 @@ void SLMControlDialog::OnBnClickedDualSLM() {
 }
 
 
-void SLMControlDialog::OnCbnChangeSlmAll()
-{
+void SLMControlDialog::OnCbnChangeSlmAll() {
 	// If ALLSame is enabled, then disable the SLM selection box
 	if (this->SLM_SetALLSame_.GetCheck() == BST_CHECKED) {
 		Utility::printLine("INFO: Set to all SLM being the same! Now when setting LUT/WFC it will apply to all the SLMs!");
@@ -263,8 +261,7 @@ void SLMControlDialog::OnCbnChangeSlmAll()
 }
 
 // Simple method for populating the selection list depending on number of boards connected
-void SLMControlDialog::populateSLMlist()
-{
+void SLMControlDialog::populateSLMlist() {
 	this->slmSelection_.Clear();
 	// Populate drop down menu with numbers for each SLM
 	for (int i = 0; i < this->slmCtrl->boards.size(); i++) {
