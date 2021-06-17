@@ -11,8 +11,8 @@
 // TODOs:	Debug mulithreading in StartNextGeneration
 //			General code polishin
 
-template <class T, class img>
-class SGAPopulation : public Population<T, img> {
+template <class T>
+class SGAPopulation : public Population<T> {
 public:
 	// Constructor that inherits from Population class
 	// Input:
@@ -20,12 +20,12 @@ public:
 	//	population_size: the number of individuals for the population
 	//	elite_size:		 the number of individuals for the population that are kept as elite
 	//	accepted_similarity: precentage of similarity to be counted as same between individuals (default 90%)
-	SGAPopulation(int genome_length, int population_size, int elite_size, double accepted_similarity = .9) : Population<T, img>(genome_length, population_size, elite_size, accepted_similarity) {};
+	SGAPopulation(int genome_length, int population_size, int elite_size, double accepted_similarity = .9) : Population<T>(genome_length, population_size, elite_size, accepted_similarity) {};
 
 	// Starts next generation using fitness of individuals.
 	bool nextGeneration() {
 		// Setting individuals to sorted (best is at end of the array)
-		Individual<T, img>* sorted_temp = SortIndividuals(this->individuals_, this->pop_size_);
+		Individual<T>* sorted_temp = SortIndividuals(this->individuals_, this->pop_size_);
 		delete[] this->individuals_;
 		this->individuals_ = sorted_temp;
 
@@ -38,7 +38,7 @@ public:
 		// Breeding
 			// Size of same_check is being how many new individuals are being made
 		bool * same_check = new bool[(this->pop_size_ - this->elite_size_)];
-		Individual<T, img> * temp = new Individual<T>[this->pop_size_];
+		Individual<T> * temp = new Individual<T>[this->pop_size_];
 		BetterRandom parent_selector(RAND_MAX);
 		double divisor = RAND_MAX / fitness_sum;
 

@@ -15,14 +15,16 @@ using std::ofstream;
 using std::vector;
 #include <thread> // For ind_threads used in runOptimization
 using std::thread;
-#include <mutex> // For protecting critical sections used in runOptimization
-using std::mutex;
+#include <mutex>
+//#include "ProjMutex.h"
 
 #include "Spinnaker.h"
 #include "SpinGenApi\SpinnakerGenApi.h"
 using namespace Spinnaker;
 using namespace Spinnaker::GenApi;
 using namespace Spinnaker::GenICam;
+
+
 
 class Optimization {
 protected:
@@ -60,6 +62,7 @@ protected:
 	int curr_gen;				// Current generation being evaluated (start at 0)
 	TimeStampGenerator * timestamp; // Timer to track and store elapsed time as the algorithm executes
 	
+	ImagePtr bestImage;
 	ImageScaler * scaler;
 	// Output debug streams // TODO at finished state may seek to change/remove these to improve performance
 	ofstream tfile;				// Record elite individual progress over generations
@@ -78,10 +81,12 @@ protected:
 	virtual bool runIndividual(int indID) = 0;		 // Method for handling the execution of an individual
 
 	vector<thread> ind_threads; // Vector hold threads
-	mutex hardwareLock; // Mutex to protect access to the hardware used in evaluating an individual (SLM, Camera, etc.)
-	mutex consoleLock, imageLock, camDisplayLock;	// Mutex to protect access to i/o and lastImage dimension values
-	mutex tfileLock, timeVsFitLock, efileLock;					// Mutex to protect file i/o
-	mutex stopFlagLock, exposureFlagLock;						// Mutex to protect important flags 
+
+	// Mutexes to protect
+	std::mutex hardwareMutex; // Mutex to protect access to the hardware used in evaluating an individual (SLM, Camera, etc.)
+	std::mutex consoleMutex, imageMutex, camDisplayMutex;	// Mutex to protect access to i/o and lastImage dimension values
+	std::mutex tfileMutex, timeVsFitMutex, efileMutex;					// Mutex to protect file i/o
+	std::mutex stopFlagMutex, exposureFlagMutex;						// Mutex to protect important flags 
 public:
 	// Constructor
 	Optimization(MainDialog& dlg_, CameraController* cc, SLMController* sc);

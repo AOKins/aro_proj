@@ -325,9 +325,7 @@ void MainDialog::OnSelchangeImageListbox() {
 ///////////////////////////////////////////////////
 void MainDialog::OnClose() {
 	// If optimization is running, give warning and prevent closing of application
-	this->runOptBoolLock.lock();
 	if (this->running_optimization_) {
-		this->runOptBoolLock.unlock();
 		Utility::printLine("WARNING: Optimization still running!");
 		MessageBox(
 			(LPCWSTR)L"Still running optimization!",
@@ -336,7 +334,6 @@ void MainDialog::OnClose() {
 			);
 	}
 	else {
-		this->runOptBoolLock.unlock();
 		Utility::printLine("INFO: System beginning to close closing!");
 
 		delete this->camCtrl;
@@ -475,10 +472,8 @@ UINT __cdecl optThreadMethod(LPVOID instance) {
 	dlg->disableMainUI(false); // Disable main UI (except for Start/Stop Button)
 
 	// Setting that we are now runnign an optimization
-	dlg->runOptBoolLock.lock();
 	dlg->running_optimization_ = true;	// Change label of this button to START now that the optimization is over
 	dlg->m_StartStopButton.SetWindowTextW(L"STOP");
-	dlg->runOptBoolLock.unlock();
 	bool enableDual = dlg->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED;
 	if (enableDual) {
 		Utility::printLine("INFO: Dual SLM has been set to TRUE!  Currently feature is not implemented");
@@ -508,11 +503,9 @@ UINT __cdecl optThreadMethod(LPVOID instance) {
 		Utility::printLine("ERROR: Optimization failed!");
 	}
 	// Setting that we are no longer running an optimization
-	dlg->runOptBoolLock.lock();
 	dlg->running_optimization_ = false;
 	// Change label of this button to START now that the optimization is over
 	dlg->m_StartStopButton.SetWindowTextW(L"START");
-	dlg->runOptBoolLock.unlock();
 
 	// Update UI
 	dlg->disableMainUI(true);
@@ -522,15 +515,12 @@ UINT __cdecl optThreadMethod(LPVOID instance) {
 
 void MainDialog::OnBnClickedStartStopButton()
 {
-	this->runOptBoolLock.lock();
 	if (this->running_optimization_ == true) {
-		this->runOptBoolLock.unlock();
 		Utility::printLine("INFO: Optimization currently running, attempting to stop safely");
 		this->stopFlag = true;
 
 	}
 	else {
-		this->runOptBoolLock.unlock();
 		Utility::printLine("INFO: No optimization currently running, attempting to start depending on selection");
 		this->stopFlag = false;
 		if (this->runOptThread != NULL) {

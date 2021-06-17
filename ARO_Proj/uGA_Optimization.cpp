@@ -88,22 +88,42 @@ bool uGA_Optimization::runIndividual(int indID) {
 	ImagePtr convImage;
 	ImagePtr curImage;
 
-	this->hardwareLock.lock();
+	ImagePtr thisImage;
+	ImagePtr thisImageConvert;
+
+	std::unique_lock<std::mutex>  consoleLock(consoleMutex, std::defer_lock);
+	std::unique_lock<std::mutex> hardwareLock(hardwareMutex, std::defer_lock);
+
+	hardwareLock.lock();
 	// Write translated image to SLM boards //TODO: modify as it assumes boards get the same image and have same size
 	for (int i = 1; i <= this->sc->boards.size(); i++) {
 		this->sc->blink_sdk->Write_image(i, aryptr, sc->getBoardHeight(i - 1), false, false, 0.0);
 	}
 	// Acquire images // - take image and determine fitness
 	this->cc->AcquireImages(curImage, convImage);
-	this->hardwareLock.unlock(); // Now done with the hardware
+	thisImage->DeepCopy(curImage);
+	thisImageConvert->DeepCopy(convImage);
+
+	try {
+		curImage->Release(); //important to not fill camera buffer
+	}
+	catch (Spinnaker::Exception &e) {
+		consoleLock.lock();
+		Utility::printLine("WARNING: current image release failed. no need to release image at this point");
+		consoleLock.unlock();
+	}
+
+	hardwareLock.unlock(); // Now done with the hardware
 
 	// Getting the image dimensions and data from resulting image
-	int imgWidth = convImage->GetWidth();
-	int imgHeight = convImage->GetHeight();
-	unsigned char * camImg = static_cast<unsigned char*>(convImage->GetData());
+	int imgWidth = thisImageConvert->GetWidth();
+	int imgHeight = thisImageConvert->GetHeight();
+	unsigned char * camImg = static_cast<unsigned char*>(thisImageConvert->GetData());
 
 	if (camImg == NULL) { // TODO: I think this is dangerous as Individual does not have default fitness if left unevaluated
+		consoleLock.lock();
 		Utility::printLine("ERROR: Image Acquisition has failed!");
+		consoleLock.unlock();
 		return false;
 	}
 	double exposureTimesRatio = this->cc->GetExposureRatio();	// needed for proper fitness value across changing exposure time
@@ -111,24 +131,41 @@ bool uGA_Optimization::runIndividual(int indID) {
 
 	// Display first individual
 	if (indID == 0 && this->displayCamImage) {
+		std::unique_lock<std::mutex> camLock(camDisplayMutex, std::defer_lock);
+		camLock.lock();
 		this->camDisplay->UpdateDisplay(camImg);
+		camLock.unlock();
 	}
 	// Record values for the top six individuals in each generation
 	if (indID > 23) {
+		std::unique_lock<std::mutex> tVfLock(timeVsFitMutex, std::defer_lock);
+		tVfLock.lock();
 		this->timeVsFitnessFile << this->timestamp->MS_SinceStart() << "," << fitness*exposureTimesRatio << "," << this->cc->finalExposureTime << "," << exposureTimesRatio << std::endl;
+		tVfLock.unlock();
 	}
 	//Save elite info of last generation
 	if (indID == (population->getSize() - 1)) {
+		std::unique_lock<std::mutex> tFileLock(tfileMutex, std::defer_lock);
+		tFileLock.lock();
 		this->tfile << "uGA GENERATION," << this->curr_gen << "," << fitness*exposureTimesRatio << std::endl;
+		tFileLock.unlock();
 		if (saveImages) {
-			cc->saveImage(convImage, (this->curr_gen + 1));
+			cc->saveImage(thisImageConvert, (this->curr_gen + 1));
 		}
+		// Also save the image
+		std::unique_lock<std::mutex> imageLock(imageMutex, std::defer_lock);
+		imageLock.lock();
+		this->bestImage->Release();
+		this->bestImage->DeepCopy(thisImageConvert);
+		imageLock.unlock();
 	}
 	try {
 		curImage->Release(); //important to not fill camera buffer
 	}
 	catch (Spinnaker::Exception &e) {
+		consoleLock.lock();
 		Utility::printLine("WARNING: current image release failed. no need to release image at this point");
+		consoleLock.unlock();
 	}
 
 	// Check stop conditions
@@ -136,12 +173,21 @@ bool uGA_Optimization::runIndividual(int indID) {
 
 	// Update fitness for this individual
 	this->population->setFitness(indID, fitness * exposureTimesRatio);
-	// Setting this individual to store it's resulting image data as well for possible future use
-	this->population->setIndividualImageDetails(indID, imgWidth, imgHeight, &convImage);
 
 	// If the fitness value is too high, flag that the exposure needs to be shortened
 	if (fitness > maxFitnessValue) {
+		std::unique_lock<std::mutex> expsureFlagLock(exposureFlagMutex, std::defer_lock);
+		expsureFlagLock.lock();
 		this->shortenExposureFlag = true;
+		expsureFlagLock.unlock();
+	}
+	try {
+		thisImage->Release(); //Release no longer needed image
+	}
+	catch (Spinnaker::Exception &e) {
+		consoleLock.lock();
+		Utility::printLine("WARNING: current image copy release failed!");
+		consoleLock.unlock();
 	}
 	return true;
 }
@@ -165,7 +211,7 @@ bool uGA_Optimization::setupInstanceVariables() {
 		return false;
 	}
 	// Setting population
-	this->population = new uGAPopulation<int, ImagePtr>(this->cc->numberOfBinsY * this->cc->numberOfBinsX * this->cc->populationDensity, this->populationSize, this->eliteSize, this->acceptedSimilarity);
+	this->population = new uGAPopulation<int>(this->cc->numberOfBinsY * this->cc->numberOfBinsX * this->cc->populationDensity, this->populationSize, this->eliteSize, this->acceptedSimilarity);
 
 	this->aryptr = new unsigned char[slmLength]; // Char array for writing SLM images
 	//this->camImg = new unsigned char; // Char array to store resulting camera image
@@ -205,15 +251,14 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 	this->tfile.close();
 	this->efile.close();
 
-	ImagePtr eliteImage = this->population->getIndvidualImage(this->population->getSize() - 1);
-
-	int imgHeight = eliteImage->GetHeight();
-	int imgWidth = eliteImage->GetWidth();
-	unsigned char * camImg = static_cast<unsigned char*>(eliteImage->GetData());
+	// Get elite info
+	unsigned char* eliteImage = static_cast<unsigned char*>(this->bestImage->GetData());
+	int imgHeight = this->bestImage->GetHeight();
+	int imgWidth = this->bestImage->GetWidth();
 
 	// Save how final optimization looks through camera
 	std::string curTime = Utility::getCurTime();
-	Mat Opt_ary = Mat(imgHeight, imgWidth, CV_8UC1, camImg);
+	Mat Opt_ary = Mat(imgHeight, imgWidth, CV_8UC1, eliteImage);
 	imwrite("logs/" + curTime + "_uGA_Optimized.bmp", Opt_ary);
 
 	// Save final (most fit SLM image)

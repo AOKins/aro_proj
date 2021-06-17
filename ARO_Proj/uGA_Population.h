@@ -10,8 +10,8 @@
 ////
 // TODOs:	Verify/Debug uGA implementation
 
-template <class T, class img>
-class uGAPopulation : public Population<T, img> {
+template <class T>
+class uGAPopulation : public Population<T> {
 public:
 	// Constructor that inherits from Population class
 	// Input:
@@ -19,7 +19,7 @@ public:
 	//	population_size: the number of individuals for the population
 	//	elite_size:		 the number of individuals for the population that are kept as elite
 	//	accepted_similarity: precentage of similarity to be counted as same between individuals (default 90%)
-	uGAPopulation(int genome_length, int population_size, int elite_size, double accepted_similarity = .9) : Population<T, img>(genome_length, population_size, elite_size, accepted_similarity) {};
+	uGAPopulation(int genome_length, int population_size, int elite_size, double accepted_similarity = .9) : Population<T>(genome_length, population_size, elite_size, accepted_similarity) {};
 
 	// Starts next generation using fitness of individuals.
 	bool nextGeneration() {
@@ -27,7 +27,7 @@ public:
 		Individual<T>* sorted_temp = this->SortIndividuals(this->individuals_, this->pop_size_);
 		bool * same_check = new bool[(this->pop_size_ - this->elite_size_)];
 		// temp for storing new population before storing into this->individuals_
-		Individual<T>* temp = new Individual<T, img>[this->pop_size_];
+		Individual<T>* temp = new Individual<T>[this->pop_size_];
 
 		// Lambda function to do assignment in parallel
 		// Input: indID - index of location to store individual in temp array

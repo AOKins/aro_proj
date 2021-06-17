@@ -96,6 +96,9 @@
     <ClInclude Include="uGA_Population.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ProjMutex.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

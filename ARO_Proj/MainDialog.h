@@ -21,9 +21,6 @@ class CameraController;
 #include "AOIControlDialog.h"
 #include "afxcmn.h"
 
-#include <thread>
-#include <mutex>
-
 
 class MainDialog : public CDialog
 {
@@ -72,7 +69,6 @@ public:
 	CEdit m_MFEdit;
 	CEdit m_MSEEdit;
 	CEdit m_MFEEdit;
-	std::mutex runOptBoolLock;
 	CWinThread* runOptThread; // Thread to run the optimization algorithm through
 
 protected:

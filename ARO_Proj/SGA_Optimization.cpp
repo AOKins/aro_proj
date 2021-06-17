@@ -69,6 +69,8 @@ bool SGA_Optimization::runOptimization() {
     }
     catch (Spinnaker::Exception &e) {
 		Utility::printLine("ERROR: " + string(e.what()));
+		return false;
+
 	}
     //Reset UI State
 	this->isWorking = false;
@@ -91,24 +93,45 @@ bool SGA_Optimization::runIndividual(int indID) {
 	ImagePtr convImage;
 	ImagePtr curImage;
 
-	this->hardwareLock.lock();
+	ImagePtr thisImage;
+	ImagePtr thisImageConvert;
+
+	std::unique_lock<std::mutex>  consoleLock(consoleMutex, std::defer_lock);
+	std::unique_lock<std::mutex> hardwareLock(hardwareMutex, std::defer_lock);
+
+	hardwareLock.lock();
 	// Write translated image to SLM boards //TODO: modify as it assumes boards get the same image and have same size
 	for (int i = 1; i <= sc->boards.size(); i++) {
 		sc->blink_sdk->Write_image(i, aryptr, sc->getBoardHeight(i - 1), false, false, 0.0);
 	}
 	// Acquire images // - take image
 	cc->AcquireImages(curImage, convImage);
+	thisImage->DeepCopy(curImage);
+	thisImageConvert->DeepCopy(convImage);
 
-	this->hardwareLock.unlock(); // Now done with the hardware
+	try {
+		curImage->Release(); //important to not fill camera buffer
+	}
+	catch (Spinnaker::Exception &e) {
+		consoleLock.lock();
+		Utility::printLine("WARNING: current image release failed. no need to release image at this point");
+		consoleLock.unlock();
+	}
+
+	hardwareLock.unlock();
+	
+	// Now done with the hardware
 
 	// Getting the image dimensions and data from resulting image
-	int imgWidth = convImage->GetWidth();
-	int imgHeight = convImage->GetHeight();
-	unsigned char * camImg = static_cast<unsigned char*>(convImage->GetData());
+	int imgWidth = thisImageConvert->GetWidth();
+	int imgHeight = thisImageConvert->GetHeight();
+	unsigned char * camImg = static_cast<unsigned char*>(thisImageConvert->GetData());
 	
 	// Giving error and ends early if there is no data
 	if (camImg == NULL) { // TODO: I think this is dangerous as Individual does not have default fitness if left unevaluated
+		consoleLock.lock();
 		Utility::printLine("ERROR: Image Acquisition has failed!");
+		consoleLock.unlock();
 		return false;
 	}
 
@@ -120,28 +143,33 @@ bool SGA_Optimization::runIndividual(int indID) {
 
 	// Display first individual
 	if (indID == 0 && displayCamImage) {
+		std::unique_lock<std::mutex> camLock(camDisplayMutex, std::defer_lock);
+		camLock.lock();
 		camDisplay->UpdateDisplay(camImg);
+		camLock.unlock();
 	}
 	// Record values for the top six individuals in each generation
 	if (indID > 23) {
-		this->timeVsFitLock.lock();
+		std::unique_lock<std::mutex> tVfLock(timeVsFitMutex, std::defer_lock);
+		tVfLock.lock();
 		this->timeVsFitnessFile << timestamp->MS_SinceStart() << "," << fitness*exposureTimesRatio << "," << cc->finalExposureTime << "," << exposureTimesRatio << std::endl;
-		this->timeVsFitLock.unlock();
+		tVfLock.unlock();
 	}
 	//Save elite info of last generation
 	if (indID == (population->getSize() - 1)) {
-		this->tfileLock.lock();
+		std::unique_lock<std::mutex> tFileLock(tfileMutex, std::defer_lock);
+		tFileLock.lock();
 		this->tfile << "SGA GENERATION," << curr_gen << "," << fitness*exposureTimesRatio << std::endl;
+		tFileLock.unlock();
 		if (saveImages) {
-			cc->saveImage(convImage, (curr_gen + 1));
+			cc->saveImage(thisImageConvert, (curr_gen + 1));
 		}
-		this->tfileLock.unlock();
-	}
-	try {
-		curImage->Release(); //important to not fill camera buffer
-	}
-	catch (Spinnaker::Exception &e) {
-		Utility::printLine("WARNING: current image release failed. no need to release image at this point");
+		// Also save the image
+		std::unique_lock<std::mutex> imageLock(imageMutex, std::defer_lock);
+		imageLock.lock();
+		//this->bestImage->Release();
+		this->bestImage->DeepCopy(thisImageConvert);
+		imageLock.unlock();
 	}
 
 	// Check stop conditions
@@ -149,14 +177,22 @@ bool SGA_Optimization::runIndividual(int indID) {
 
 	// Update fitness for this individual
 	population->setFitness(indID, fitness * exposureTimesRatio);
-	// Setting this individual to store it's resulting image data as well for possible future use
-	this->population->setIndividualImageDetails(indID, imgWidth, imgHeight, &convImage);
 
 	// If the fitness value is too high, flag that the exposure needs to be shortened
 	if (fitness > maxFitnessValue) {
-		this->exposureFlagLock.lock();
+		std::unique_lock<std::mutex> expsureFlagLock(exposureFlagMutex, std::defer_lock);
+		expsureFlagLock.lock();
 		this->shortenExposureFlag = true;
-		this->exposureFlagLock.unlock();
+		expsureFlagLock.unlock();
+	}
+
+	try {
+		thisImage->Release(); //Release no longer needed image
+	}
+	catch (Spinnaker::Exception &e) {
+		consoleLock.lock();
+		Utility::printLine("WARNING: current image copy release failed!");		
+		consoleLock.unlock();
 	}
 	return true; // No errors!
 }
@@ -180,7 +216,8 @@ bool SGA_Optimization::setupInstanceVariables() {
 		return false;
 	}
 	// Setting population
-	this->population = new SGAPopulation<int, ImagePtr>(this->cc->numberOfBinsY * this->cc->numberOfBinsX * this->cc->populationDensity, this->populationSize, this->eliteSize, this->acceptedSimilarity);
+	this->population = new SGAPopulation<int>(this->cc->numberOfBinsY * this->cc->numberOfBinsX * this->cc->populationDensity, this->populationSize, this->eliteSize, this->acceptedSimilarity);
+	this->bestImage = Image::Create();
 
 	this->shortenExposureFlag = false;		// Set to true by individual if fitness is too high
 	this->stopConditionsMetFlag = false;	// Set to true if a stop condition was reached by one of the individuals
@@ -218,15 +255,13 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	this->tfile.close();
 	this->efile.close();
 	
-	ImagePtr eliteImage = this->population->getIndvidualImage(this->population->getSize() - 1);
-
-	int imgHeight = eliteImage->GetHeight();
-	int imgWidth = eliteImage->GetWidth();
-	unsigned char * camImg = static_cast<unsigned char*>(eliteImage->GetData());
+	unsigned char* eliteImage = static_cast<unsigned char*>(this->bestImage->GetData());
+	int imgHeight = this->bestImage->GetHeight();
+	int imgWidth = this->bestImage->GetWidth();
 
 	// Save how final optimization looks through camera
 	std::string curTime = Utility::getCurTime();
-	Mat Opt_ary = Mat(imgHeight, imgWidth, CV_8UC1, camImg);
+	Mat Opt_ary = Mat(imgHeight, imgWidth, CV_8UC1, eliteImage);
 	cv::imwrite("logs/" + curTime + "_SGA_Optimized.bmp", Opt_ary);
 
 	// Save final (most fit SLM image)

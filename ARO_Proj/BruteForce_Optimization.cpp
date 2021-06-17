@@ -72,6 +72,10 @@ bool BruteForce_Optimization::runOptimization() {
 	int index = 0;
 	double fitness = 0;
 
+	// Instance variables we need
+	ImagePtr convImage, curImage;
+	unsigned char * camImg = NULL;
+
 	// Creating displays if desired
 	if (displayCamImage) {
 		this->camDisplay->OpenDisplay();
@@ -100,9 +104,9 @@ bool BruteForce_Optimization::runOptimization() {
 						this->sc->blink_sdk->Write_image(i, aryptr, this->sc->getBoardHeight(i - 1), false, false, 0.0);
 					}
 					//Acquire and display camera image
-					this->cc->AcquireImages(this->curImage, this->convImage);
-					this->camImg = static_cast<unsigned char*>(this->convImage->GetData());
-					if (this->camImg == NULL)	{
+					this->cc->AcquireImages(curImage, convImage);
+					camImg = static_cast<unsigned char*>(convImage->GetData());
+					if (camImg == NULL)	{
 						Utility::printLine("ERROR: Image Acquisition has failed!");
 						continue;
 					}
@@ -110,8 +114,8 @@ bool BruteForce_Optimization::runOptimization() {
 						this->camDisplay->UpdateDisplay(camImg);
 					}
 					exposureTimesRatio = this->cc->GetExposureRatio();
-					fitness = Utility::FindAverageValue(this->camImg, this->convImage->GetWidth(), this->curImage->GetHeight(), this->cc->targetRadius);
-					this->curImage->Release(); //important to not fill camera buffer
+					fitness = Utility::FindAverageValue(camImg, convImage->GetWidth(), curImage->GetHeight(), this->cc->targetRadius);
+					curImage->Release(); //important to not fill camera buffer
 
 					//Record current performance to file //Ask what kind of calcualtion is this?
 					double ms = index*dphi + ll / dphi;
@@ -174,7 +178,7 @@ bool BruteForce_Optimization::runOptimization() {
 		tfile2.close();
 
 		// Save how final optimization looks through camera
-		Mat Opt_ary = Mat(this->curImage->GetHeight(), this->curImage->GetWidth(), CV_8UC1, this->camImg);
+		Mat Opt_ary = Mat(curImage->GetHeight(), curImage->GetWidth(), CV_8UC1, camImg);
 		cv::imwrite("logs/" + curTime + "_OPT5_Optimized.bmp", Opt_ary);
 
 		//Record the final (most fit) slm image
