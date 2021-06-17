@@ -190,7 +190,7 @@ bool SGA_Optimization::setupInstanceVariables() {
 
 	// Setup image pointers
 	////this->curImage = Image::Create();
-	this->convImage = Image::Create();
+	//this->convImage = Image::Create();
 
 	//Open up files to which progress will be logged
 	this->tfile.open("logs/SGA_functionEvals_vs_fitness.txt", std::ios::app);
@@ -234,8 +234,8 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	// - pointers
 	delete this->camDisplay;
 	delete this->slmDisplay;
-	delete this->population;
 	delete this->timestamp;
+	delete this->population;
 	delete[] this->aryptr;
 	delete this->scaler;
 
