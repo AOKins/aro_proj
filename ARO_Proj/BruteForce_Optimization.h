@@ -3,11 +3,15 @@
 
 #include "Optimization.h"
 
+#include <fstream>	// used to export information to file 
+
 class MainDialog;
 class CameraController;
 class SLMController;
 
 class BruteForce_Optimization : public Optimization {
+	std::ofstream lmaxfile;
+	std::ofstream rtime;
 public:
 	// Constructor - inherits from base class
 	BruteForce_Optimization(MainDialog& dlg, CameraController* cc, SLMController* sc) : Optimization(dlg, cc, sc){};

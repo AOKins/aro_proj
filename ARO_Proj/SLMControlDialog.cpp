@@ -33,7 +33,7 @@ void SLMControlDialog::DoDataExchange(CDataExchange* pDX)
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_SLM_PWR_BUTTON, m_SlmPwrButton);
 	DDX_Control(pDX, ID_SLM_SELECT, slmSelection_);
-	DDX_Control(pDX, IDC_SLM_DUAL, dualEnable);
+	DDX_Control(pDX, IDC_SLM_MULTI, multiEnable);
 	DDX_Control(pDX, IDC_SLM_ALLSAME, SLM_SetALLSame_);
 }
 
@@ -41,7 +41,7 @@ BEGIN_MESSAGE_MAP(SLMControlDialog, CDialogEx)
 	ON_BN_CLICKED(IDC_SLM_PWR_BUTTON, &SLMControlDialog::OnBnClickedSlmPwrButton)
 	ON_BN_CLICKED(IDC_SETLUT, &SLMControlDialog::OnBnClickedSetlut)
 	ON_BN_CLICKED(IDC_SETWFC, &SLMControlDialog::OnBnClickedSetwfc)
-	ON_BN_CLICKED(IDC_SLM_DUAL, &SLMControlDialog::OnBnClickedDualSLM)
+	ON_BN_CLICKED(IDC_SLM_MULTI, &SLMControlDialog::OnBnClickedMultiSLM)
 	ON_CBN_SELCHANGE(IDC_SLM_ALLSAME, &SLMControlDialog::OnCbnChangeSlmAll)
 END_MESSAGE_MAP()
 
@@ -223,26 +223,26 @@ void SLMControlDialog::OnBnClickedSetwfc() {
 SLMController* SLMControlDialog::getSLMCtrl() { return this->slmCtrl; }
 
 
-void SLMControlDialog::OnBnClickedDualSLM() {
-	// When attempting to enable Dual SLM setup, will confirm that there are enough boards
-	if (this->dualEnable.GetCheck() == BST_CHECKED) {
+void SLMControlDialog::OnBnClickedMultiSLM() {
+	// When attempting to enable Multi-SLM setup, will confirm that there are enough boards
+	if (this->multiEnable.GetCheck() == BST_CHECKED) {
 		if (this->slmCtrl->boards.size() < 2) {
 			// If not possible, will give warning in console and window along with undoing the selection
-			Utility::printLine("WARNING: Dual SLM was enabled but there are 1 or fewer boards! Disabling check.");
+			Utility::printLine("WARNING: Multi-SLM was enabled but there are 1 or fewer boards! Disabling check.");
 			MessageBox(
 				(LPCWSTR)L"Dual SLM ERROR",
 				(LPCWSTR)L"You have attempted to enable Dual SLM but not enough boards were found! Disabling selection.",
 				MB_ICONWARNING | MB_OK
 			);
-			this->dualEnable.SetCheck(BST_UNCHECKED);
+			this->multiEnable.SetCheck(BST_UNCHECKED);
 		}
 		else {
-			Utility::printLine("INFO: Dual SLM has been enabled");
+			Utility::printLine("INFO: Multi-SLM has been enabled");
 
 		}
 	}
 	else {
-		Utility::printLine("INFO: Dual SLM has been disabled");
+		Utility::printLine("INFO: Multi-SLM has been disabled");
 	}
 }
 

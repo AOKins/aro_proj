@@ -283,7 +283,6 @@
     <ClInclude Include="BruteForce_Optimization.h" />
     <ClInclude Include="CameraControlDialog.h" />
     <ClInclude Include="CameraController.h" />
-    <ClInclude Include="ProjMutex.h" />
     <ClInclude Include="uGA_Population.h" />
     <ClInclude Include="ImageScaler.h" />
     <ClInclude Include="MainDialog.h" />
