@@ -20,9 +20,9 @@ public:
 	// Output: returns true if successful ran without error, false if error occurs
 	bool runOptimization();
 
-	// These methods are given empty implementation as currently (June 3 2021) not updating/refactoring BF optimization
 	bool setupInstanceVariables();
 	bool shutdownOptimizationInstance();
+	// This method returns false as this isn't/shoudn't be used by this optimization
 	bool runIndividual(int indID) { return false; };
 };
 

@@ -131,10 +131,10 @@ BOOL MainDialog::OnInitDialog() {
 	//1) https://stackoverflow.com/questions/1044315/setwindowpos-function-not-moving-window
 	//2) https://www.youtube.com/watch?v=WHPNzx4E5rM
 	// - set tab headings
-	LPCTSTR headings[] = {L"Optimization Settings", L"SLM Settings", L"Camera Settings", L"AOI Settings" };
-	for (int i = 0; i < 4; i++)
+	LPCTSTR headings[] = {L"Optimization Settings", L"SLM Settings", L"Camera Settings", L"AOI Settings"};
+	for (int i = 0; i < 4; i++) {
 		m_TabControl.InsertItem(i, headings[i]);
-
+	}
 	// - set all tab components (Create Dialogs from Templates)
 	CRect rect;
 	m_TabControl.GetClientRect(&rect); //Gets dimensions of the tab control to fit in dialogs inside

@@ -5,6 +5,7 @@
 #include "Utility.h"
 #include <string>
 
+#include <fstream>
 using std::ostringstream;
 
 // [CONSTRUCTOR(S)]
@@ -29,8 +30,7 @@ bool CameraController::setupCamera() {
 	Utility::printLine();
 	
 	// Connect to the camera if the cam pointer is null
-	if (cam == NULL) {
-		//Camera access
+	if (cam == NULL) {	// Camera access
 		UpdateConnectedCameraInfo();
 	}
 
@@ -108,16 +108,14 @@ bool CameraController::startCamera() {
 	return true;
 }
 
+// Note: Does not release any images that may still be in use
 bool CameraController::stopCamera() {
-	//TODO: release any image(s) that are currently used
-
 	cam->EndAcquisition();
 	return true;
 }
 
 //Releases camera references - have to call setup camera again if need to use camer after this call
-bool CameraController::shutdownCamera()
-{
+bool CameraController::shutdownCamera() {
 	//release camera
 	cam->DeInit();
 
@@ -296,7 +294,7 @@ bool CameraController::UpdateConnectedCameraInfo() {
 			return false;
 		}
 		else
-			Utility::printLine("INFO: There are " + std::to_string(camList.GetSize()) + " cameras avaliable!");
+			Utility::printLine("INFO: There are " + std::to_string(camList.GetSize()) + " camera(s) avaliable!");
 
 		//Check if only one camera
 		int camAmount = camList.GetSize();
@@ -325,10 +323,6 @@ bool CameraController::UpdateConnectedCameraInfo() {
 		}
 		else
 			Utility::printLine("INFO: Retrieved Camera was initialized!");
-
-		//TODO: determine if need a class reference to nodeMap of cam
-		//nodeMap = cam->GetNodeMap();
-		//nodeMapTLDevice = cam->GetTLDeviceNodeMap();
 	}
 	catch (Spinnaker::Exception &e)	{
 		Utility::printLine("ERROR: " + std::string(e.what()));
