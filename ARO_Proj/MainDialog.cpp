@@ -337,7 +337,7 @@ void MainDialog::OnClose() {
 		Utility::printLine("INFO: System beginning to close closing!");
 
 		delete this->camCtrl;
-		delete this->slmCtrl;
+		// SLM controller is destructed by the SLM Dialog Controller
 
 		//Finish console output
 		fclose(fp);
