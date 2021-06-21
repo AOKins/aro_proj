@@ -1,6 +1,6 @@
 ////////////////////
 // Optimization handler methods implementation for simple genetic algorithm
-// Last edited: 06/18/2021 by Andrew O'Kins
+// Last edited: 06/08/2021 by Andrew O'Kins
 ////////////////////
 #include "stdafx.h"				// Required in source
 #include "SGA_Optimization.h"	// Header file
@@ -23,11 +23,11 @@
 using namespace cv;
 
 ////
-// TODOs:	Debug multithreading as needed
-//			Add support for multi-SLM configuration
-//			Properly Address how to handle if image acquisition failed (currently just moves on to next individual without assigning a default fitness value)
+// TODOs:	Consider multithreading where appriopriate to improve speed performance
+//			Add support for multiple boards
+//			Address how to handle if image acquisition failed (currently just moves on to next individual without assigning a default fitness value)
 //			send final scaled image to the SLM //ASK needed?
-//			Remove undesired file i/o once debugging is complete
+//			Remove unneeded file i/o once debugging is complete
 
 // Method for executing the optimization
 // Output: returns true if successful ran without error, false if error occurs
@@ -49,8 +49,7 @@ bool SGA_Optimization::runOptimization() {
 		for (this->curr_gen = 0; this->curr_gen < maxGenenerations && !stopConditionsMetFlag; this->curr_gen++) {
 			// Run each individual, giving them all fitness values as a result of their genome
 			for (int indID = 0; indID < population->getSize(); indID++) {
-				//this->runIndividual(indID); // Serial
-				this->ind_threads.push_back(std::thread(this->runIndividual, indID)); // Parallel
+				this->runIndividual(indID);
 			}
 			Utility::rejoinClear(this->ind_threads);
 		
@@ -71,6 +70,7 @@ bool SGA_Optimization::runOptimization() {
     catch (Spinnaker::Exception &e) {
 		Utility::printLine("ERROR: " + string(e.what()));
 		return false;
+
 	}
     //Reset UI State
 	this->isWorking = false;
@@ -88,12 +88,11 @@ bool SGA_Optimization::runOptimization() {
 bool SGA_Optimization::runIndividual(int indID) {
 	//Apply LUT/Binning to randomly the generated individual's image
 	std::vector<int> * tempptr = (population->getGenome(indID)); // Get the SLM image for the individual
-	scaler->TranslateImage(tempptr, this->slmImg); // Scale the individual's image to SLM size
+	scaler->TranslateImage(tempptr, aryptr); // Scale the individual's image to SLM size
 
-	// Local scoped ImagePtr's as we are only concerned with this individual
-		// Image pointers to the image from the Camera's buffer
-	ImagePtr convImage, curImage;
-		// Image pointer to copy from the camera buffer and seperate before release lock from hardware
+	ImagePtr convImage;
+	ImagePtr curImage;
+
 	ImagePtr thisImage = Image::Create();
 	ImagePtr thisImageConvert = Image::Create();
 
@@ -103,11 +102,10 @@ bool SGA_Optimization::runIndividual(int indID) {
 	hardwareLock.lock();
 	// Write translated image to SLM boards //TODO: modify as it assumes boards get the same image and have same size
 	for (int i = 1; i <= sc->boards.size(); i++) {
-		this->sc->blink_sdk->Write_image(i, this->slmImg, sc->getBoardHeight(i - 1), false, false, 0.0);
+		sc->blink_sdk->Write_image(i, aryptr, sc->getBoardHeight(i - 1), false, false, 0.0);
 	}
 	// Acquire images // - take image
-	this->cc->AcquireImages(curImage, convImage);
-	// DeepCopy before removing from camera buffer
+	cc->AcquireImages(curImage, convImage);
 	thisImage->DeepCopy(curImage);
 	thisImageConvert->DeepCopy(convImage);
 
@@ -120,7 +118,9 @@ bool SGA_Optimization::runIndividual(int indID) {
 		consoleLock.unlock();
 	}
 
-	hardwareLock.unlock(); // Now done with the hardware
+	hardwareLock.unlock();
+	
+	// Now done with the hardware
 
 	// Getting the image dimensions and data from resulting image
 	int imgWidth = thisImageConvert->GetWidth();
@@ -136,7 +136,8 @@ bool SGA_Optimization::runIndividual(int indID) {
 	}
 
 	// Get current exposure setting of camera (relative to initial)
-	double exposureTimesRatio = this->cc->GetExposureRatio();	// needed for proper fitness value across changing exposure time
+	double exposureTimesRatio = cc->GetExposureRatio();	// needed for proper fitness value across changing exposure time
+
 	// Determine the fitness by intensity of the image within circle of target radius
 	double fitness = Utility::FindAverageValue(camImg, imgWidth, imgHeight, cc->targetRadius);
 
@@ -166,6 +167,7 @@ bool SGA_Optimization::runIndividual(int indID) {
 		// Also save the image
 		std::unique_lock<std::mutex> imageLock(imageMutex, std::defer_lock);
 		imageLock.lock();
+		//this->bestImage->Release();
 		this->bestImage->DeepCopy(thisImageConvert);
 		imageLock.unlock();
 	}
@@ -192,10 +194,7 @@ bool SGA_Optimization::setupInstanceVariables() {
 	// Setting population size as well as number of elite individuals kept in the genetic repopulation
 	this->populationSize = 30;
 	this->eliteSize = 5;
-	this->bestImage = Image::Create();
-	
-	this->ind_threads.clear();
-	
+
 	// Find length for SLM images
 	this->slmLength = this->sc->getBoardWidth(0) * this->sc->getBoardHeight(0) * 1;
 	if (slmLength <= -1) {
@@ -210,6 +209,7 @@ bool SGA_Optimization::setupInstanceVariables() {
 	}
 	// Setting population
 	this->population = new SGAPopulation<int>(this->cc->numberOfBinsY * this->cc->numberOfBinsX * this->cc->populationDensity, this->populationSize, this->eliteSize, this->acceptedSimilarity);
+	this->bestImage = Image::Create();
 
 	this->shortenExposureFlag = false;		// Set to true by individual if fitness is too high
 	this->stopConditionsMetFlag = false;	// Set to true if a stop condition was reached by one of the individuals
@@ -224,9 +224,9 @@ bool SGA_Optimization::setupInstanceVariables() {
 	if (this->displaySLMImage) {
 		this->slmDisplay->OpenDisplay();
 	}
-	this->slmImg = new unsigned char[slmLength]; // Char array for writing SLM images
+	this->aryptr = new unsigned char[slmLength]; // Char array for writing SLM images
 	// Scaler Setup (using base class)
-	this->scaler = setupScaler(this->slmImg);
+	this->scaler = setupScaler(aryptr);
 
 	// Start up the camera
 	this->cc->startCamera();
@@ -247,7 +247,6 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	this->tfile.close();
 	this->efile.close();
 	
-	// Get elite info
 	unsigned char* eliteImage = static_cast<unsigned char*>(this->bestImage->GetData());
 	int imgHeight = this->bestImage->GetHeight();
 	int imgWidth = this->bestImage->GetWidth();
@@ -260,8 +259,8 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	// Save final (most fit SLM image)
 	std::vector<int> * tempptr = this->population->getGenome(this->population->getSize() - 1); // Get the image for the individual (most fit)
 
-	scaler->TranslateImage(tempptr, this->slmImg);
-	Mat m_ary = Mat(512, 512, CV_8UC1, this->slmImg);
+	scaler->TranslateImage(tempptr, this->aryptr);
+	Mat m_ary = Mat(512, 512, CV_8UC1, this->aryptr);
 	cv::imwrite("logs/" + curTime + "_SGA_phaseopt.bmp", m_ary);
 
 	// Generic file renaming to have time stamps of run
@@ -281,7 +280,7 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	delete this->slmDisplay;
 	delete this->timestamp;
 	delete this->population;
-	delete[] this->slmImg;
+	delete[] this->aryptr;
 	delete this->scaler;
 
 	return true;

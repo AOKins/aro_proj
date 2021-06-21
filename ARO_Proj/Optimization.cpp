@@ -108,12 +108,12 @@ bool Optimization::prepareSoftwareHardware() {
 	return true;
 }
 
-ImageScaler* Optimization::setupScaler(unsigned char *slmImg, int slmNum = 0) {
-	ImageScaler* scaler = new ImageScaler(sc->getBoardWidth(slmNum), sc->getBoardHeight(slmNum), 1, NULL);
+ImageScaler* Optimization::setupScaler(unsigned char *aryptr) {
+	ImageScaler* scaler = new ImageScaler(sc->getBoardWidth(0), sc->getBoardHeight(0), 1, NULL);
 	scaler->SetBinSize(cc->binSizeX, cc->binSizeY);
 	scaler->SetLUT(NULL);
 	scaler->SetUsedBins(cc->numberOfBinsX, cc->numberOfBinsY);
-	scaler->ZeroOutputImage(slmImg); // Initialize the slm image array to be all zeros
+	scaler->ZeroOutputImage(aryptr);
 
 	return scaler;
 }

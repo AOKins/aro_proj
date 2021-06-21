@@ -6,7 +6,8 @@
 #include <string>
 #include "Utility.h"
 
-class CameraDisplay {
+class CameraDisplay
+{
 private:
 	int port_height_;
 	int port_width_;

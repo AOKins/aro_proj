@@ -35,6 +35,5 @@ public:
 	void SetCameraController(CameraController* cc);
 
 	void SetAOIFeilds(int x, int y, int width, int height);
-//	afx_msg void OnBnClickedMaxImageSizeButton();
 	afx_msg void OnBnClickedMaxImageSizeButton();
 };

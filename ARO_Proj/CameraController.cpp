@@ -5,7 +5,6 @@
 #include "Utility.h"
 #include <string>
 
-#include <fstream>
 using std::ostringstream;
 
 // [CONSTRUCTOR(S)]
@@ -30,7 +29,8 @@ bool CameraController::setupCamera() {
 	Utility::printLine();
 	
 	// Connect to the camera if the cam pointer is null
-	if (cam == NULL) {	// Camera access
+	if (cam == NULL) {
+		//Camera access
 		UpdateConnectedCameraInfo();
 	}
 
@@ -108,14 +108,16 @@ bool CameraController::startCamera() {
 	return true;
 }
 
-// Note: Does not release any images that may still be in use
 bool CameraController::stopCamera() {
+	//TODO: release any image(s) that are currently used
+
 	cam->EndAcquisition();
 	return true;
 }
 
 //Releases camera references - have to call setup camera again if need to use camer after this call
-bool CameraController::shutdownCamera() {
+bool CameraController::shutdownCamera()
+{
 	//release camera
 	cam->DeInit();
 
@@ -142,14 +144,19 @@ bool CameraController::saveImage(ImagePtr& curImage, int curGen) {
 	curImage->Save(filename.str().c_str());
 	Utility::printLine("INFO: Saved elite of generation #" + std::to_string(curGen) + "!");
 
+	Utility::printLine("INFO: saved an image for generation #" + std::to_string(curGen));
+
 	return true;
 }
 
 //AcquireImages: get one image from the camera
 void CameraController::AcquireImages(ImagePtr& curImage, ImagePtr& convertedImage) {
+	//convertedImage = Image::Create();
+
 	try {
 		// Retrieve next received image
 		curImage = cam->GetNextImage();
+
 		// Ensure image completion
 		if (curImage->IsIncomplete()) {
 			//TODO: implement proper handling of inclomplete images (retake of image)
@@ -160,10 +167,12 @@ void CameraController::AcquireImages(ImagePtr& curImage, ImagePtr& convertedImag
 
 		//copy image to pImage pointer
 		convertedImage = curImage->Convert(PixelFormat_Mono8); // TODO try see if there is any performance gain if use -> , HQ_LINEAR);
+
 	}
 	catch (Spinnaker::Exception &e) {
 		Utility::printLine("ERROR: " + std::string(e.what()));
 	}
+
 	Utility::printLine("#####################################################", true);
 }
 
@@ -294,7 +303,7 @@ bool CameraController::UpdateConnectedCameraInfo() {
 			return false;
 		}
 		else
-			Utility::printLine("INFO: There are " + std::to_string(camList.GetSize()) + " camera(s) avaliable!");
+			Utility::printLine("INFO: There are " + std::to_string(camList.GetSize()) + " cameras avaliable!");
 
 		//Check if only one camera
 		int camAmount = camList.GetSize();
@@ -323,6 +332,10 @@ bool CameraController::UpdateConnectedCameraInfo() {
 		}
 		else
 			Utility::printLine("INFO: Retrieved Camera was initialized!");
+
+		//TODO: determine if need a class reference to nodeMap of cam
+		//nodeMap = cam->GetNodeMap();
+		//nodeMapTLDevice = cam->GetTLDeviceNodeMap();
 	}
 	catch (Spinnaker::Exception &e)	{
 		Utility::printLine("ERROR: " + std::string(e.what()));
@@ -503,7 +516,7 @@ bool CameraController::ConfigureCustomImageSettings() {
 // layer; please see NodeMapInfo example for more in-depth comments on printing
 // device information from the nodemap.
 int CameraController::PrintDeviceInfo(INodeMap & nodeMap) {
-	Utility::printLine(); // New line
+	Utility::printLine();
 	Utility::printLine("*** CAMERA INFORMATION ***");
 	try	{
 		FeatureList_t features;
@@ -543,6 +556,7 @@ int CameraController::PrintDeviceInfo(INodeMap & nodeMap) {
  * @return - TRUE if success, FALSE if failed */
 bool CameraController::ConfigureExposureTime() {
 	finalExposureTime = initialExposureTime;
+		
 	return SetExposure(finalExposureTime);
 }
 
@@ -559,6 +573,7 @@ double CameraController::GetExposureRatio() {
 bool CameraController::SetExposure(double exposureTimeToSet) {
 	//Constraint exposure time from going lower than camera limit
 	//TODO: determine this lower bound for the camera we are using
+
 	try {
 		INodeMap &nodeMap = cam->GetNodeMap();
 
@@ -608,7 +623,8 @@ bool CameraController::GetCenter(int &x, int &y) {
 	int fullWidth = -1;
 	int fullHeight = -1;
 	
-	if (!GetFullImage(fullWidth, fullHeight)) {
+	if (!GetFullImage(fullWidth, fullHeight))
+	{
 		Utility::printLine("ERROR: failed to get max dimensions for getting center values");
 		return false;
 	}

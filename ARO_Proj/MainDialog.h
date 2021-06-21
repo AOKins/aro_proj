@@ -4,6 +4,7 @@
 // [DESCRIPTION]
 // MainDialog.h : header file for the main dialog of the program
 
+
 // [FORWARD DEFINITIONS]
 class SLMController;
 class CameraController;
@@ -20,7 +21,9 @@ class CameraController;
 #include "AOIControlDialog.h"
 #include "afxcmn.h"
 
-class MainDialog : public CDialog {
+
+class MainDialog : public CDialog
+{
 public:
 	// [GLOBAL PARAMETERS]
 	int frameRate = 200; //200 FPS or 200 HZ (valid range 1 - 1000)

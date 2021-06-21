@@ -21,6 +21,7 @@ SLMControlDialog::SLMControlDialog(CWnd* pParent /*=NULL*/)
 	: CDialogEx(SLMControlDialog::IDD, pParent)
 {
 	this->slmCtrl = new SLMController();
+	this->slmSelectionID_ = 0;
 }
 
 SLMControlDialog::~SLMControlDialog()
@@ -33,7 +34,7 @@ void SLMControlDialog::DoDataExchange(CDataExchange* pDX)
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_SLM_PWR_BUTTON, m_SlmPwrButton);
 	DDX_Control(pDX, ID_SLM_SELECT, slmSelection_);
-	DDX_Control(pDX, IDC_SLM_MULTI, multiEnable);
+	DDX_Control(pDX, IDC_SLM_DUAL, dualEnable);
 	DDX_Control(pDX, IDC_SLM_ALLSAME, SLM_SetALLSame_);
 }
 
@@ -41,8 +42,9 @@ BEGIN_MESSAGE_MAP(SLMControlDialog, CDialogEx)
 	ON_BN_CLICKED(IDC_SLM_PWR_BUTTON, &SLMControlDialog::OnBnClickedSlmPwrButton)
 	ON_BN_CLICKED(IDC_SETLUT, &SLMControlDialog::OnBnClickedSetlut)
 	ON_BN_CLICKED(IDC_SETWFC, &SLMControlDialog::OnBnClickedSetwfc)
-	ON_BN_CLICKED(IDC_SLM_MULTI, &SLMControlDialog::OnBnClickedMultiSLM)
+	ON_BN_CLICKED(IDC_SLM_DUAL, &SLMControlDialog::OnBnClickedDualSLM)
 	ON_CBN_SELCHANGE(IDC_SLM_ALLSAME, &SLMControlDialog::OnCbnChangeSlmAll)
+	ON_CBN_SELCHANGE(ID_SLM_SELECT, &SLMControlDialog::OnCbnSelchangeSlmSelect)
 END_MESSAGE_MAP()
 
 // SLMControlDialog message handlers
@@ -128,16 +130,14 @@ void SLMControlDialog::OnBnClickedSetlut() {
 		}
 		filePath = CT2A(fileName);
 
-		int slmNum;
 		if (this->SLM_SetALLSame_.GetCheck() == BST_UNCHECKED) {
 			// Get the SLM being assinged the LUT file, asssumes the index poistion of the selection is consistent with board selection
 			//		for example if the user selects 1 (out of 2) the value should be 0.  This is done currently (June 15th as a shortcut instead of parsing text of selection)
-			slmNum = this->slmSelection_.GetCurSel();
-			tryAgain = !attemptLUTload(slmNum, filePath);
+			tryAgain = !attemptLUTload(this->slmSelectionID_, filePath);
 		}
 		else {
 			// SLM set all setting is checked, so assign the same LUT file to all the boards
-			for (slmNum = 0; slmNum < this->slmCtrl->boards.size() && !tryAgain; slmNum++) {
+			for (int  slmNum = 0; slmNum < this->slmCtrl->boards.size() && !tryAgain; slmNum++) {
 				tryAgain = !attemptLUTload(slmNum, filePath);
 			}
 		}
@@ -186,7 +186,6 @@ bool SLMControlDialog::attemptWFCload(int slmNum, std::string filePath) {
 	return noErrors;
 }
 
-
 void SLMControlDialog::OnBnClickedSetwfc() {
 	bool tryAgain;
 	CString fileName;
@@ -219,33 +218,30 @@ void SLMControlDialog::OnBnClickedSetwfc() {
 	} while (tryAgain);
 }
 
-
 SLMController* SLMControlDialog::getSLMCtrl() { return this->slmCtrl; }
 
-
-void SLMControlDialog::OnBnClickedMultiSLM() {
-	// When attempting to enable Multi-SLM setup, will confirm that there are enough boards
-	if (this->multiEnable.GetCheck() == BST_CHECKED) {
+void SLMControlDialog::OnBnClickedDualSLM() {
+	// When attempting to enable Dual SLM setup, will confirm that there are enough boards
+	if (this->dualEnable.GetCheck() == BST_CHECKED) {
 		if (this->slmCtrl->boards.size() < 2) {
 			// If not possible, will give warning in console and window along with undoing the selection
-			Utility::printLine("WARNING: Multi-SLM was enabled but there are 1 or fewer boards! Disabling check.");
+			Utility::printLine("WARNING: Dual SLM was enabled but there are 1 or fewer boards! Disabling check.");
 			MessageBox(
 				(LPCWSTR)L"Dual SLM ERROR",
 				(LPCWSTR)L"You have attempted to enable Dual SLM but not enough boards were found! Disabling selection.",
 				MB_ICONWARNING | MB_OK
 			);
-			this->multiEnable.SetCheck(BST_UNCHECKED);
+			this->dualEnable.SetCheck(BST_UNCHECKED);
 		}
 		else {
-			Utility::printLine("INFO: Multi-SLM has been enabled");
+			Utility::printLine("INFO: Dual SLM has been enabled");
 
 		}
 	}
 	else {
-		Utility::printLine("INFO: Multi-SLM has been disabled");
+		Utility::printLine("INFO: Dual SLM has been disabled");
 	}
 }
-
 
 void SLMControlDialog::OnCbnChangeSlmAll() {
 	// If ALLSame is enabled, then disable the SLM selection box
@@ -263,10 +259,18 @@ void SLMControlDialog::OnCbnChangeSlmAll() {
 // Simple method for populating the selection list depending on number of boards connected
 void SLMControlDialog::populateSLMlist() {
 	this->slmSelection_.Clear();
+	int numBoards = this->slmCtrl->boards.size();
 	// Populate drop down menu with numbers for each SLM
-	for (int i = 0; i < this->slmCtrl->boards.size(); i++) {
+	for (int i = 0; i < numBoards; i++) {
 		CString strI(std::to_string(i + 1).c_str());
 		LPCTSTR lpstrI(strI);
 		this->slmSelection_.AddString(lpstrI);
 	}
+	// If there is at least one board, default to board 0 for selection
+	if (numBoards > 0) {
+		this->slmSelection_.SetCurSel(0);
+	}
 }
+
+// Update selection ID value
+void SLMControlDialog::OnCbnSelchangeSlmSelect() { this->slmSelectionID_ = this->slmSelection_.GetCurSel(); }

@@ -1,7 +1,4 @@
-////////////////////
-// Optimization handler methods implementation for brute force algorithm
-// Last edited: 06/18/2021 by Andrew O'Kins
-////////////////////
+
 #include "stdafx.h"						// Required in source
 #include "BruteForce_Optimization.h"	// Header file
 
@@ -15,12 +12,11 @@
 #include "Blink_SDK.h"
 #include "SLM_Board.h"
 
+#include <fstream>				// used to export information to file 
 #include <chrono>
 #include <string>
 using std::ofstream;
 using namespace cv;
-
-// TODO: Consider how to go about using multi-SLM with this algorithm
 
 bool BruteForce_Optimization::runOptimization() {
 	Utility::printLine("OPT 5 BUTTON CLICKED!");
@@ -39,23 +35,36 @@ bool BruteForce_Optimization::runOptimization() {
 	//Declare variables
 	// TODO: which of these can be combined which can be deleted or implified ALSO make them understandable!
 	double dblN;
-	int binCol, binRow, nn, mm, slmWidth, slmHeight, ll, lMax, kk;
+	int ii, jj, nn, mm, iMax, jMax, ll, lMax, kk;
 	int bin, dphi;
 	double allTimeBestFitness = 0;
 	double rMax;
 	double exposureTimesRatio;
-	// set values
-	slmWidth = this->sc->getBoardWidth(0);
-	slmHeight = this->sc->getBoardHeight(0);
+
+	unsigned char * aryptr = new unsigned char[slmLength];
+
+	//set variables TODO: determine wich are needed and whch are in controllers
+	iMax = 512;
+	jMax = 512;
 	bin = 8;
-	dblN = (slmWidth / bin) * (slmWidth / bin);
+	dblN = (iMax / bin) * (iMax / bin);
 	dphi = 16;
 
-	//Initialize array with 0
-	for (binCol = 0; binCol < slmWidth; binCol++) {
-		for (binRow = 0; binRow < slmHeight; binRow++) {
-			kk = binCol * 512 + binRow;
-			this->slmImg[kk] = 0;
+	// Open files for logging algorithm progress 
+	ofstream lmaxfile("logs/lmax.txt", std::ios::app);
+
+	//Find genome length
+	int genomeLength = sc->getBoardWidth(0) * sc->getBoardHeight(0) * 1;
+	if (genomeLength == -1)	{
+		Utility::printLine("ERRROR: Genome Length Cannot Be -1");
+		return false;
+	}
+
+	//Initialize array
+	for (ii = 0; ii < iMax; ii++) {
+		for (jj = 0; jj < jMax; jj++) {
+			kk = ii * 512 + jj;
+			aryptr[kk] = 0;
 		}
 	}
 
@@ -65,6 +74,8 @@ bool BruteForce_Optimization::runOptimization() {
 
 	// Instance variables we need
 	ImagePtr convImage, curImage;
+	unsigned char * camImg = NULL;
+
 	// Creating displays if desired
 	if (displayCamImage) {
 		this->camDisplay->OpenDisplay();
@@ -74,29 +85,27 @@ bool BruteForce_Optimization::runOptimization() {
 	}
 	try	{
 		this->timestamp = new TimeStampGenerator();
-		bool endOpt = false; // Initialy assume we are not going to end the optimziation
 		// Iterate over bins
-		for (binCol = 0; binCol < slmWidth && endOpt != true; binCol += bin) { // row
-			for (binRow = 0; binRow < slmHeight && endOpt != true; binRow += bin) { // column
+		for (ii = 0; ii < iMax && this->dlg.stopFlag != true; ii += bin) {
+			for (jj = 0; jj < jMax && this->dlg.stopFlag != true; jj += bin)	{
 				lMax = 0;
 				rMax = 0;
-				//find max phase for this bin
-				for (ll = 0; ll < 256 && endOpt != true; ll += dphi) {
+				//find max phase for bin
+				for (ll = 0; ll < 256 && this->dlg.stopFlag != true; ll += dphi)	{
 					//bin phase
-					for (nn = 0; nn < bin; nn++) {
-						for (mm = 0; mm < bin; mm++) {
-							kk = (binCol + nn) * slmWidth + (mm + binRow);
-							this->slmImg[kk] = ll;
+					for (nn = 0; nn < bin && this->dlg.stopFlag != true; nn++) {
+						for (mm = 0; mm < bin && this->dlg.stopFlag != true; mm++) {
+							kk = (ii + nn) * iMax + (mm + jj);
+							aryptr[kk] = ll;
 						}
 					}
-					// Update board with new image
+					//Update board with new image
 					for (int i = 1; i <= this->sc->boards.size(); i++) {
-						this->sc->blink_sdk->Write_image(i, this->slmImg, this->sc->getBoardHeight(i - 1), false, false, 0.0);
+						this->sc->blink_sdk->Write_image(i, aryptr, this->sc->getBoardHeight(i - 1), false, false, 0.0);
 					}
 					//Acquire and display camera image
 					this->cc->AcquireImages(curImage, convImage);
-
-					unsigned char* camImg = static_cast<unsigned char*>(convImage->GetData());
+					camImg = static_cast<unsigned char*>(convImage->GetData());
 					if (camImg == NULL)	{
 						Utility::printLine("ERROR: Image Acquisition has failed!");
 						continue;
@@ -104,28 +113,26 @@ bool BruteForce_Optimization::runOptimization() {
 					if (this->displayCamImage) {
 						this->camDisplay->UpdateDisplay(camImg);
 					}
-
 					exposureTimesRatio = this->cc->GetExposureRatio();
 					fitness = Utility::FindAverageValue(camImg, convImage->GetWidth(), curImage->GetHeight(), this->cc->targetRadius);
+					curImage->Release(); //important to not fill camera buffer
 
 					//Record current performance to file //Ask what kind of calcualtion is this?
 					double ms = index*dphi + ll / dphi;
 					this->timeVsFitnessFile << this->timestamp->MS_SinceStart() << " " << fitness * this->cc->GetExposureRatio() << " " << this->cc->GetExposureRatio() << std::endl;
 					this->tfile << ms << " " << fitness * this->cc->GetExposureRatio() << " " << this->cc->GetExposureRatio() << std::endl;
 
-					// Keep record of the best fitness value and image
+					// Keep record of the best fitness value and 
 					if (fitness * exposureTimesRatio > rMax) {
 						lMax = ll;
 						rMax = fitness * exposureTimesRatio;
-						this->bestImage->DeepCopy(convImage);
 					}
-					curImage->Release(); //important to not fill camera buffer
 
 					// Halve the exposure time if over max fitness allowed
 					if (fitness > maxFitnessValue) {
 						this->cc->HalfExposureTime();
 					}
-					endOpt = stopConditionsReached(fitness*exposureTimesRatio, this->timestamp->MS_SinceStart, 0);
+
 				}
 
 				//Print current optimization progress to conosle
@@ -137,48 +144,76 @@ bool BruteForce_Optimization::runOptimization() {
 				//set maximal phase
 				for (nn = 0; nn < bin; nn++) {
 					for (mm = 0; mm < bin; mm++) {
-						kk = (binCol + nn) * slmWidth + (mm + binRow);
-						this->slmImg[kk] = lMax;
+						kk = (ii + nn) * iMax + (mm + jj);
+						aryptr[kk] = lMax;
 					}
 				}
+
 				lmaxfile << lMax << " " << rMax << std::endl;
-				
+
+				/// Save image as jpeg
+				///	ostringstream filename;
+				/// filename << index << ".jpg";
+				/// pImage->Save(filename.str().c_str());*/
+
 				// Save progress data
+				ofstream rtime;
+				rtime.open("logs/Opt_rtime.txt", std::ios::app);
 				rtime << this->timestamp->MS_SinceStart() << " ms  " << lMax << "   " << this->cc->finalExposureTime << std::endl;
+				rtime.close();
+
 				index += 1;
 			}
+
+			//See if this is supposed to be here 
+			if (this->timestamp->S_SinceStart() > this->secondsToStop){
+				break;
+			}
 		}
+
+		//Record total time taken for optimization
+		std::string curTime = Utility::getCurTime();
+		ofstream tfile2("logs/" + curTime + "_OPT5_time.txt", std::ios::app);
+		tfile2 << this->timestamp->MS_SinceStart() << std::endl;
+		tfile2.close();
+
+		// Save how final optimization looks through camera
+		Mat Opt_ary = Mat(curImage->GetHeight(), curImage->GetWidth(), CV_8UC1, camImg);
+		cv::imwrite("logs/" + curTime + "_OPT5_Optimized.bmp", Opt_ary);
+
+		//Record the final (most fit) slm image
+		Mat m_ary = Mat(512, 512, CV_8UC1, aryptr);
+		imwrite("logs/" + curTime + "_OPT5_phaseopt.bmp", m_ary);
+
 	}
 	catch (Spinnaker::Exception &e) {
 		Utility::printLine("ERROR: " + string(e.what()));
 	}
-	// Cleanup
-	return shutdownOptimizationInstance();;
+
+	//Cleanup
+	lmaxfile.close();
+	shutdownOptimizationInstance();
+	delete[] aryptr;
+
+	//Reset UI State
+	this->isWorking = false;
+	this->dlg.disableMainUI(!isWorking);
+
+	return true;
 }
 
 bool BruteForce_Optimization::setupInstanceVariables() {
-	// Derive the length
 	this->slmLength = this->sc->getBoardWidth(0) * this->sc->getBoardHeight(0) * 1;
-	if (this->slmLength == -1)	{
-		Utility::printLine("ERRROR: Genome Length Cannot Be -1");
-		return false;
-	}
-	this->slmImg = new unsigned char[this->slmLength]; // Initialize array for storing slm images
+	// Allocate memory to store used images
+	//this->camImg = new unsigned char;
 
-	this->cc->startCamera(); // setup camera
+	this->cc->startCamera();
 
 	this->tfile.open("logs/Opt_functionEvals_vs_fitness.txt", std::ios::app);
 	this->timeVsFitnessFile.open("logs/Opt_time_vs_fitness.txt", std::ios::app);
 
-	// Setup displays
 	this->camDisplay = new CameraDisplay(this->cc->cameraImageHeight, this->cc->cameraImageWidth, "Camera Display");
 	this->slmDisplay = new CameraDisplay(this->sc->getBoardHeight(0), this->sc->getBoardWidth(0), "SLM Display");
-	// Setup container for best image
-	this->bestImage = Image::Create();
-
-	// Open files for logging algorithm progress 
-	this->lmaxfile.open("logs/lmax.txt", std::ios::app);
-	this->rtime.open("logs/Opt_rtime.txt", std::ios::app);
 
 	return true;
 }
@@ -195,25 +230,6 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 	std::rename("logs/Opt_rtime.txt", ("logs/" + curTime + "_OPT5_rtime.txt").c_str());
 	saveParameters(curTime, "OPT5");
 
-	//Record total time taken for optimization
-	std::string curTime = Utility::getCurTime();
-	std::ofstream tfile2("logs/" + curTime + "_OPT5_time.txt", std::ios::app);
-	tfile2 << this->timestamp->MS_SinceStart() << std::endl;
-	tfile2.close();
-
-	// Save how final optimization looks through camera
-	unsigned char* camImg = static_cast<unsigned char*>(this->bestImage->GetData());
-	Mat Opt_ary = Mat(this->bestImage->GetHeight(), this->bestImage->GetWidth(), CV_8UC1, camImg);
-	cv::imwrite("logs/" + curTime + "_OPT5_Optimized.bmp", Opt_ary);
-
-	//Record the final (most fit) slm image
-	Mat m_ary = Mat(512, 512, CV_8UC1, this->slmImg);
-	cv::imwrite("logs/" + curTime + "_OPT5_phaseopt.bmp", m_ary);
-
-	this->lmaxfile.close();
-	this->rtime.close();
-
-	delete[] this->slmImg;
 	// - camera shutdown
 	this->cc->stopCamera();
 	this->cc->shutdownCamera();
@@ -224,10 +240,6 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 	delete this->camDisplay;
 	delete this->slmDisplay;
 	delete this->timestamp;
-
-	//Reset UI State
-	this->isWorking = false;
-	this->dlg.disableMainUI(!isWorking);
 
 	return true;
 }

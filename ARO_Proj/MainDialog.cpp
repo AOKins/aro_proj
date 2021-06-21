@@ -1,5 +1,5 @@
 // [DESCRIPTION]
-// MainDialog.cpp: implementation file for the main dialog of the program
+// BlinkPCIeSDKDlg.cpp: implementation file for the main dialog of the program
 // Authors: Benjamin Richardson, Rebecca Tucker, Kostiantyn Makrasnov and More @ ISP ASL
 
 // [DEFINITIONS/ABRIVIATIONS]
@@ -93,7 +93,8 @@ END_MESSAGE_MAP()
 //					only one board for now.
 //
 ///////////////////////////////////////////////////////
-BOOL MainDialog::OnInitDialog() {
+BOOL MainDialog::OnInitDialog()
+{
 	//[CONSOLE OUTPUT]
 	//Enable console output
 	//#ifdef _DEBUG
@@ -131,10 +132,10 @@ BOOL MainDialog::OnInitDialog() {
 	//1) https://stackoverflow.com/questions/1044315/setwindowpos-function-not-moving-window
 	//2) https://www.youtube.com/watch?v=WHPNzx4E5rM
 	// - set tab headings
-	LPCTSTR headings[] = {L"Optimization Settings", L"SLM Settings", L"Camera Settings", L"AOI Settings"};
-	for (int i = 0; i < 4; i++) {
+	LPCTSTR headings[] = {L"Optimization Settings", L"SLM Settings", L"Camera Settings", L"AOI Settings" };
+	for (int i = 0; i < 4; i++)
 		m_TabControl.InsertItem(i, headings[i]);
-	}
+
 	// - set all tab components (Create Dialogs from Templates)
 	CRect rect;
 	m_TabControl.GetClientRect(&rect); //Gets dimensions of the tab control to fit in dialogs inside
@@ -300,7 +301,7 @@ HCURSOR MainDialog::OnQueryDragIcon()
 //////////////////////////////////////////////
 void MainDialog::OnSelchangeImageListbox() {
 	//Figure out which image in the list was just selected
-	int sel = m_ImageListBox.GetCurSel();
+	int sel = this->m_ImageListBox.GetCurSel();
 	if (sel == LB_ERR){ //nothing selected
 		return;
 	}
@@ -328,7 +329,7 @@ void MainDialog::OnClose() {
 		Utility::printLine("WARNING: Optimization still running!");
 		MessageBox(
 			(LPCWSTR)L"Still running optimization!",
-			(LPCWSTR)L"The optimization is still running! Must stop it first!",
+			(LPCWSTR)L"The optimization is still running! Must wait to stop it first.",
 			MB_ICONWARNING | MB_OK
 			);
 	}
@@ -336,7 +337,7 @@ void MainDialog::OnClose() {
 		Utility::printLine("INFO: System beginning to close closing!");
 
 		delete this->camCtrl;
-		// delete this->slmCtrl SLM controller is destructed by the SLM Dialog Controller
+		// SLM controller is destructed by the SLM Dialog Controller
 
 		//Finish console output
 		fclose(fp);
@@ -375,6 +376,7 @@ void MainDialog::OnOK()
 void MainDialog::OnCompensatePhaseCheckbox()
 {
 	UpdateData(true);
+
 	//Re-load the sequence if apropriate checkbox pressed
 	slmCtrl->LoadSequence();
 	//Load the currently selected image to the SLM
@@ -387,7 +389,6 @@ void MainDialog::OnBnClickedUgaButton()
 	this->opt_selection_ = OptType::uGA;
 	Utility::printLine("INFO: uGA optimization selected!");
 
-	// Disable the selected option and enable the others as well as the START/STOP button now that an algorithm for sure has been chosen
 	this->m_uGAButton.EnableWindow(false);
 	this->m_SGAButton.EnableWindow(true);
 	this->m_OptButton.EnableWindow(true);
@@ -400,7 +401,6 @@ void MainDialog::OnBnClickedSgaButton()
 	Utility::printLine("INFO: SGA optimization selected!");
 	this->opt_selection_ = OptType::SGA;
 
-	// Disable the selected option and enable the others as well as the START/STOP button now that an algorithm for sure has been chosen
 	this->m_SGAButton.EnableWindow(false);
 	this->m_uGAButton.EnableWindow(true);
 	this->m_OptButton.EnableWindow(true);
@@ -413,7 +413,6 @@ void MainDialog::OnBnClickedOptButton()
 	Utility::printLine("INFO: OPT5 optimization selected!");
 	this->opt_selection_ = OptType::OPT5;
 
-	// Disable the selected option and enable the others as well as the START/STOP button now that an algorithm for sure has been chosen
 	this->m_OptButton.EnableWindow(false);
 	this->m_SGAButton.EnableWindow(true);
 	this->m_uGAButton.EnableWindow(true);
@@ -455,7 +454,8 @@ void MainDialog::OnTcnSelchangeTab1(NMHDR *pNMHDR, LRESULT *pResult)
 }
 
 // [UI UPDATE]
-void MainDialog::disableMainUI(bool isMainEnabled) {
+void MainDialog::disableMainUI(bool isMainEnabled)
+{
 	//All controls have thesame state
 	// - enabled: when nothing is running
 	// - disabled when the algorithm is running
@@ -467,19 +467,14 @@ void MainDialog::disableMainUI(bool isMainEnabled) {
 }
 
 // Worker thread process for running optimization
-// Declared in this scope to work with MFC threading
-// Input: instance - pointer to MainDialog (will be cast as (MainDialog*)
-// Output: Optimization will run with type based on selection through MainDialog
 UINT __cdecl optThreadMethod(LPVOID instance) {
-	// Cast input into MainDialog
-	MainDialog * dlg = static_cast<MainDialog*>(instance);
+	MainDialog * dlg = (MainDialog*)instance;
 	dlg->disableMainUI(false); // Disable main UI (except for Start/Stop Button)
 
 	// Setting that we are now runnign an optimization
 	dlg->running_optimization_ = true;	// Change label of this button to START now that the optimization is over
 	dlg->m_StartStopButton.SetWindowTextW(L"STOP");
-	bool enableDual = dlg->m_slmControlDlg.multiEnable.GetCheck() == BST_CHECKED;
-	// Check if multi-slm, currently (June 18th 2021) doesn't actually implement it
+	bool enableDual = dlg->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED;
 	if (enableDual) {
 		Utility::printLine("INFO: Dual SLM has been set to TRUE!  Currently feature is not implemented");
 	}
@@ -487,7 +482,7 @@ UINT __cdecl optThreadMethod(LPVOID instance) {
 		Utility::printLine("INFO: Dual SLM has been set to FALSE!");
 	}
 
-	// Perform the optimzation operation depending on selection and get if successful (no errors) or not
+	// Perform the optimzation operation depending on selection
 	if (dlg->opt_selection_ == dlg->OptType::OPT5) {
 		BruteForce_Optimization opt((*dlg), dlg->camCtrl, dlg->slmCtrl);
 		dlg->opt_success = opt.runOptimization();
@@ -518,11 +513,12 @@ UINT __cdecl optThreadMethod(LPVOID instance) {
 	return 0;
 }
 
-void MainDialog::OnBnClickedStartStopButton() {
-	// If already running the optimization, this is acting as STOP button and should attempt to stop the optimization safely by setting stop flag
+void MainDialog::OnBnClickedStartStopButton()
+{
 	if (this->running_optimization_ == true) {
-		Utility::printLine("INFO: Attempting to stop safely");
+		Utility::printLine("INFO: Optimization currently running, attempting to stop safely");
 		this->stopFlag = true;
+
 	}
 	else {
 		Utility::printLine("INFO: No optimization currently running, attempting to start depending on selection");
@@ -531,6 +527,8 @@ void MainDialog::OnBnClickedStartStopButton() {
 			Utility::printLine("WARNING: Optimization worker thread is not null but creating another thread");
 		}
 		this->runOptThread = AfxBeginThread(optThreadMethod, LPVOID(this));
-		this->runOptThread->m_bAutoDelete = true; // Explicit setting for auto delete when thread is done
+		this->runOptThread->m_bAutoDelete = true; // Setting for auto delete
 	}
+
 }
+

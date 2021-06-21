@@ -1,10 +1,12 @@
-// ARO_App.h : main header file for the ARO Project application 
+
+// BlinkPCIeSDK.h : main header file for the ARO Project application 
 // here we inherit from the base class CWinApp to begin with a 
 // Windows App template
 
 #include "MainDialog.h"
 
-class ARO_AppApp : public CWinApp {
+class ARO_AppApp : public CWinApp
+{
 public:
 	// [CONSTRUCTOR(S)]
 	ARO_AppApp();
