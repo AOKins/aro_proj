@@ -14,17 +14,13 @@ using std::ofstream;
 #include <vector> // For managing ind_threads
 using std::vector;
 #include <thread> // For ind_threads used in runOptimization
-using std::thread;
-#include <mutex>
-//#include "ProjMutex.h"
+#include <mutex>  // Mutexes to protect identified critical sections
 
 #include "Spinnaker.h"
 #include "SpinGenApi\SpinnakerGenApi.h"
 using namespace Spinnaker;
 using namespace Spinnaker::GenApi;
 using namespace Spinnaker::GenICam;
-
-
 
 class Optimization {
 protected:
@@ -34,13 +30,13 @@ protected:
 	SLMController* sc;
 	//Base algorithm parameters
 	double acceptedSimilarity = .97; // images considered the same when reach this threshold (has to be less than 1)
-	double maxFitnessValue    = 200; // max allowed fitness value - when reached exposure is halved (TODO: check this feature)
-	double maxGenenerations   = 3000;
+	double maxFitnessValue = 200; // max allowed fitness value - when reached exposure is halved (TODO: check this feature)
+	double maxGenenerations = 3000;
 
 	//Base algorithm stop conditions
-	double fitnessToStop =  0;
+	double fitnessToStop = 0;
 	double secondsToStop = 60;
-	double genEvalToStop =  0;
+	double genEvalToStop = 0;
 
 	//Preference-type parameters
 	bool saveImages = false;		// TRUE -> save images of the fittest individual of each gen
@@ -48,20 +44,20 @@ protected:
 	bool displaySLMImage = false;   // TODO: only first SLM right now - add functionality to display any or all boards
 
 	//Instance variables (used during optimization process)
-		// Values assigned within setupInstanceVariables(), then if needed cleared in shutdownOptimizationInstance()
+	// Values assigned within setupInstanceVariables(), then if needed cleared in shutdownOptimizationInstance()
 	bool isWorking = false; // true if currently actively running the optimization algorithm
 	int populationSize; // Size of the population being used
 	int eliteSize;		// Number of elite individuals within the population (should be less than populationSize)
 	int slmLength;		// Size of images for sc
 	int imageLength;	// Size of images from cc
-	unsigned char *aryptr;
+	unsigned char *slmImg;
 	bool shortenExposureFlag;   // Set to true by individual if fitness is too high
 	bool stopConditionsMetFlag; // Set to true if a stop condition was reached by one of the individuals
 	CameraDisplay * camDisplay; // Display for camera
 	CameraDisplay * slmDisplay; // Display for SLM
 	int curr_gen;				// Current generation being evaluated (start at 0)
 	TimeStampGenerator * timestamp; // Timer to track and store elapsed time as the algorithm executes
-	
+
 	ImagePtr bestImage;
 	ImageScaler * scaler;
 	// Output debug streams // TODO at finished state may seek to change/remove these to improve performance
@@ -72,17 +68,35 @@ protected:
 	// Methods for use in runOptimization()
 	bool prepareStopConditions();
 	bool prepareSoftwareHardware();
-	ImageScaler* setupScaler(unsigned char *aryptr);
+
+	// Creates a scaler with given SLMController
+	// Input: slmImg - array that will be storing scalled image to be initialized with 0's
+	//		  slmNum - index for board that will be scaling to, 0 based
+	// Output: returns scaler that will scale
+	ImageScaler* setupScaler(unsigned char *slmImg, int slmNum);
+
+	// Check to see if we have reached the end condition
+	// Input:
+	//		curFitness - the current fitness to compare against fitnessToStop
+	//		curSecPassed - current passed time in seconds to compare against secondsToStop
+	//		curGenerations - the current generation that has been evaluated to compare against genEvalsToStop
+	// Output: returns true if either input is greater than compared against OR the MainDialog's stopFlag has been set to true
 	bool stopConditionsReached(double curFitness, double curSecPassed, double curGenerations);
+
+	// Save the various setting parameters used in this optimization
+	// Stores the values with formatting in "/logs/[time]_[optType]_Optimization_Parameters.txt"
+	// Input:
+	//		time - the current time as a string label
+	//		optType - a string for identifying the kind of optimization that has been performed
 	void saveParameters(std::string time, std::string optType);
 
+	// Methods relying on implementation from child classes
 	virtual bool setupInstanceVariables() = 0;		 // Setting up properties used in runOptimization()
 	virtual bool shutdownOptimizationInstance() = 0; // Cleaning up properties as well as final saving for runOptimization()
 	virtual bool runIndividual(int indID) = 0;		 // Method for handling the execution of an individual
 
-	vector<thread> ind_threads; // Vector hold threads
-
-	// Mutexes to protect
+	vector<std::thread> ind_threads; // Vector hold threads of running individuals
+	// Mutexes to protect critical sections
 	std::mutex hardwareMutex; // Mutex to protect access to the hardware used in evaluating an individual (SLM, Camera, etc.)
 	std::mutex consoleMutex, imageMutex, camDisplayMutex;	// Mutex to protect access to i/o and lastImage dimension values
 	std::mutex tfileMutex, timeVsFitMutex, efileMutex;					// Mutex to protect file i/o
