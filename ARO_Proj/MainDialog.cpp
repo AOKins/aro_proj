@@ -473,7 +473,7 @@ UINT __cdecl optThreadMethod(LPVOID instance) {
 
 	// Setting that we are now runnign an optimization
 	dlg->running_optimization_ = true;	// Change label of this button to START now that the optimization is over
-	dlg->m_StartStopButton.SetWindowTextW(L"STOP");
+	dlg->m_StartStopButton.SetWindowTextW(L"STOP OPTIMIZATION");
 	bool enableDual = dlg->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED;
 	if (enableDual) {
 		Utility::printLine("INFO: Dual SLM has been set to TRUE!  Currently feature is not implemented");
@@ -505,7 +505,7 @@ UINT __cdecl optThreadMethod(LPVOID instance) {
 	// Setting that we are no longer running an optimization
 	dlg->running_optimization_ = false;
 	// Change label of this button to START now that the optimization is over
-	dlg->m_StartStopButton.SetWindowTextW(L"START");
+	dlg->m_StartStopButton.SetWindowTextW(L"Start Optimization");
 
 	// Update UI
 	dlg->disableMainUI(true);

@@ -92,7 +92,7 @@ bool BruteForce_Optimization::runOptimization() {
 					}
 					// Update board with new image
 					for (int i = 1; i <= this->sc->boards.size(); i++) {
-						this->sc->blink_sdk->Write_image(i, this->slmImg, this->sc->getBoardHeight(i - 1), false, false, 0.0);
+						this->sc->blink_sdk->Write_image(i, this->slmImg, this->sc->getBoardHeight(i - 1), false, false, 0);
 					}
 					//Acquire and display camera image
 					this->cc->AcquireImages(curImage, convImage);
@@ -126,7 +126,7 @@ bool BruteForce_Optimization::runOptimization() {
 					if (fitness > maxFitnessValue) {
 						this->cc->HalfExposureTime();
 					}
-					endOpt = stopConditionsReached(fitness*exposureTimesRatio, this->timestamp->MS_SinceStart(), 0);
+					endOpt = dlg.stopFlag;
 				}
 
 				//Print current optimization progress to conosle

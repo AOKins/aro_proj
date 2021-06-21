@@ -82,22 +82,18 @@ public:
 		}
 		Utility::rejoinClear(this->ind_threads);		// Rejoin
 
-		// Lambda function for using DeepCopyIndividual in parallel
-		// Input: id - index for individual to be copied from individuals_ and to temp
-		// Captures: temp - pointer to array of individuals to store in
-		//  		 this - current Population instance for using appropriate methods
-		auto copyInds = [this, temp](int id){
-			this->DeepCopyIndividual(temp[id], this->individuals_[id]);
-		};
-		
 		// for the elites, copy directly into new generation
 		// Performing deep copy for individuals in parallel
 		for (int id = (this->pop_size_ - this->elite_size_); id < this->pop_size_; id++) {
-			this->ind_threads.push_back(thread(copyInds, id));
+			// Lambda function for using DeepCopyIndividual in parallel
+			// Input: id - index for individual to be copied from individuals_ and to temp
+			// Captures: temp - pointer to array of individuals to store in
+			//  		 this - current Population instance for using appropriate methods
+			this->ind_threads.push_back(thread(
+				[this, temp](int id){this->DeepCopyIndividual(temp[id], this->individuals_[id]);}, id));
 		}
 		Utility::rejoinClear(this->ind_threads);		// Rejoin
 		
-	
 		// Collect the resulting same_check values,
 			// if at least one is false (not similar) then the result is set to false
 		bool same_check_result = true;
@@ -109,16 +105,15 @@ public:
 
 		// if all of our individuals are labeled similar, replace half of them with new images
 		if (same_check_result) {
-			// Lambda function to ensure that generating random image is done in parallel
-			// Input: id - index for individual to be set
-			// Captures: temp - pointer to array of individuals to store new random genomes in
-			//  		 this - current Population instance for using appropriate methods
-			auto randInd = [temp, this](int id) {
-				temp[id].set_genome(this->GenerateRandomImage());
-			};
 			// Calling generate random image for half of pop individuals
 			for (int i = 0; i < this->pop_size_ / 2; i++) {
-				this->ind_threads.push_back(thread(randInd, i));
+				// Lambda function to ensure that generating random image is done in parallel
+				// Input: id - index for individual to be set
+				// Captures: temp - pointer to array of individuals to store new random genomes in
+				//  		 this - current Population instance for using appropriate methods
+				this->ind_threads.push_back(thread(
+					[temp, this](int id) {temp[id].set_genome(this->GenerateRandomImage());}, i)
+				);
 			}
 			Utility::rejoinClear(this->ind_threads);			// Rejoin
 		}

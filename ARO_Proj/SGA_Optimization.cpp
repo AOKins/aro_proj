@@ -48,18 +48,15 @@ bool SGA_Optimization::runOptimization() {
 		// Optimization loop for each generation
 		for (this->curr_gen = 0; this->curr_gen < maxGenenerations && !stopConditionsMetFlag; this->curr_gen++) {
 			// Run each individual, giving them all fitness values as a result of their genome
-
-			auto runInd = [this](int indID) {
-				this->runIndividual(indID);
-			};
-
-
 			for (int indID = 0; indID < population->getSize(); indID++) {
+				// Lambda function to access this instance of Optimization to perform runIndividual
+				// Input: indID - index location to run individual from in population
+				// Captures: this - pointer to current SGA_Optimization instance
+				this->ind_threads.push_back(std::thread([this](int indID) {	this->runIndividual(indID); }, indID)); // Parallel
 				//this->runIndividual(indID); // Serial
-				this->ind_threads.push_back(std::thread(runInd, indID)); // Parallel
 			}
 			Utility::rejoinClear(this->ind_threads);
-
+	
 			// Create a more fit generation
 			population->nextGeneration();
 			// Half exposure time if fitness value is too high
@@ -93,8 +90,7 @@ bool SGA_Optimization::runOptimization() {
 //     stopConditionsMetFlag is set to true if conditions met
 bool SGA_Optimization::runIndividual(int indID) {
 	//Apply LUT/Binning to randomly the generated individual's image
-	std::vector<int> * tempptr = (population->getGenome(indID)); // Get the SLM image for the individual
-	scaler->TranslateImage(tempptr, this->slmImg); // Scale the individual's image to SLM size
+	std::vector<int> * slmVec = (population->getGenome(indID)); // Get the SLM image for the individual
 
 	// Local scoped ImagePtr's as we are only concerned with this individual
 	// Image pointers to the image from the Camera's buffer
@@ -107,9 +103,18 @@ bool SGA_Optimization::runIndividual(int indID) {
 	std::unique_lock<std::mutex> hardwareLock(hardwareMutex, std::defer_lock);
 
 	hardwareLock.lock();
+	// If the hardware boolean is already true, then that means another thread is using this hardware and we have an issue
+	if (this->usingHardware) {
+		Utility::printLine("ERROR: HARDWARE BEING USED BY OTHER THREAD(S)!");
+		hardwareLock.unlock();
+		return false;
+	}
+	this->usingHardware = true;
+
+	scaler->TranslateImage(slmVec, this->slmImg); // Scale the individual's image to SLM size in preperation of the hardware
 	// Write translated image to SLM boards //TODO: modify as it assumes boards get the same image and have same size
 	for (int i = 1; i <= sc->boards.size(); i++) {
-		this->sc->blink_sdk->Write_image(i, this->slmImg, sc->getBoardHeight(i - 1), false, false, 0.0);
+		this->sc->blink_sdk->Write_image(i, this->slmImg, sc->getBoardHeight(i - 1), false, false, 0);
 	}
 	// Acquire images // - take image
 	this->cc->AcquireImages(curImage, convImage);
@@ -125,12 +130,12 @@ bool SGA_Optimization::runIndividual(int indID) {
 		Utility::printLine("WARNING: current image release failed. no need to release image at this point");
 		consoleLock.unlock();
 	}
-
+	this->usingHardware = false;
 	hardwareLock.unlock(); // Now done with the hardware
 
 	// Getting the image dimensions and data from resulting image
-	int imgWidth = thisImageConvert->GetWidth();
-	int imgHeight = thisImageConvert->GetHeight();
+	size_t imgWidth = thisImageConvert->GetWidth();
+	size_t imgHeight = thisImageConvert->GetHeight();
 	unsigned char * camImg = static_cast<unsigned char*>(thisImageConvert->GetData());
 
 	// Giving error and ends early if there is no data
@@ -176,8 +181,10 @@ bool SGA_Optimization::runIndividual(int indID) {
 		imageLock.unlock();
 	}
 
-	// Check stop conditions
-	stopConditionsMetFlag = stopConditionsReached((fitness*exposureTimesRatio), timestamp->S_SinceStart(), curr_gen + 1);
+	// Check stop conditions, only assign true if we reached the condition (race condition if done directly)
+	if (stopConditionsReached((fitness*exposureTimesRatio), this->timestamp->S_SinceStart(), this->curr_gen + 1) == true) {
+		this->stopConditionsMetFlag = true;
+	}
 
 	// Update fitness for this individual
 	population->setFitness(indID, fitness * exposureTimesRatio);
@@ -255,8 +262,8 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 
 	// Get elite info
 	unsigned char* eliteImage = static_cast<unsigned char*>(this->bestImage->GetData());
-	int imgHeight = this->bestImage->GetHeight();
-	int imgWidth = this->bestImage->GetWidth();
+	size_t imgHeight = this->bestImage->GetHeight();
+	size_t imgWidth = this->bestImage->GetWidth();
 
 	// Save how final optimization looks through camera
 	std::string curTime = Utility::getCurTime();

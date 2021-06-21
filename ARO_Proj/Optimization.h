@@ -46,6 +46,7 @@ protected:
 	//Instance variables (used during optimization process)
 	// Values assigned within setupInstanceVariables(), then if needed cleared in shutdownOptimizationInstance()
 	bool isWorking = false; // true if currently actively running the optimization algorithm
+	bool usingHardware = false; // debug flag of using hardware currently in a given thread (to know if accidentally having two threads use hardware at once!)
 	int populationSize; // Size of the population being used
 	int eliteSize;		// Number of elite individuals within the population (should be less than populationSize)
 	int slmLength;		// Size of images for sc

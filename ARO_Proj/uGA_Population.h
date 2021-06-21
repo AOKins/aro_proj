@@ -66,17 +66,15 @@ public:
 
 		// if all of our individuals are labeled similar, replace half of them with new images
 		if (same_check_result) {
-			// Lambda function to ensure that generating random image is done in parallel
-			// Input: id - index for individual to be set
-			// Captures:
-			//		temp - pointer to array of individuals to store new random genomes in
-			//		this - pointer to current instance of uGA_Population for accessing GenerateRandomImage method
-			auto randInd = [temp, this](int id) {
-				temp[id].set_genome(this->GenerateRandomImage());
-			};
 			// Calling generate random image for bottom 4 individuals (keeping best)
 			for (int i = 0; i < 4; i++) {
-				this->ind_threads.push_back(thread(randInd, i));
+				// Lambda function to ensure that generating random image is done in parallel
+				// Input: id - index for individual to be set
+				// Captures:
+				//		temp - pointer to array of individuals to store new random genomes in
+				//		this - pointer to current instance of uGA_Population for accessing GenerateRandomImage method
+				this->ind_threads.push_back(thread([temp, this](int id)
+					{temp[id].set_genome(this->GenerateRandomImage()); }, i));
 			}
 			Utility::rejoinClear(this->ind_threads);			// Rejoin
 		}
