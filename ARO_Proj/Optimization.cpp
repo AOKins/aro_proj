@@ -1,99 +1,158 @@
-#ifndef OPTIMIZATION_H_
-#define OPTIMIZATION_H_
 
-class MainDialog;
-class CameraController;
-class SLMController;
-class ImageScaler;
-class CameraDisplay;
-class TimeStampGenerator;
-
+#include "stdafx.h"				// Required in source
 #include <string>
-#include <fstream>				// used to export information to file for debugging
-using std::ofstream;
-#include <vector> // For managing ind_threads
-using std::vector;
-#include <thread> // For ind_threads used in runOptimization
-using std::thread;
-#include <mutex>
-//#include "ProjMutex.h"
+using std::string;
+#include "Optimization.h"		// Header file
 
-#include "Spinnaker.h"
-#include "SpinGenApi\SpinnakerGenApi.h"
-using namespace Spinnaker;
-using namespace Spinnaker::GenApi;
-using namespace Spinnaker::GenICam;
+#include "MainDialog.h"			// used for UI reference
+#include "CameraController.h"
+#include "SLMController.h"
+#include "Utility.h"			// used for debug statements
+#include "Timing.h"				// contains time keeping functions
+#include "ImageScaler.h"		// changes size of image to fit slm //ASK: is this correct? 
+
+#include <fstream>				// used to export information to file 
+#include <chrono>
+#include <thread>
+
+Optimization::Optimization(MainDialog& dlg_, CameraController* cc, SLMController* sc) : dlg(dlg_) {
+	if (cc == nullptr)
+		Utility::printLine("WARNING: invalid camera controller passed to optimization!");
+	if (sc == nullptr)
+		Utility::printLine("WARNING: invalid SLM controller passed to optimization!");
+	this->cc = cc;
+	this->sc = sc;
+	this->ind_threads.clear();
+}
+
+// [SETUP]
+bool Optimization::prepareStopConditions() {
+	bool result = true;
+
+	// Fitness to stop at
+	try	{
+		CString path;
+		this->dlg.m_optimizationControlDlg.m_minFitness.GetWindowTextW(path);
+		if (path.IsEmpty()){
+			throw new std::exception();
+		}
+		this->fitnessToStop = _tstof(path);
+	}
+	catch (...)	{
+		Utility::printLine("ERROR: Can't Parse Minimum Fitness");
+		result = false;
+	}
+
+	// Time (in sec) to stop at
+	try	{
+		CString path;
+		this->dlg.m_optimizationControlDlg.m_minSeconds.GetWindowTextW(path);
+		if (path.IsEmpty()) throw new std::exception();
+		secondsToStop = _tstof(path);
+	}
+	catch (...)	{
+		Utility::printLine("ERROR: Can't Parse Minimum Seconds Elapsed");
+		result = false;
+	}
+
+	// Generations evaluations to stop at
+	try	{
+		CString path;
+		this->dlg.m_optimizationControlDlg.m_minGenerations.GetWindowTextW(path);
+		if (path.IsEmpty()) throw new std::exception();
+		genEvalToStop = _tstof(path);
+	}
+	catch (...)	{
+		Utility::printLine("ERROR: Can't Parse Minimum Function Evaluations");
+		result = false;
+	}
+
+	return result;
+}
+
+//[SETUP]
+bool Optimization::prepareSoftwareHardware() {
+	Utility::printLine("INFO: Preparing equipment and software for optimization!");
+
+	//Can't start operation if an optimization is already running 
+	if (this->isWorking) {
+		Utility::printLine("WARNING: cannot prepare hardware the second time!");
+		return false;
+	}
+	Utility::printLine("INFO: No optimization running, able to perform setup!");
 
 
+	// - configure equipment
+	if (!this->cc->setupCamera())	{
+		Utility::printLine("ERROR: Camera setup has failed!");
+		return false;
+	}
+	Utility::printLine("INFO: Camera setup complete!");
 
-class Optimization {
-protected:
-	//Object references
-	MainDialog& dlg;
-	CameraController* cc;
-	SLMController* sc;
-	//Base algorithm parameters
-	double acceptedSimilarity = .97; // images considered the same when reach this threshold (has to be less than 1)
-	double maxFitnessValue = 200; // max allowed fitness value - when reached exposure is halved (TODO: check this feature)
-	double maxGenenerations = 3000;
+	if (!this->sc->slmCtrlReady()) {
+		Utility::printLine("ERROR: SLM setup has failed!");
+		return false;
+	}
+	Utility::printLine("INFO: SLM setup complete!");
 
-	//Base algorithm stop conditions
-	double fitnessToStop = 0;
-	double secondsToStop = 60;
-	double genEvalToStop = 0;
+	// - configure algorithm parameters
+	if (!prepareStopConditions()) {
+		Utility::printLine("ERROR: Preparing stop conditions has failed!");
+		return false;
+	}
+	Utility::printLine("INFO: Stop conditions updated!");
 
-	//Preference-type parameters
-	bool saveImages = false;		// TRUE -> save images of the fittest individual of each gen
-	bool displayCamImage = true;    // TRUE -> opens a window showing the camera image
-	bool displaySLMImage = false;   // TODO: only first SLM right now - add functionality to display any or all boards
+	// - configure proper UI states
+	this->isWorking = true;
+	this->dlg.disableMainUI(!isWorking);
+	return true;
+}
 
-	//Instance variables (used during optimization process)
-	// Values assigned within setupInstanceVariables(), then if needed cleared in shutdownOptimizationInstance()
-	bool isWorking = false; // true if currently actively running the optimization algorithm
-	int populationSize; // Size of the population being used
-	int eliteSize;		// Number of elite individuals within the population (should be less than populationSize)
-	int slmLength;		// Size of images for sc
-	int imageLength;	// Size of images from cc
-	unsigned char *aryptr;
-	bool shortenExposureFlag;   // Set to true by individual if fitness is too high
-	bool stopConditionsMetFlag; // Set to true if a stop condition was reached by one of the individuals
-	CameraDisplay * camDisplay; // Display for camera
-	CameraDisplay * slmDisplay; // Display for SLM
-	int curr_gen;				// Current generation being evaluated (start at 0)
-	TimeStampGenerator * timestamp; // Timer to track and store elapsed time as the algorithm executes
+ImageScaler* Optimization::setupScaler(unsigned char *slmImg, int slmNum = 0) {
+	ImageScaler* scaler = new ImageScaler(sc->getBoardWidth(slmNum), sc->getBoardHeight(slmNum), 1, NULL);
+	scaler->SetBinSize(cc->binSizeX, cc->binSizeY);
+	scaler->SetLUT(NULL);
+	scaler->SetUsedBins(cc->numberOfBinsX, cc->numberOfBinsY);
+	scaler->ZeroOutputImage(slmImg); // Initialize the slm image array to be all zeros
 
-	ImagePtr bestImage;
-	ImageScaler * scaler;
-	// Output debug streams // TODO at finished state may seek to change/remove these to improve performance
-	ofstream tfile;				// Record elite individual progress over generations
-	ofstream timeVsFitnessFile;	// Recoding general fitness progress
-	ofstream efile;				// Expsoure file to record when exposure is shortened
+	return scaler;
+}
 
-	// Methods for use in runOptimization()
-	bool prepareStopConditions();
-	bool prepareSoftwareHardware();
-	ImageScaler* setupScaler(unsigned char *aryptr);
-	bool stopConditionsReached(double curFitness, double curSecPassed, double curGenerations);
-	void saveParameters(std::string time, std::string optType);
+// [SAVE/LOAD FEATURES]
+void Optimization::saveParameters(std::string time, std::string optType) {
+	std::ofstream paramFile("logs/" + time + "_" + optType + "_Optimization_Parameters.txt", std::ios::app);
+	paramFile << "----------------------------------------------------------------" << std::endl;
+	paramFile << "OPTIMIZATION SETTINGS:" << std::endl;
+	paramFile << "Type - " << optType << std::endl;
+	if (optType != "OPT5") {
+		paramFile << "Stop Fitness - " << std::to_string(fitnessToStop) << std::endl;
+		paramFile << "Stop Time - " << std::to_string(secondsToStop) << std::endl;
+		paramFile << "Stop Generation - " << std::to_string(genEvalToStop) << std::endl;
+	}
+	paramFile << "----------------------------------------------------------------" << std::endl;
+	paramFile << "CAMERA SETTINGS:" << std::endl;
+	paramFile << "AOI x0 - " << std::to_string(cc->x0) << std::endl;
+	paramFile << "AOI y0 - " << std::to_string(cc->y0) << std::endl;
+	paramFile << "AOI Image Width - " << std::to_string(cc->cameraImageWidth) << std::endl;
+	paramFile << "AOI Image Height - " << std::to_string(cc->cameraImageHeight) << std::endl;
+	paramFile << "Acquisition Gamma - " << std::to_string(cc->gamma) << std::endl;
+	paramFile << "Acquisition FPS - " << std::to_string(cc->fps) << std::endl;
+	paramFile << "Acquisition Initial Exposure Time - " << std::to_string(cc->initialExposureTime) << std::endl;
+	paramFile << "Number of Bins X - " << std::to_string(cc->numberOfBinsX) << std::endl;
+	paramFile << "Number of Bins Y - " << std::to_string(cc->numberOfBinsY) << std::endl;
+	paramFile << "Bins Size X - " << std::to_string(cc->numberOfBinsX) << std::endl;
+	paramFile << "Bins Size Y - " << std::to_string(cc->numberOfBinsY) << std::endl;
+	paramFile << "Target Radius - " << std::to_string(cc->targetRadius) << std::endl;
+	paramFile << "----------------------------------------------------------------" << std::endl;
+	paramFile << "SLM SETTINGS:" << std::endl;
+	paramFile << "Board Amount - " << std::to_string(sc->numBoards) << std::endl;
+	paramFile.close();
+}
 
-	virtual bool setupInstanceVariables() = 0;		 // Setting up properties used in runOptimization()
-	virtual bool shutdownOptimizationInstance() = 0; // Cleaning up properties as well as final saving for runOptimization()
-	virtual bool runIndividual(int indID) = 0;		 // Method for handling the execution of an individual
-
-	vector<thread> ind_threads; // Vector hold threads
-
-	// Mutexes to protect
-	std::mutex hardwareMutex; // Mutex to protect access to the hardware used in evaluating an individual (SLM, Camera, etc.)
-	std::mutex consoleMutex, imageMutex, camDisplayMutex;	// Mutex to protect access to i/o and lastImage dimension values
-	std::mutex tfileMutex, timeVsFitMutex, efileMutex;					// Mutex to protect file i/o
-	std::mutex stopFlagMutex, exposureFlagMutex;						// Mutex to protect important flags 
-public:
-	// Constructor
-	Optimization(MainDialog& dlg_, CameraController* cc, SLMController* sc);
-
-	// Method for performing the optimization
-	// Output: returns true if successful ran without error, false if error occurs
-	virtual bool runOptimization() = 0;
-};
-
-#endif
+//[CHECKS]
+bool Optimization::stopConditionsReached(double curFitness, double curSecPassed, double curGenerations) {
+	if ((curFitness > this->fitnessToStop && curSecPassed > this->secondsToStop && curGenerations > this->genEvalToStop) || dlg.stopFlag == true) {
+		return true;
+	}
+	return false;
+}

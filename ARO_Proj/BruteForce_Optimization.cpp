@@ -15,6 +15,7 @@
 #include "Blink_SDK.h"
 #include "SLM_Board.h"
 
+#include <string>
 #include <chrono>
 #include <string>
 using std::ofstream;
@@ -125,7 +126,7 @@ bool BruteForce_Optimization::runOptimization() {
 					if (fitness > maxFitnessValue) {
 						this->cc->HalfExposureTime();
 					}
-					endOpt = stopConditionsReached(fitness*exposureTimesRatio, this->timestamp->MS_SinceStart, 0);
+					endOpt = stopConditionsReached(fitness*exposureTimesRatio, this->timestamp->MS_SinceStart(), 0);
 				}
 
 				//Print current optimization progress to conosle
@@ -196,7 +197,7 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 	saveParameters(curTime, "OPT5");
 
 	//Record total time taken for optimization
-	std::string curTime = Utility::getCurTime();
+	curTime = Utility::getCurTime();
 	std::ofstream tfile2("logs/" + curTime + "_OPT5_time.txt", std::ios::app);
 	tfile2 << this->timestamp->MS_SinceStart() << std::endl;
 	tfile2.close();

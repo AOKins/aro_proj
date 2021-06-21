@@ -49,8 +49,13 @@ bool uGA_Optimization::runOptimization() {
 		for (this->curr_gen = 0; this->curr_gen < this->maxGenenerations && !this->stopConditionsMetFlag; this->curr_gen++) {
 			// Run each individual, giving them all fitness values as a result of their genome
 			for (int indID = 0; indID < this->population->getSize(); indID++) {
+
+				auto runInd = [this](int indID) {
+					this->runIndividual(indID);
+				};
+
 				//this->runIndividual(indID); // Serial
-				this->ind_threads.push_back(std::thread(this->runIndividual, indID)); // Parallel
+				this->ind_threads.push_back(std::thread(runInd, indID)); // Parallel
 			}
 			Utility::rejoinClear(this->ind_threads);
 
@@ -225,7 +230,7 @@ bool uGA_Optimization::setupInstanceVariables() {
 		this->slmDisplay->OpenDisplay();
 	}
 	// Scaler Setup (using base class)
-	this->scaler = setupScaler(this->slmImg);
+	this->scaler = setupScaler(this->slmImg, 0);
 	this->slmImg = new unsigned char[slmLength]; // Char array for writing SLM images
 
 	// Start up the camera

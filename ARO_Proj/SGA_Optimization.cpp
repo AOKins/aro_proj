@@ -48,9 +48,15 @@ bool SGA_Optimization::runOptimization() {
 		// Optimization loop for each generation
 		for (this->curr_gen = 0; this->curr_gen < maxGenenerations && !stopConditionsMetFlag; this->curr_gen++) {
 			// Run each individual, giving them all fitness values as a result of their genome
+
+			auto runInd = [this](int indID) {
+				this->runIndividual(indID);
+			};
+
+
 			for (int indID = 0; indID < population->getSize(); indID++) {
 				//this->runIndividual(indID); // Serial
-				this->ind_threads.push_back(std::thread(this->runIndividual, indID)); // Parallel
+				this->ind_threads.push_back(std::thread(runInd, indID)); // Parallel
 			}
 			Utility::rejoinClear(this->ind_threads);
 
@@ -226,7 +232,7 @@ bool SGA_Optimization::setupInstanceVariables() {
 	}
 	this->slmImg = new unsigned char[slmLength]; // Char array for writing SLM images
 	// Scaler Setup (using base class)
-	this->scaler = setupScaler(this->slmImg);
+	this->scaler = setupScaler(this->slmImg, 0);
 
 	// Start up the camera
 	this->cc->startCamera();
