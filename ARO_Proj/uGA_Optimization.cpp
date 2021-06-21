@@ -33,6 +33,16 @@ using namespace cv;
 // Output: returns true if successful ran without error, false if error occurs
 bool uGA_Optimization::runOptimization() {
 	Utility::printLine("uGA BUTTON CLICKED!");
+
+	// Set things up accordingly if doing single or multi-SLM
+	bool enableMultiSLM = dlg.m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED;
+	if (enableMultiSLM) {
+		Utility::printLine("INFO: Multi-SLM is TRUE!  Currently feature is not implemented so nothing changes");
+	}
+	else {
+		Utility::printLine("INFO: Multi-SLM has been set to FALSE!");
+	}
+
 	//Setup before optimization (see base class for implementation)
 	if (!prepareSoftwareHardware()) {
 		Utility::printLine("ERROR: Failed to prepare software or/and hardware for UGA Optimization");

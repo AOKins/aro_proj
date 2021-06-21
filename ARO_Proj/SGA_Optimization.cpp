@@ -33,6 +33,16 @@ using namespace cv;
 // Output: returns true if successful ran without error, false if error occurs
 bool SGA_Optimization::runOptimization() {
 	Utility::printLine("SGA BUTTON PRESSED!");
+
+	// Set things up accordingly if doing single or multi-SLM
+	bool enableMultiSLM = dlg.m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED;
+	if (enableMultiSLM) {
+		Utility::printLine("INFO: Multi-SLM is TRUE!  Currently feature is not implemented so nothing changes");
+	}
+	else {
+		Utility::printLine("INFO: Multi-SLM has been set to FALSE!");
+	}
+
 	//Setup before optimization (see base class for implementation)
 	if (!prepareSoftwareHardware()) {
 		Utility::printLine("ERROR: Failed to prepare software or/and hardware for SGA Optimization");
@@ -207,7 +217,6 @@ bool SGA_Optimization::setupInstanceVariables() {
 	this->populationSize = 30;
 	this->eliteSize = 5;
 	this->bestImage = Image::Create();
-
 	this->ind_threads.clear();
 
 	// Find length for SLM images
@@ -238,8 +247,8 @@ bool SGA_Optimization::setupInstanceVariables() {
 	if (this->displaySLMImage) {
 		this->slmDisplay->OpenDisplay();
 	}
-	this->slmImg = new unsigned char[slmLength]; // Char array for writing SLM images
 	// Scaler Setup (using base class)
+	this->slmImg = new unsigned char[slmLength]; // Char array for writing SLM images
 	this->scaler = setupScaler(this->slmImg, 0);
 
 	// Start up the camera

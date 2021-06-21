@@ -57,7 +57,7 @@ bool CameraController::setupCamera() {
 	if (!ConfigureExposureTime()) {
 		return false;
 	}
-	Utility::printLine("INFO: configured expousre settting on camera!");
+	Utility::printLine("INFO: configured exposure setting on camera!");
 
 	isCamCreated = true;
 	return true;
@@ -94,7 +94,6 @@ bool CameraController::startCamera() {
 		}
 		else {
 			ptrSBufferHandler->SetIntValue(StreamBufferHandlingMode_NewestOnly);
-			Utility::printLine("INFO: Camera buffer set to 'NewestOnly'!");
 		}
 		//Begin Aquisition
 		cam->BeginAcquisition();

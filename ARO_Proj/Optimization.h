@@ -72,7 +72,7 @@ protected:
 
 	// Creates a scaler with given SLMController
 	// Input: slmImg - array that will be storing scalled image to be initialized with 0's
-	//		  slmNum - index for board that will be scaling to, 0 based
+	//		  slmNum - index for board that will be scaling to, 0 based (defaults to 0)
 	// Output: returns scaler that will scale
 	ImageScaler* setupScaler(unsigned char *slmImg, int slmNum);
 

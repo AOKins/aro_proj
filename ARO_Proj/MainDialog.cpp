@@ -380,8 +380,7 @@ void MainDialog::OnCompensatePhaseCheckbox()
 }
 
 //OnBnClickedUgaButton: Select the uGA Algorithm Button
-void MainDialog::OnBnClickedUgaButton()
-{
+void MainDialog::OnBnClickedUgaButton() {
 	this->opt_selection_ = OptType::uGA;
 	Utility::printLine("INFO: uGA optimization selected");
 
@@ -392,8 +391,7 @@ void MainDialog::OnBnClickedUgaButton()
 }
 
 //OnBnClickedSgaButton: Select the SGA Algorithm Button
-void MainDialog::OnBnClickedSgaButton()
-{
+void MainDialog::OnBnClickedSgaButton() {
 	Utility::printLine("INFO: SGA optimization selected");
 	this->opt_selection_ = OptType::SGA;
 
@@ -404,8 +402,7 @@ void MainDialog::OnBnClickedSgaButton()
 }
 
 //OnBnClickedOptButton: Select the OPT5 Algorithm Button
-void MainDialog::OnBnClickedOptButton()
-{
+void MainDialog::OnBnClickedOptButton() {
 	Utility::printLine("INFO: OPT5 optimization selected");
 	this->opt_selection_ = OptType::OPT5;
 
@@ -465,14 +462,7 @@ UINT __cdecl optThreadMethod(LPVOID instance) {
 
 	// Setting that we are now runnign an optimization
 	dlg->running_optimization_ = true;	// Change label of this button to START now that the optimization is over
-	dlg->m_StartStopButton.SetWindowTextW(L"STOP OPTIMIZATION");
-	bool enableMultiSLM = dlg->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED;
-	if (enableMultiSLM) {
-		Utility::printLine("INFO: Multi-SLM is TRUE!  Currently feature is not implemented");
-	}
-	else {
-		Utility::printLine("INFO: Multi-SLM has been set to FALSE!");
-	}
+	dlg->m_StartStopButton.SetWindowTextW(L"STOP");
 
 	// Perform the optimzation operation depending on selection
 	if (dlg->opt_selection_ == dlg->OptType::OPT5) {
@@ -494,7 +484,7 @@ UINT __cdecl optThreadMethod(LPVOID instance) {
 	// Output if error/failure in Optimization
 	if (!dlg->opt_success) {
 		Utility::printLine("ERROR: Optimization failed!");
-		MessageBox(NULL, (LPCWSTR)L"Error!", (LPCWSTR)L"We're sorry, but an error has occurred while running the optimization.", MB_ICONERROR | MB_OK);
+		MessageBox(NULL, (LPCWSTR)L"Error!", (LPCWSTR)L"An error has occurred while running the optimization.", MB_ICONERROR | MB_OK);
 	}
 	// Setting that we are no longer running an optimization
 	dlg->running_optimization_ = false;
