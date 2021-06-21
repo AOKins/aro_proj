@@ -81,7 +81,6 @@ bool Optimization::prepareSoftwareHardware() {
 	}
 	Utility::printLine("INFO: No optimization running, able to perform setup!");
 
-
 	// - configure equipment
 	if (!this->cc->setupCamera())	{
 		Utility::printLine("ERROR: Camera setup has failed!");
