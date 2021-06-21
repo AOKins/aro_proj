@@ -67,8 +67,7 @@ bool uGA_Optimization::runOptimization() {
 					[this](int indID) {	this->runIndividual(indID); }, indID)); // Parallel
 			}
 			Utility::rejoinClear(this->ind_threads);
-
-			// Create a more fit generation
+			// Perform GA crossover/breeding to produce next generation
 			population->nextGeneration();
 			// Half exposure time if fitness value is too high
 			if (this->shortenExposureFlag) {
