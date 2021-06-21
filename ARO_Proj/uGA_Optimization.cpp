@@ -173,7 +173,8 @@ bool uGA_Optimization::runIndividual(int indID) {
 		this->tfile << "uGA GENERATION," << this->curr_gen << "," << fitness*exposureTimesRatio << std::endl;
 		tFileLock.unlock();
 		if (saveImages) {
-			cc->saveImage(thisImageConvert, (this->curr_gen + 1));
+			std::string imgFilePath = "logs/UGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite.jpg";
+			cc->saveImage(thisImageConvert, imgFilePath);
 		}
 		// Also save the image as current best
 		std::unique_lock<std::mutex> imageLock(imageMutex, std::defer_lock);

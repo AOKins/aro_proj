@@ -117,8 +117,11 @@ void SLMControlDialog::OnBnClickedSetlut() {
 	do {
 		tryAgain = false;
 		LPWSTR p = fileName.GetBuffer(FILE_LIST_BUFFER_SIZE);
+
+		// Initially only show LUT files (end in .LUT extension) but also provide option to show all files
+		static TCHAR BASED_CODE filterFiles[] = _T("LUT Files (*.LUT)|*.LUT|ALL Files (*.*)|*.*||");
 		// Construct and open standard Windows file dialog box with default filename being "./slm3986_at532_P8.LUT"
-		CFileDialog dlgFile(TRUE, L"LUT", L"./slm3986_at532_P8.LUT");
+		CFileDialog dlgFile(TRUE, NULL, L"./slm3986_at532_P8.LUT", OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, filterFiles);
 
 		OPENFILENAME& ofn = dlgFile.GetOFN();
 		ofn.lpstrFile = p;
@@ -225,21 +228,21 @@ void SLMControlDialog::OnBnClickedDualSLM() {
 	if (this->dualEnable.GetCheck() == BST_CHECKED) {
 		if (this->slmCtrl->boards.size() < 2) {
 			// If not possible, will give warning in console and window along with undoing the selection
-			Utility::printLine("WARNING: Dual SLM was enabled but there are 1 or fewer boards! Disabling check.");
+			Utility::printLine("WARNING: Multi-SLM was enabled but there are 1 or fewer boards! Disabling check.");
 			MessageBox(
-				(LPCWSTR)L"Dual SLM ERROR",
-				(LPCWSTR)L"You have attempted to enable Dual SLM but not enough boards were found! Disabling selection.",
+				(LPCWSTR)L"Multi SLM ERROR",
+				(LPCWSTR)L"You have attempted to enable Multi SLM but not enough boards were found (1 or fewer)! Disabling selection.",
 				MB_ICONWARNING | MB_OK
 			);
 			this->dualEnable.SetCheck(BST_UNCHECKED);
 		}
 		else {
-			Utility::printLine("INFO: Dual SLM has been enabled");
+			Utility::printLine("INFO: Multi-SLM has been enabled");
 
 		}
 	}
 	else {
-		Utility::printLine("INFO: Dual SLM has been disabled");
+		Utility::printLine("INFO: Multi-SLM has been disabled");
 	}
 }
 
@@ -259,7 +262,7 @@ void SLMControlDialog::OnCbnChangeSlmAll() {
 // Simple method for populating the selection list depending on number of boards connected
 void SLMControlDialog::populateSLMlist() {
 	this->slmSelection_.Clear();
-	int numBoards = this->slmCtrl->boards.size();
+	int numBoards = int(this->slmCtrl->boards.size());
 	// Populate drop down menu with numbers for each SLM
 	for (int i = 0; i < numBoards; i++) {
 		CString strI(std::to_string(i + 1).c_str());

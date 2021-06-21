@@ -172,7 +172,8 @@ bool SGA_Optimization::runIndividual(int indID) {
 		this->tfile << "SGA GENERATION," << curr_gen << "," << fitness*exposureTimesRatio << std::endl;
 		tFileLock.unlock();
 		if (saveImages) {
-			cc->saveImage(thisImageConvert, (curr_gen + 1));
+			std::string imgFilePath = "logs/SGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite.jpg";
+			cc->saveImage(thisImageConvert, imgFilePath);
 		}
 		// Also save the image
 		std::unique_lock<std::mutex> imageLock(imageMutex, std::defer_lock);

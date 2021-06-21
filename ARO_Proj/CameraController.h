@@ -1,6 +1,8 @@
 #ifndef CAMERA_CONTROLLER_H_
 #define CAMERA_CONTROLLER_H_
 
+#include <string>
+
 #include "Spinnaker.h"
 #include "SpinGenApi\SpinnakerGenApi.h"
 using namespace Spinnaker;
@@ -53,7 +55,7 @@ public:
 
 	bool setupCamera();
 	bool startCamera();
-	bool saveImage(ImagePtr& curImage, int curGen);
+	bool saveImage(ImagePtr& curImage, std::string curGen);
 	void AcquireImages(ImagePtr& curImage, ImagePtr& convertedImage);
 	bool stopCamera();
 	bool shutdownCamera();

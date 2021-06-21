@@ -26,36 +26,37 @@ CameraController::~CameraController() {
 
 // [CAMERA CONTROL]
 bool CameraController::setupCamera() {
-	Utility::printLine();
+	Utility::printLine(); // break in output
 	
 	// Connect to the camera if the cam pointer is null
 	if (cam == NULL) {
-		//Camera access
 		UpdateConnectedCameraInfo();
 	}
-
 	// Quit if don't have a reference to UI (latest parameters)
-	if (!dlg)
+	if (!dlg) {
 		return false;
-	Utility::printLine("INFO: dlg reference checked!");
-
-	if (!UpdateImageParameters())
+	}
+	if (!UpdateImageParameters()) {
 		return false;
+	}
 	Utility::printLine("INFO: updated image parameters!");
 
 	if (!cam->IsValid() || !cam->IsInitialized()) {
 		shutdownCamera();
-		if (!UpdateConnectedCameraInfo())
+		if (!UpdateConnectedCameraInfo()) {
 			return false;
+		}
 		Utility::printLine("INFO: updated connected camera info!");
 	}
 	
-	if (!ConfigureCustomImageSettings())
+	if (!ConfigureCustomImageSettings()) {
 		return false;
+	}
 	Utility::printLine("INFO: configured image settings on camera!");
 	
-	if (!ConfigureExposureTime())
+	if (!ConfigureExposureTime()) {
 		return false;
+	}
 	Utility::printLine("INFO: configured expousre settting on camera!");
 
 	isCamCreated = true;
@@ -65,7 +66,7 @@ bool CameraController::setupCamera() {
 bool CameraController::startCamera() {
 	try	{
 		INodeMap &nodeMap = cam->GetNodeMap();
-		INodeMap &TLnodeMap = cam->GetTLStreamNodeMap();
+		INodeMap &TLnodeMap = cam->GetTLStreamNodeMap(); // For managing Transport Layer Stream nodes (Buffer Handler for example)
 		// Set acquisition mode to singleframe
 		// - retrieve enumerationg node to set
 		CEnumerationPtr ptrAcquisitionMode = nodeMap.GetNode("AcquisitionMode"); 
@@ -88,14 +89,13 @@ bool CameraController::startCamera() {
 		//		Spinnaker defaults to OldestFirst, changed to NewestOnly as we are only interested in current image for individual being run
 		CEnumerationPtr ptrSBufferHandler = TLnodeMap.GetNode("StreamBufferHandlingMode");
 		if (!IsAvailable(ptrSBufferHandler) || !IsWritable(ptrSBufferHandler)) {
-			Utility::printLine("Unable to set acquisition mode (enum retrieval).");
+			Utility::printLine("ERROR: Unable to set buffer handler mode (node retrieval).");
 			return false;
 		}
 		else {
 			ptrSBufferHandler->SetIntValue(StreamBufferHandlingMode_NewestOnly);
 			Utility::printLine("INFO: Camera buffer set to 'NewestOnly'!");
 		}
-		
 		//Begin Aquisition
 		cam->BeginAcquisition();
 		Utility::printLine("INFO: Successfully began acquiring images!");
@@ -104,8 +104,7 @@ bool CameraController::startCamera() {
 		Utility::printLine("ERROR: Camera could not start - /n" + std::string(e.what()));
 		return false;
 	}
-
-	return true;
+	return true; // no errors!
 }
 
 bool CameraController::stopCamera() {
@@ -116,43 +115,36 @@ bool CameraController::stopCamera() {
 }
 
 //Releases camera references - have to call setup camera again if need to use camer after this call
-bool CameraController::shutdownCamera()
-{
+bool CameraController::shutdownCamera() {
 	//release camera
 	cam->DeInit();
-
 	//release system
 	cam = NULL;
 	camList.Clear();
 	system->ReleaseInstance();
 	isCamCreated = false;
-
 	return true;
 }
 
 // [ACQUISITION]
-/*getImage: high level wrapper that allows to take an image if camera was started
-*/
-bool CameraController::saveImage(ImagePtr& curImage, int curGen) {
+// Save an image with template file name
+// Input: curImage - image pointer to save
+//		  path - string to where and name of the image is to be saved
+// Output: curImage is saved at path
+bool CameraController::saveImage(ImagePtr& curImage, std::string path) {
 	if (!curImage.IsValid()) {
 		Utility::printLine("ERROR: Camera Aquisition resulted in a NULL image!");
 		return false;
 	}
-
 	ostringstream filename;
-	filename << "logs/UGA_Gen_" << curGen << "_Elite.jpg";
+	filename << path;//"logs/UGA_Gen_" << curGen << "_Elite.jpg";
 	curImage->Save(filename.str().c_str());
-	Utility::printLine("INFO: Saved elite of generation #" + std::to_string(curGen) + "!");
-
-	Utility::printLine("INFO: saved an image for generation #" + std::to_string(curGen));
-
 	return true;
 }
 
 //AcquireImages: get one image from the camera
 void CameraController::AcquireImages(ImagePtr& curImage, ImagePtr& convertedImage) {
 	//convertedImage = Image::Create();
-
 	try {
 		// Retrieve next received image
 		curImage = cam->GetNextImage();
@@ -172,15 +164,13 @@ void CameraController::AcquireImages(ImagePtr& curImage, ImagePtr& convertedImag
 	catch (Spinnaker::Exception &e) {
 		Utility::printLine("ERROR: " + std::string(e.what()));
 	}
-
 	Utility::printLine("#####################################################", true);
 }
 
 // [CAMERA SETUP]
 bool CameraController::UpdateImageParameters() {
 	bool result = true;
-
-	//Frames per second
+	// Frames per second
 	try	{
 		CString path("");
 		dlg.m_cameraControlDlg.m_FramesPerSecond.GetWindowTextW(path);
@@ -192,8 +182,7 @@ bool CameraController::UpdateImageParameters() {
 		Utility::printLine("ERROR: Was unable to parse the frames per second time input feild!");
 		result = false;
 	}
-
-	//Gamma value
+	// Gamma value
 	try	{
 		CString path("");
 		dlg.m_cameraControlDlg.m_gammaValue.GetWindowTextW(path);
@@ -204,8 +193,7 @@ bool CameraController::UpdateImageParameters() {
 		Utility::printLine("ERROR: Was unable to parse the frames per second time input feild!");
 		result = false;
 	}
-
-	//Initial exposure time
+	// Initial exposure time
 	try	{
 		CString path("");
 		dlg.m_cameraControlDlg.m_initialExposureTimeInput.GetWindowTextW(path);
@@ -213,11 +201,10 @@ bool CameraController::UpdateImageParameters() {
 		initialExposureTime = _tstof(path);
 	}
 	catch (...)	{
-		Utility::printLine("ERROR: Was unnable to parse the initial exposure time input feild!");
+		Utility::printLine("ERROR: Was unable to parse the initial exposure time input feild!");
 		result = false;
 	}
-
-	//Get all AOI settings
+	// Get all AOI settings
 	try	{
 		CString path("");
 		dlg.m_aoiControlDlg.m_leftInput.GetWindowTextW(path);
@@ -237,11 +224,10 @@ bool CameraController::UpdateImageParameters() {
 		cameraImageHeight = _tstoi(path);
 	}
 	catch (...)	{
-		Utility::printLine("ERROR: Was unnable to parse AOI settings!");
+		Utility::printLine("ERROR: Was unable to parse AOI settings!");
 		result = false;
 	}
-
-	//Number of image bins X and Y (ASK: if actually need to be thesame)
+	// Number of image bins X and Y (ASK: if actually need to be thesame)
 	try	{
 		CString path("");
 		dlg.m_optimizationControlDlg.m_numberBins.GetWindowTextW(path);
@@ -253,7 +239,6 @@ bool CameraController::UpdateImageParameters() {
 		result = false;
 	}
 	numberOfBinsY = numberOfBinsX;
-
 	//Size of bins X and Y (ASK: if actually thesame xy? and isn't stating the # of bins already determine size?)
 	try	{
 		CString path("");
@@ -266,7 +251,6 @@ bool CameraController::UpdateImageParameters() {
 		result = false;
 	}
 	binSizeY = binSizeX;
-
 	//Integration/target radius (ASK: what is this for?)
 	try	{
 		CString path("");
@@ -278,7 +262,6 @@ bool CameraController::UpdateImageParameters() {
 		Utility::printLine("ERROR: Was unable to parse integration radius input feild!");
 		result = false;
 	}
-
 	// Setup target matrix
 	delete[] targetMatrix;
 	targetMatrix = new int[cameraImageHeight*cameraImageWidth];
@@ -287,7 +270,7 @@ bool CameraController::UpdateImageParameters() {
 	return result;
 }
 
-//GetConnectedCameraInfo: used to proccess/store data about all currentlyconnected cameras
+//GetConnectedCameraInfo: used to proccess/store data about all currently connected cameras
 bool CameraController::UpdateConnectedCameraInfo() {
 	try	{
 		//Spinaker system object w/ camera list
@@ -332,10 +315,6 @@ bool CameraController::UpdateConnectedCameraInfo() {
 		}
 		else
 			Utility::printLine("INFO: Retrieved Camera was initialized!");
-
-		//TODO: determine if need a class reference to nodeMap of cam
-		//nodeMap = cam->GetNodeMap();
-		//nodeMapTLDevice = cam->GetTLDeviceNodeMap();
 	}
 	catch (Spinnaker::Exception &e)	{
 		Utility::printLine("ERROR: " + std::string(e.what()));
