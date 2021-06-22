@@ -53,7 +53,7 @@ bool SGA_Optimization::runOptimization() {
 					// Lambda function to access this instance of Optimization to perform runIndividual
 					// Input: indID - index location to run individual from in population
 					// Captures: this - pointer to current SGA_Optimization instance
-					this->ind_threads.push_back(std::thread([this](int indID, int popID) {	this->runIndividual(indID, popID); }, indID, popID)); // Parallel
+					this->ind_threads.push_back(std::thread([this](int indID, int popID) {	this->runIndividual(indID); }, indID, popID)); // Parallel
 					//this->runIndividual(indID); // Serial
 				}
 			}
@@ -85,7 +85,7 @@ bool SGA_Optimization::runOptimization() {
 }
 
 // Method for handling the execution of an individual
-// Input: indID - index value for individual being run to determine fitness (for multithreading will be the thread id as well)
+// Input: indID - index value for individual in each population being run to determine fitness (for multithreading will be the thread id as well)
 // Output: returns false if a critical error occurs, true otherwise
 //	individual in population index indID will have assigned fitness according to result from cc
 //	lastImgWidth,lastImgHeight updated according to result from cc
@@ -280,12 +280,12 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	Mat Opt_ary = Mat(imgHeight, imgWidth, CV_8UC1, eliteImage);
 	cv::imwrite("logs/" + curTime + "_SGA_Optimized.bmp", Opt_ary);
 
-	// Save final (most fit SLM image)
-	std::vector<int> * tempptr = this->population[0].getGenome(this->population[0].getSize() - 1); // Get the image for the individual (most fit)
-
-	scaler->TranslateImage(tempptr, this->slmImg);
-	Mat m_ary = Mat(512, 512, CV_8UC1, this->slmImg);
-	cv::imwrite("logs/" + curTime + "_SGA_phaseopt.bmp", m_ary);
+	// Save final (most fit SLM images)
+	for (int popID = 0; popID < this->population.size(); popID++) {
+		scalers[popID]->TranslateImage(this->population[popID].getGenome(this->population[popID].getSize() - 1), this->slmScaledImages[popID]);
+		Mat m_ary = Mat(512, 512, CV_8UC1, this->slmScaledImages[popID]);
+		imwrite("logs/" + curTime + "_SGA_phaseopt_SLM" + std::to_string(popID) + ".bmp", m_ary);
+	}
 
 	// Generic file renaming to have time stamps of run
 	std::rename("logs/SGA_functionEvals_vs_fitness.txt", ("logs/" + curTime + "_SGA_functionEvals_vs_fitness.txt").c_str());
