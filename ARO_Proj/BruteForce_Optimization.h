@@ -12,6 +12,8 @@ class SLMController;
 class BruteForce_Optimization : public Optimization {
 	std::ofstream lmaxfile;
 	std::ofstream rtime;
+	unsigned char* slmImg;
+	int slmLength;
 public:
 	// Constructor - inherits from base class
 	BruteForce_Optimization(MainDialog& dlg, CameraController* cc, SLMController* sc) : Optimization(dlg, cc, sc){};

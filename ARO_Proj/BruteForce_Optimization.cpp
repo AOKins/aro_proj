@@ -204,7 +204,7 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 
 	// Save how final optimization looks through camera
 	unsigned char* camImg = static_cast<unsigned char*>(this->bestImage->GetData());
-	Mat Opt_ary = Mat(this->bestImage->GetHeight(), this->bestImage->GetWidth(), CV_8UC1, camImg);
+	Mat Opt_ary = Mat(int(this->bestImage->GetHeight()), int(this->bestImage->GetWidth()), CV_8UC1, camImg);
 	cv::imwrite("logs/" + curTime + "_OPT5_Optimized.bmp", Opt_ary);
 
 	//Record the final (most fit) slm image

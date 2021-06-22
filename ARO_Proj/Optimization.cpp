@@ -111,8 +111,6 @@ ImageScaler* Optimization::setupScaler(unsigned char *slmImg, int slmNum = 0) {
 	int width = int(sc->getBoardWidth(slmNum));
 	int height = int(sc->getBoardHeight(slmNum));
 
-	slmImg = new unsigned char[width*height];
-
 	ImageScaler* scaler = new ImageScaler(width, height, 1, NULL);
 	scaler->SetBinSize(cc->binSizeX, cc->binSizeY);
 	scaler->SetLUT(NULL);

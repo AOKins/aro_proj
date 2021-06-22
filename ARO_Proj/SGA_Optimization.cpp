@@ -48,17 +48,18 @@ bool SGA_Optimization::runOptimization() {
 		// Optimization loop for each generation
 		for (this->curr_gen = 0; this->curr_gen < maxGenenerations && !stopConditionsMetFlag; this->curr_gen++) {
 			// Run each individual, giving them all fitness values as a result of their genome
-			for (int indID = 0; indID < population[0].getSize(); indID++) {
+			for (int indID = 0; indID < population[0]->getSize(); indID++) {
 				// Lambda function to access this instance of Optimization to perform runIndividual
 				// Input: indID - index location to run individual from in population
 				// Captures: this - pointer to current SGA_Optimization instance
-				this->ind_threads.push_back(std::thread([this](int indID) {	this->runIndividual(indID); }, indID)); // Parallel
-				//this->runIndividual(indID); // Serial
+				//this->ind_threads.push_back(std::thread([this](int indID) {	this->runIndividual(indID); }, indID)); // Parallel
+				this->runIndividual(indID); // Serial
 			}
 			Utility::rejoinClear(this->ind_threads);
 			// Perform GA crossover/breeding to produce next generation
 			for (int popID = 0; popID < population.size(); popID++) {
-				this->ind_threads.push_back(std::thread([this](int popID){this->population[popID].nextGeneration();}, popID));
+				this->population[popID]->nextGeneration();
+				//this->ind_threads.push_back(std::thread([this](int popID) { this->population[popID].nextGeneration(); }, popID));
 			}
 			Utility::rejoinClear(this->ind_threads);
 			// Half exposure time if fitness value is too high
@@ -115,7 +116,7 @@ bool SGA_Optimization::runIndividual(int indID) {
 	// Single SLM -> should only write to board 0 (popCount = 1)
 	for (int i = 0; i < this->popCount; i++) {
 		// Scale the individual genome to fit SLM
-		this->scalers[i]->TranslateImage(this->population[i].getGenome(indID), this->slmScaledImages[i]); // Translate the vector genome into char array image
+		this->scalers[i]->TranslateImage(this->population[i]->getGenome(indID), this->slmScaledImages[i]); // Translate the vector genome into char array image
 		// Write to SLM
 		this->sc->blink_sdk->Write_image(i+1, this->slmScaledImages[i], sc->getBoardHeight(i), false, false, 0);
 	}
@@ -170,7 +171,7 @@ bool SGA_Optimization::runIndividual(int indID) {
 		tVfLock.unlock();
 	}
 	//Save elite info of last generation
-	if (indID == (population[0].getSize() - 1)) {
+	if (indID == (population[0]->getSize() - 1)) {
 		std::unique_lock<std::mutex> tFileLock(tfileMutex, std::defer_lock);
 		tFileLock.lock();
 		this->tfile << "SGA GENERATION," << curr_gen << "," << fitness*exposureTimesRatio << std::endl;
@@ -193,7 +194,7 @@ bool SGA_Optimization::runIndividual(int indID) {
 
 	// Update fitness for the individuals
 	for (int popID = 0; popID < this->population.size(); popID++) {
-		this->population[popID].setFitness(indID, fitness * exposureTimesRatio);
+		this->population[popID]->setFitness(indID, fitness * exposureTimesRatio);
 	}
 	// If the fitness value is too high, flag that the exposure needs to be shortened
 	if (fitness > maxFitnessValue) {
@@ -216,7 +217,7 @@ bool SGA_Optimization::setupInstanceVariables() {
 	// Set things up accordingly if doing single or multi-SLM
 	bool enableMultiSLM = dlg.m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED;
 	if (enableMultiSLM) {
-		this->popCount = sc->boards.size();
+		this->popCount = int(sc->boards.size());
 	}
 	else {
 		this->popCount = 1;
@@ -224,7 +225,7 @@ bool SGA_Optimization::setupInstanceVariables() {
 	// Setting population vector
 	this->population.clear();
 	for (int i = 0; i < this->popCount; i++) {
-		this->population.push_back(SGAPopulation<int>(this->cc->numberOfBinsY * this->cc->numberOfBinsX * this->cc->populationDensity, this->populationSize, this->eliteSize, this->acceptedSimilarity));
+		this->population.push_back(new SGAPopulation<int>(this->cc->numberOfBinsY * this->cc->numberOfBinsX * this->cc->populationDensity, this->populationSize, this->eliteSize, this->acceptedSimilarity));
 	}
 
 	this->shortenExposureFlag = false;		// Set to true by individual if fitness is too high
@@ -247,6 +248,8 @@ bool SGA_Optimization::setupInstanceVariables() {
 	this->scalers.clear();
 	// Setup a vector for every board
 	for (int i = 0; i < sc->boards.size(); i++) {
+		int slmLength = this->sc->boards[i]->imageWidth * this->sc->boards[i]->imageHeight;
+		this->slmScaledImages[i] = (new unsigned char[slmLength]);
 		this->scalers.push_back(setupScaler(this->slmScaledImages[i], i));
 	}
 
@@ -276,12 +279,12 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 
 	// Save how final optimization looks through camera
 	std::string curTime = Utility::getCurTime();
-	Mat Opt_ary = Mat(imgHeight, imgWidth, CV_8UC1, eliteImage);
+	Mat Opt_ary = Mat(int(imgHeight), int(imgWidth), CV_8UC1, eliteImage);
 	cv::imwrite("logs/" + curTime + "_SGA_Optimized.bmp", Opt_ary);
 
 	// Save final (most fit SLM images)
 	for (int popID = 0; popID < this->population.size(); popID++) {
-		scalers[popID]->TranslateImage(this->population[popID].getGenome(this->population[popID].getSize() - 1), this->slmScaledImages[popID]);
+		scalers[popID]->TranslateImage(this->population[popID]->getGenome(this->population[popID]->getSize() - 1), this->slmScaledImages[popID]);
 		Mat m_ary = Mat(512, 512, CV_8UC1, this->slmScaledImages[popID]);
 		imwrite("logs/" + curTime + "_SGA_phaseopt_SLM" + std::to_string(popID) + ".bmp", m_ary);
 	}
@@ -292,6 +295,9 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	std::rename("logs/exposure.txt", ("logs/" + curTime + "_SGA_exposure.txt").c_str());
 	saveParameters(curTime, "SGA");
 
+	for (int i = 0; i < this->population.size(); i++) {
+		delete this->population[i];
+	}
 	this->population.clear();
 
 	// - image displays
