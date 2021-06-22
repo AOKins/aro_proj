@@ -1,8 +1,8 @@
 
 // [DESCRIPTION]
 // Implementation file for the core of the program 
-#include "stdafx.h"
-#include "ARO_App.h"
+#include "../headers/stdafx.h"
+#include "../headers/ARO_App.h"
 
 // Handles F1 Help Menu
 BEGIN_MESSAGE_MAP(ARO_AppApp, CWinApp)

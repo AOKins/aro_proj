@@ -9,14 +9,13 @@
 #define INDIVIDUAL_H_
 #include "BetterRandom.h"
 #include <vector>
-using std::vector;
 
 template <class T>
 class Individual {
 private:
 
 	// The genome associated with the individual.
-	vector<T>* genome_;
+	std::vector<T>* genome_;
 
 	// The fitness of the individual, this must be assigned with set_fitness
 	double fitness_;
@@ -45,7 +44,7 @@ public:
 
 	// Sets the genome to be associated with the individual.
 	// @param new_genome -> genome to be associated
-	void set_genome(vector<T> * new_genome) {
+	void set_genome(std::vector<T> * new_genome) {
 		if (this->genome_ != NULL) {
 			delete this->genome_;
 		}

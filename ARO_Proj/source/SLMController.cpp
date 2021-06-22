@@ -1,20 +1,20 @@
 // [INCUDE FILES]
 // - Required
-#include "stdafx.h"				// Required in source
+#include "../headers/.h"				// Required in source
 #include <string>
 #include <fstream>	// used to export information to file 
-#include "ImageScaler.h"
-#include "CameraController.h"
-#include "SLMController.h"		// Header file
-#include "SLM_Board.h"
+#include "../headers/ImageScaler.h"
+#include "../headers/CameraController.h"
+#include "../headers/SLMController.h"		// Header file
+#include "../headers/SLM_Board.h"
 
 //	- External libraries
-#include "Blink_SDK.h"			// Camera functions
-#include "cdib.h"				// Used by blink to read in bitmaps
+#include "../headers/Blink_SDK.h"			// Camera functions
+#include "../headers/cdib.h"				// Used by blink to read in bitmaps
 //	- Custom classes
-#include "MainDialog.h"
+#include "../headers/MainDialog.h"
 
-#include "Utility.h"
+#include "../headers/Utility.h"
 // - System libraries
 
 SLMController::SLMController() {

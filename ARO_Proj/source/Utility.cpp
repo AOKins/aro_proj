@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "../headers/stdafx.h"
 
 #include <fstream>	// used to export information to file 
 #include <string>	// output format
@@ -6,9 +6,9 @@
 #include <ctime>
 #include <vector>
 #include <algorithm>
-#include "CameraController.h"
-#include "SLMController.h"
-#include "Utility.h"
+#include "../headers/CameraController.h"
+#include "../headers/SLMController.h"
+#include "../headers/Utility.h"
 
 
 #include <opencv2\highgui\highgui.hpp>	//image processing

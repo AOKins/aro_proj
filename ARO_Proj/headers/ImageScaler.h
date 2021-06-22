@@ -2,6 +2,7 @@
 #define IMAGE_SCALER_H_
 
 #include <vector>
+
 class ImageScaler{
 private:
 	int output_image_width_, output_image_height_, output_image_depth_;

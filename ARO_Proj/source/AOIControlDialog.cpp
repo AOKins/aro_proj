@@ -1,13 +1,13 @@
 // AOIControlDialog.cpp : implementation file
 //
 
-#include "stdafx.h"
-#include "Utility.h"
-#include <string>
-#include "CameraController.h"
-#include "AOIControlDialog.h"
-#include "afxdialogex.h"
+#include "../headers/stdafx.h"
+#include "../headers/Utility.h"
+#include "../headers/CameraController.h"
+#include "../headers/AOIControlDialog.h"
+#include "../headers/afxdialogex.h"
 
+#include <string>
 
 // AOIControlDialog dialog
 

@@ -1,9 +1,10 @@
 // [DESCRIPTION]
 // Implementation file for the SLM_Board class
 
-#include "stdafx.h"
+#include "../headers/stdafx.h"
+#include "../headers/SLM_Board.h"
+
 #include <string>
-#include "SLM_Board.h"
 
 SLM_Board::SLM_Board(bool isNematic, int width, int height) {
 	is_LC_Nematic = isNematic;

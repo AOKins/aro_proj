@@ -1,9 +1,9 @@
 // OptimizationControlDialog.cpp : implementation file
 //
 
-#include "stdafx.h"
-#include "OptimizationControlDialog.h"
-#include "afxdialogex.h"
+#include "../headers/stdafx.h"
+#include "../headers/OptimizationControlDialog.h"
+#include "../headers/afxdialogex.h"
 
 
 // OptimizationControlDialog dialog

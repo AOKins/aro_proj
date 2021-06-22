@@ -1,10 +1,9 @@
-#include "stdafx.h"				// Required in source
+#include "../headers/stdafx.h"				// Required in source
+#include "../headers/CameraController.h"	// Header file
+#include "../headers/MainDialog.h"
+#include "../headers/Utility.h"
 
-#include "CameraController.h"	// Header file
-#include "MainDialog.h"
-#include "Utility.h"
 #include <string>
-
 using std::ostringstream;
 
 // [CONSTRUCTOR(S)]

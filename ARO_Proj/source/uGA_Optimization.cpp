@@ -2,20 +2,20 @@
 // Optimization handler methods implementation for micro-genetic algorithm
 // Last edited: 06/22/2021 by Andrew O'Kins
 ////////////////////
-#include "stdafx.h"				// Required in source
-#include "uGA_Optimization.h"	// Header file
-#include "uGA_Population.h"
+#include "../headers/stdafx.h"				// Required in source
+#include "../headers/uGA_Optimization.h"	// Header file
+#include "../headers/uGA_Population.h"
 
-#include "Utility.h"
-#include "Timing.h"
-#include "CamDisplay.h"
+#include "../headers/Utility.h"
+#include "../headers/Timing.h"
+#include "../headers/CamDisplay.h"
 
-#include "MainDialog.h"
-#include "SLMController.h"
-#include "CameraController.h"
-#include "ImageScaler.h"
-#include "Blink_SDK.h"
-#include "SLM_Board.h"
+#include "../headers/MainDialog.h"
+#include "../headers/SLMController.h"
+#include "../headers/CameraController.h"
+#include "../headers/ImageScaler.h"
+#include "../headers/Blink_SDK.h"
+#include "../headers/SLM_Board.h"
 
 #include <cstdlib>
 #include <chrono>

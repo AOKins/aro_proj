@@ -1,11 +1,11 @@
 // SLMControlDialog.cpp : implementation file
 //
 
-#include "stdafx.h"
-#include "SLMController.h"
-#include "SLM_Board.h"
-#include "SLMControlDialog.h"
-#include "Utility.h"
+#include "../headers/stdafx.h"
+#include "../headers/SLMController.h"
+#include "../headers/SLM_Board.h"
+#include "../headers/SLMControlDialog.h"
+#include "../headers/Utility.h"
 #include "afxdialogex.h"
 
 #include <string>

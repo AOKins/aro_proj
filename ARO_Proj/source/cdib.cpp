@@ -1,7 +1,7 @@
 // cdib.cpp
 // new version for WIN32
-#include "stdafx.h"
-#include "cdib.h"
+#include "../headers/stdafx.h"
+#include "../headers/cdib.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

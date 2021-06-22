@@ -50,7 +50,6 @@
 
 
 //[NAMESPACES]
-using namespace std;
 using namespace cv;
 using namespace Spinnaker;
 using namespace Spinnaker::GenApi;

@@ -1,8 +1,8 @@
-#include "stdafx.h"
-#include "ImageScaler.h"
+#include "../headers/stdafx.h"
+#include "../headers/ImageScaler.h"
+
 #include <algorithm>
 #include <iostream>
-using namespace std;
 
 // Constructor
 // @param output_image_width -> x diminsion size of output image

@@ -1,10 +1,12 @@
-#include "stdafx.h"
-#include "CamDisplay.h"
+#include "../headers/stdafx.h"
+#include "../headers/CamDisplay.h"
+#include "../headers/Utility.h"
+
 #include <opencv2\core\core.hpp>
 #include <opencv2\highgui\highgui.hpp>
 #include <opencv2\imgproc\imgproc.hpp>
+
 #include <string>
-#include "Utility.h"
 
 using namespace cv;
 using std::string;

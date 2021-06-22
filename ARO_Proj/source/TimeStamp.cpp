@@ -2,8 +2,8 @@
 
 //References: To remove trailing zeros from double to string converion: https://thispointer.com/c-convert-double-to-string-and-manage-precision-scientific-notation/
 
-#include "stdafx.h"
-#include "TimeStamp.h"
+#include "../headers/stdafx.h"
+#include "../headers/TimeStamp.h"
 
 //Constructor
 TimeStamp::TimeStamp(double duration, string label) {

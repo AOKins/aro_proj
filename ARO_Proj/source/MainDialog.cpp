@@ -8,23 +8,23 @@
 // LC  - Liquid Crystal - the type of diplay the SLM has
 
 // [INCUDE FILES]
-#include "stdafx.h"				// Required in source
-#include "resource.h"
-#include "MainDialog.h"			// Header file for dialog functions
+#include "../headers/stdafx.h"				// Required in source
+#include "../headers/resource.h"
+#include "../headers/MainDialog.h"			// Header file for dialog functions
 
 // - Aglogrithm Related
-#include "Optimization.h"
-#include "uGA_Optimization.h"
-#include "SGA_Optimization.h"
-#include "BruteForce_Optimization.h"
+#include "../headers/Optimization.h"
+#include "../headers/uGA_Optimization.h"
+#include "../headers/SGA_Optimization.h"
+#include "../headers/BruteForce_Optimization.h"
 
 //	- Helper
-#include "Utility.h"			// Collection of static helper functions
-#include "CamDisplay.h"			//
-#include "SLMController.h"		// Wrapper for SLM control
-#include "CameraController.h"	// Spinnaker Camera interface wrapper
-#include "Blink_SDK.h"			// SLM SDK functions
-#include "SLM_Board.h"
+#include "../headers/Utility.h"			// Collection of static helper functions
+#include "../headers/CamDisplay.h"			//
+#include "../headers/SLMController.h"		// Wrapper for SLM control
+#include "../headers/CameraController.h"	// Spinnaker Camera interface wrapper
+#include "../headers/Blink_SDK.h"			// SLM SDK functions
+#include "../headers/SLM_Board.h"
 
 //	- System
 #include <fstream>				// Used to export information to file 
