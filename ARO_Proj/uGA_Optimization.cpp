@@ -47,21 +47,20 @@ bool uGA_Optimization::runOptimization() {
 		this->timestamp = new TimeStampGenerator();		// Starting time stamp to track elapsed time
 		// Optimization loop for each generation
 		for (this->curr_gen = 0; this->curr_gen < this->maxGenenerations && !this->stopConditionsMetFlag; this->curr_gen++) {
-			for (int popID = 0; popID < population.size(); popID++) {
-				// Run each individual, giving them all fitness values as a result of their genome
-				for (int indID = 0; indID < population[popID].getSize(); indID++) {
-					// Lambda function to access this instance of Optimization to perform runIndividual
-					// Input: indID - index location to run individual from in population
-					// Captures: this - pointer to current SGA_Optimization instance
-					this->ind_threads.push_back(std::thread([this](int indID, int popID) {	this->runIndividual(indID, popID); }, indID, popID)); // Parallel
-					//this->runIndividual(indID); // Serial
-				}
+			// Run each individual, giving them all fitness values as a result of their genome
+			for (int indID = 0; indID < population[0].getSize(); indID++) {
+				// Lambda function to access this instance of Optimization to perform runIndividual
+				// Input: indID - index location to run individual from in population
+				// Captures: this - pointer to current SGA_Optimization instance
+				this->ind_threads.push_back(std::thread([this](int indID) {	this->runIndividual(indID); }, indID)); // Parallel
+				//this->runIndividual(indID); // Serial
 			}
 			Utility::rejoinClear(this->ind_threads);
 			// Perform GA crossover/breeding to produce next generation
 			for (int popID = 0; popID < population.size(); popID++) {
-				population[popID].nextGeneration();
+				this->ind_threads.push_back(std::thread([this](int popID){this->population[popID].nextGeneration(); }, popID));
 			}
+			Utility::rejoinClear(this->ind_threads);
 			// Half exposure time if fitness value is too high
 			if (this->shortenExposureFlag) {
 				this->cc->HalfExposureTime();
