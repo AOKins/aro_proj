@@ -47,11 +47,9 @@ protected:
 	// Values assigned within setupInstanceVariables(), then if needed cleared in shutdownOptimizationInstance()
 	bool isWorking = false; // true if currently actively running the optimization algorithm
 	bool usingHardware = false; // debug flag of using hardware currently in a given thread (to know if accidentally having two threads use hardware at once!)
-	int populationSize; // Size of the population being used
+	int populationSize; // Size of the population being used (number of individuals in a population class)
+	int popCount;		// Number of populations working with (equal to sc->boards.size() if multi-SLM mode)
 	int eliteSize;		// Number of elite individuals within the population (should be less than populationSize)
-	int slmLength;		// Size of images for sc
-	int imageLength;	// Size of images from cc
-	unsigned char *slmImg;
 	bool shortenExposureFlag;   // Set to true by individual if fitness is too high
 	bool stopConditionsMetFlag; // Set to true if a stop condition was reached by one of the individuals
 	CameraDisplay * camDisplay; // Display for camera
@@ -60,7 +58,8 @@ protected:
 	TimeStampGenerator * timestamp; // Timer to track and store elapsed time as the algorithm executes
 
 	ImagePtr bestImage;
-	ImageScaler * scaler;
+	std::vector<ImageScaler*> scalers;
+	std::vector<unsigned char*> slmScaledImages;
 	// Output debug streams // TODO at finished state may seek to change/remove these to improve performance
 	ofstream tfile;				// Record elite individual progress over generations
 	ofstream timeVsFitnessFile;	// Recoding general fitness progress

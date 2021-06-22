@@ -1,6 +1,6 @@
 ////////////////////
 // Optimization handler methods implementation for micro-genetic algorithm
-// Last edited: 06/18/2021 by Andrew O'Kins
+// Last edited: 06/22/2021 by Andrew O'Kins
 ////////////////////
 #include "stdafx.h"				// Required in source
 #include "uGA_Optimization.h"	// Header file
@@ -24,25 +24,15 @@ using namespace cv;
 
 ////
 // TODOs:	Debug multithreading as needed
-//			Add support for multi-SLM configuration
 //			Properly Address how to handle if image acquisition failed (currently just moves on to next individual without assigning a default fitness value)
 //			send final scaled image to the SLM //ASK needed?
-//			Remove undesired file i/o once debugging is complete
+//			Remove undesired i/o once debugging is complete
 
 // Method for executing the optimization
 // Output: returns true if successful ran without error, false if error occurs
 bool uGA_Optimization::runOptimization() {
 	Utility::printLine("uGA BUTTON CLICKED!");
-
-	// Set things up accordingly if doing single or multi-SLM
-	bool enableMultiSLM = dlg.m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED;
-	if (enableMultiSLM) {
-		Utility::printLine("INFO: Multi-SLM is TRUE!  Currently feature is not implemented so nothing changes");
-	}
-	else {
-		Utility::printLine("INFO: Multi-SLM has been set to FALSE!");
-	}
-
+	
 	//Setup before optimization (see base class for implementation)
 	if (!prepareSoftwareHardware()) {
 		Utility::printLine("ERROR: Failed to prepare software or/and hardware for UGA Optimization");
@@ -57,18 +47,21 @@ bool uGA_Optimization::runOptimization() {
 		this->timestamp = new TimeStampGenerator();		// Starting time stamp to track elapsed time
 		// Optimization loop for each generation
 		for (this->curr_gen = 0; this->curr_gen < this->maxGenenerations && !this->stopConditionsMetFlag; this->curr_gen++) {
-			// Run each individual, giving them all fitness values as a result of their genome
-			for (int indID = 0; indID < this->population->getSize(); indID++) {
-				//this->runIndividual(indID); // Serial
-				// Lambda function to access this instance of Optimization to perform runIndividual
-				// Input: indID - index location to run individual from in population
-				// Captures: this - pointer to current SGA_Optimization instance
-				this->ind_threads.push_back(std::thread(
-					[this](int indID) {	this->runIndividual(indID); }, indID)); // Parallel
+			for (int popID = 0; popID < population.size(); popID++) {
+				// Run each individual, giving them all fitness values as a result of their genome
+				for (int indID = 0; indID < population[popID].getSize(); indID++) {
+					// Lambda function to access this instance of Optimization to perform runIndividual
+					// Input: indID - index location to run individual from in population
+					// Captures: this - pointer to current SGA_Optimization instance
+					this->ind_threads.push_back(std::thread([this](int indID, int popID) {	this->runIndividual(indID, popID); }, indID, popID)); // Parallel
+					//this->runIndividual(indID); // Serial
+				}
 			}
 			Utility::rejoinClear(this->ind_threads);
 			// Perform GA crossover/breeding to produce next generation
-			population->nextGeneration();
+			for (int popID = 0; popID < population.size(); popID++) {
+				population[popID].nextGeneration();
+			}
 			// Half exposure time if fitness value is too high
 			if (this->shortenExposureFlag) {
 				this->cc->HalfExposureTime();
@@ -83,7 +76,7 @@ bool uGA_Optimization::runOptimization() {
 	}
 	catch (Spinnaker::Exception &e) {
 		Utility::printLine("ERROR: " + string(e.what()));
-
+		return false;
 	}
 	//Reset UI State
 	this->isWorking = false;
@@ -99,9 +92,6 @@ bool uGA_Optimization::runOptimization() {
 //     shortenExposureFlag is set to true if fitness value is high enough
 //     stopConditionsMetFlag is set to true if conditions met
 bool uGA_Optimization::runIndividual(int indID) {
-	//Apply LUT/Binning to randomly the generated individual's image
-	std::vector<int>* slmVect = (this->population->getGenome(indID)); // Get the image for the individual
-
 	// Local scoped ImagePtr's as we are only concerned with this individual
 	// Image pointers to the image from the Camera's buffer
 	ImagePtr convImage, curImage;
@@ -121,11 +111,16 @@ bool uGA_Optimization::runIndividual(int indID) {
 	}
 	this->usingHardware = true;
 
-	this->scaler->TranslateImage(slmVect, this->slmImg); // Translate the vector genome into char array image
-	// Write translated image to SLM boards //TODO: modify as it assumes boards get the same image
-	for (int i = 1; i <= this->sc->boards.size(); i++) {
-		this->sc->blink_sdk->Write_image(i, this->slmImg, sc->getBoardHeight(i - 1), false, false, 0);
+	// Write translated image to SLM boards, assumes there are at least as many boards as populations
+		// Multi SLM engaged -> should write to every board (popCount = # of boards)
+		// Single SLM -> should only write to board 0 (popCount = 1)
+	for (int i = 0; i < this->popCount; i++) {
+		// Scale the individual genome to fit SLM
+		this->scalers[i]->TranslateImage(this->population[i].getGenome(indID), this->slmScaledImages[i]); // Translate the vector genome into char array image
+		// Write to SLM
+		this->sc->blink_sdk->Write_image(i+1, this->slmScaledImages[i], sc->getBoardHeight(i), false, false, 0);
 	}
+
 	// Acquire images // - take image and determine fitness
 	this->cc->AcquireImages(curImage, convImage);
 	// DeepCopy before removing from camera buffer
@@ -176,7 +171,7 @@ bool uGA_Optimization::runIndividual(int indID) {
 		tVfLock.unlock();
 	}
 	//Save elite info of last generation
-	if (indID == (population->getSize() - 1)) {
+	if (indID == (population[0].getSize() - 1)) {
 		std::unique_lock<std::mutex> tFileLock(tfileMutex, std::defer_lock);
 		tFileLock.lock();
 		this->tfile << "uGA GENERATION," << this->curr_gen << "," << fitness*exposureTimesRatio << std::endl;
@@ -197,9 +192,10 @@ bool uGA_Optimization::runIndividual(int indID) {
 		this->stopConditionsMetFlag = true;
 	}
 
-	// Update fitness for this individual
-	this->population->setFitness(indID, fitness * exposureTimesRatio);
-
+	// Update fitness for the individuals
+	for (int popID = 0; popID < this->population.size(); popID++) {
+		this->population[popID].setFitness(indID, fitness * exposureTimesRatio);
+	}
 	// If the fitness value is too high, flag that the exposure needs to be shortened
 	if (fitness > maxFitnessValue) {
 		std::unique_lock<std::mutex> expsureFlagLock(exposureFlagMutex, std::defer_lock);
@@ -218,20 +214,19 @@ bool uGA_Optimization::setupInstanceVariables() {
 	this->bestImage = Image::Create();
 	this->ind_threads.clear();
 
-	// Find length for SLM images
-	this->slmLength = this->sc->getBoardWidth(0) * this->sc->getBoardHeight(0) * 1;
-	if (this->slmLength <= -1) {
-		Utility::printLine("ERROR: SLM Length cannot be less than 0!");
-		return false;
+	// Set things up accordingly if doing single or multi-SLM
+	bool enableMultiSLM = dlg.m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED;
+	if (enableMultiSLM) {
+		this->popCount = sc->boards.size();
 	}
-	// Find length of camera images
-	this->imageLength = this->cc->cameraImageHeight * this->cc->cameraImageWidth;
-	if (imageLength <= -1) {
-		Utility::printLine("ERROR: Image Length cannot be less than 0!");
-		return false;
+	else {
+		this->popCount = 1;
 	}
-	// Setting population
-	this->population = new uGAPopulation<int>(this->cc->numberOfBinsY * this->cc->numberOfBinsX * this->cc->populationDensity, this->populationSize, this->eliteSize, this->acceptedSimilarity);
+	// Setting population vector
+	this->population.clear();
+	for (int i = 0; i < this->popCount; i++) {
+		this->population.push_back(uGAPopulation<int>(this->cc->numberOfBinsY * this->cc->numberOfBinsX * this->cc->populationDensity, this->populationSize, this->eliteSize, this->acceptedSimilarity));
+	}
 
 	this->shortenExposureFlag = false; // Set to true by individual if fitness is too high
 	this->stopConditionsMetFlag = false; // Set to true if a stop condition was reached by one of the individuals
@@ -247,8 +242,14 @@ bool uGA_Optimization::setupInstanceVariables() {
 		this->slmDisplay->OpenDisplay();
 	}
 	// Scaler Setup (using base class)
-	this->slmImg = new unsigned char[slmLength]; // Char array for writing SLM images
-	this->scaler = setupScaler(this->slmImg, 0);
+	this->slmScaledImages.clear();
+	// Setup the scaled images vector
+	this->slmScaledImages = std::vector<unsigned char*>(this->sc->boards.size());
+	this->scalers.clear();
+	// Setup a vector for every board
+	for (int i = 0; i < sc->boards.size(); i++) {
+		this->scalers.push_back(setupScaler(this->slmScaledImages[i], i));
+	}
 
 	// Start up the camera
 	this->cc->startCamera();
@@ -279,18 +280,20 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 	Mat Opt_ary = Mat(int(imgHeight), int(imgWidth), CV_8UC1, eliteImage);
 	imwrite("logs/" + curTime + "_uGA_Optimized.bmp", Opt_ary);
 
-	// Save final (most fit SLM image)
-	std::vector<int> * tempptr = this->population->getGenome(this->population->getSize() - 1); // Get the image for the individual (most fit)
-
-	scaler->TranslateImage(tempptr, this->slmImg);
-	Mat m_ary = Mat(512, 512, CV_8UC1, this->slmImg);
-	imwrite("logs/" + curTime + "_uGA_phaseopt.bmp", m_ary);
+	// Save final (most fit SLM images)
+	for (int popID = 0; popID < this->population.size(); popID++) {
+		scalers[popID]->TranslateImage(this->population[popID].getGenome(this->population[popID].getSize() - 1), this->slmScaledImages[popID]);
+		Mat m_ary = Mat(512, 512, CV_8UC1, this->slmScaledImages[popID]);
+		imwrite("logs/" + curTime + "_uGA_phaseopt_SLM" + std::to_string(popID) + ".bmp", m_ary);
+	}
 
 	// Generic file renaming to have time stamps of run
 	std::rename("logs/uGA_functionEvals_vs_fitness.txt", ("logs/" + curTime + "_uGA_functionEvals_vs_fitness.txt").c_str());
 	std::rename("logs/uGA_time_vs_fitness.txt", ("logs/" + curTime + "_uGA_time_vs_fitness.txt").c_str());
 	std::rename("logs/exposure.txt", ("logs/" + curTime + "_uGA_exposure.txt").c_str());
 	saveParameters(curTime, "uGA");
+
+	this->population.clear();
 
 	// - image displays
 	this->camDisplay->CloseDisplay();
@@ -301,10 +304,10 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 	// - pointers
 	delete this->camDisplay;
 	delete this->slmDisplay;
-	delete this->population;
 	delete this->timestamp;
-	delete[] this->slmImg;
-	delete this->scaler;
-
+	for (int i = 0; i < this->scalers.size(); i++) {
+		delete this->scalers[i];
+	}
+	this->scalers.clear();
 	return true;
 }

@@ -108,7 +108,12 @@ bool Optimization::prepareSoftwareHardware() {
 }
 
 ImageScaler* Optimization::setupScaler(unsigned char *slmImg, int slmNum = 0) {
-	ImageScaler* scaler = new ImageScaler(sc->getBoardWidth(slmNum), sc->getBoardHeight(slmNum), 1, NULL);
+	int width = int(sc->getBoardWidth(slmNum));
+	int height = int(sc->getBoardHeight(slmNum));
+
+	slmImg = new unsigned char[width*height];
+
+	ImageScaler* scaler = new ImageScaler(width, height, 1, NULL);
 	scaler->SetBinSize(cc->binSizeX, cc->binSizeY);
 	scaler->SetLUT(NULL);
 	scaler->SetUsedBins(cc->numberOfBinsX, cc->numberOfBinsY);
