@@ -1,5 +1,5 @@
 ////////////////////
-// Population handler for standard genetic algorithm that inherits from base Population
+// Population handler for simple genetic algorithm that inherits from base Population
 // Last edited: 06/21/2021 by Andrew O'Kins
 ////////////////////
 #ifndef SGAPOPULATION_H_
@@ -22,7 +22,7 @@ public:
 	//	accepted_similarity: precentage of similarity to be counted as same between individuals (default 90%)
 	SGAPopulation(int genome_length, int population_size, int elite_size, double accepted_similarity = .9) : Population<T>(genome_length, population_size, elite_size, accepted_similarity) {};
 
-	// Starts next generation using fitness of individuals.
+	// Starts next generation using fitness of individuals.  Following the simple genetic algorithm approach.
 	bool nextGeneration() {
 		// Setting individuals to sorted (best is at end of the array)
 		Individual<T>* sorted_temp = SortIndividuals(this->individuals_, this->pop_size_);

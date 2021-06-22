@@ -105,10 +105,7 @@ BOOL MainDialog::OnInitDialog()
 	freopen_s(&fp, "CONOUT$", "w", stdout);
 	std::cout.clear();
 
-	/*if (!AllocConsole())
-	{
-		AfxMessageBox(L"Output will not be shown!");
-	}
+	/*
 	else
 	{
 		freopen("CONOUT$", "w", stdout);
@@ -133,9 +130,9 @@ BOOL MainDialog::OnInitDialog()
 	//2) https://www.youtube.com/watch?v=WHPNzx4E5rM
 	// - set tab headings
 	LPCTSTR headings[] = {L"Optimization Settings", L"SLM Settings", L"Camera Settings", L"AOI Settings" };
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 4; i++) {
 		m_TabControl.InsertItem(i, headings[i]);
-
+	}
 	// - set all tab components (Create Dialogs from Templates)
 	CRect rect;
 	m_TabControl.GetClientRect(&rect); //Gets dimensions of the tab control to fit in dialogs inside
@@ -168,13 +165,22 @@ BOOL MainDialog::OnInitDialog()
 	m_aoiControlDlg.m_heightInput.SetWindowTextW(_T("64"));
 	m_slmControlDlg.m_SlmPwrButton.SetWindowTextW(_T("Turn power ON")); // - power button (TODO: determine if SLM is actually off at start)
 
-	//GetCheck() Retrieves BST_CHECKED if checked & BST_UNCHECKED if not checked
-	//Line currently commented out to identify if cause of assert failure m_optimizationControlDlg.m_SampleCheckmark.GetCheck();  
-
 	// - get reference to slm controller
 	slmCtrl = m_slmControlDlg.getSLMCtrl();
 	slmCtrl->SetMainDlg(this);
 	m_slmControlDlg.populateSLMlist(); // Simple method to setup the list of selections
+
+	// Give a warning message if no boards have been detected
+	if (m_slmControlDlg.slmCtrl->boards.size() < 1) {
+		MessageBox((LPCWSTR)L"No SLM detected!",
+			(LPCWSTR)L"No SLM has been detected to be connected!",
+			MB_ICONWARNING | MB_OK);
+	}
+	else { // This else case is here just to debug
+		MessageBox((LPCWSTR)L"SLM(s) detected!",
+			(LPCWSTR)L"SLMs have been detected to be connected!",
+			MB_ICONWARNING | MB_OK);
+	}
 
 	//Show the default tab (optimizations settings)
 	m_pwndShow = &m_optimizationControlDlg;
