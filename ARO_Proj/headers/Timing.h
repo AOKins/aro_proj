@@ -19,21 +19,21 @@ public:
 	//@param pause_interval -> the size of each interval in ms
 	IntervalTimer(double pause_interval, double shove_interval){
 		QueryPerformanceFrequency((LARGE_INTEGER *)&frequency_);
-		ticks_per_interval_ = frequency_ * (pause_interval / 1000);
-		ticks_per_shove_ = frequency_ * (shove_interval / 1000);
+		ticks_per_interval_ = frequency_ * (__int64(pause_interval) / 1000);
+		ticks_per_shove_ = frequency_ * (__int64(shove_interval) / 1000);
 	}
 
 	//constructor
 	IntervalTimer(int ticks_per_interval, double shove_interval){
 		QueryPerformanceFrequency((LARGE_INTEGER *)&frequency_);
 		ticks_per_interval_ = ticks_per_interval;
-		ticks_per_shove_ = frequency_ * (shove_interval / 1000);
+		ticks_per_shove_ = frequency_ * (__int64(shove_interval) / 1000);
 	}
 
 	//constructor
 	IntervalTimer(double pause_interval, int ticks_per_shove){
 		QueryPerformanceFrequency((LARGE_INTEGER *)&frequency_);
-		ticks_per_interval_ = frequency_ * (pause_interval / 1000);
+		ticks_per_interval_ = frequency_ * (__int64(pause_interval) / 1000);
 		ticks_per_shove_ = ticks_per_shove;
 	}
 
@@ -86,7 +86,7 @@ public:
 	//@param pause_interval -> the size of each interval in ms
 	StopwatchTimer(double pause_interval){
 		QueryPerformanceFrequency((LARGE_INTEGER *)&frequency_);
-		ticks_per_interval_ = frequency_ * (pause_interval / 1000);
+		ticks_per_interval_ = __int64(frequency_ * (pause_interval / 1000));
 	}
 
 	//constructor
@@ -124,14 +124,14 @@ public:
 	double S_SinceStart() {
 		__int64 currentTime;
 		QueryPerformanceCounter((LARGE_INTEGER *)&currentTime);
-		double seconds = ((currentTime - start_time_) / frequency_);
+		double seconds = double((currentTime - start_time_) / frequency_);
 		return seconds;
 	}
 
 	double MS_SinceStart() {
 		__int64 currentTime;
 		QueryPerformanceCounter((LARGE_INTEGER *)&currentTime);
-		double milliseconds = ((currentTime - start_time_) / (frequency_ / 1000));
+		double milliseconds = double((currentTime - start_time_) / (frequency_ / 1000));
 		return milliseconds;
 	}
 };

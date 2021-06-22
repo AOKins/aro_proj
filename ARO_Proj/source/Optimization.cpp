@@ -1,4 +1,3 @@
-
 #include "stdafx.h"				// Required in source
 #include <string>
 using std::string;
