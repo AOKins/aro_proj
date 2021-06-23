@@ -208,13 +208,12 @@ void Utility::GenerateTargetMatrix_SinglePoint(int* targetMatrix, int cameraImag
 		// calculate rough dimensions of a circle
 		xmin = centerX - sqrt(pow(targetRadius, 2) - pow(i - centerY, 2));
 		xmax = centerX + sqrt(pow(targetRadius, 2) - pow(i - centerY, 2));
-		for (int j = xmin; j < xmax; j++)
-		{
+		for (int j = xmin; j < xmax; j++) {
 			targetMatrix[i*cameraImageWidth + j] = 500;
 		}
 	}
 
-	std::ofstream efile("targetmat.txt", std::ios::app);
+	std::ofstream efile("targetmat.txt");
 	for (int i = 0; i < cameraImageWidth; i++) {
 		for (int j = 0; j < cameraImageHeight; j++)	{
 			efile << targetMatrix[j*cameraImageWidth + i] << ' ';
