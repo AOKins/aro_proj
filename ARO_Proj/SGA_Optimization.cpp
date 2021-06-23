@@ -252,6 +252,7 @@ bool SGA_Optimization::setupInstanceVariables() {
 	this->scalers.clear();
 	// Setup a vector for every board
 	for (int i = 0; i < sc->boards.size(); i++) {
+		this->slmScaledImages[i] = new unsigned char[sc->boards[i]->GetArea()];
 		this->scalers.push_back(setupScaler(this->slmScaledImages[i], i));
 	}
 
@@ -314,6 +315,7 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	delete this->timestamp;
 	for (int i = 0; i < this->scalers.size(); i++) {
 		delete this->scalers[i];
+		delete this->slmScaledImages[i];
 	}
 	this->scalers.clear();
 	return true;
