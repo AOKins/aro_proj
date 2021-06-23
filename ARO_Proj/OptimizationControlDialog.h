@@ -5,8 +5,7 @@
 
 // OptimizationControlDialog dialog
 
-class OptimizationControlDialog : public CDialogEx
-{
+class OptimizationControlDialog : public CDialogEx {
 	DECLARE_DYNAMIC(OptimizationControlDialog)
 
 public:

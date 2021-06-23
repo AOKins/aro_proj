@@ -10,17 +10,21 @@ public:
 	int imageWidth;
 	int imageHeight;
 
-	unsigned char*   FrameOne;
-	unsigned char*   FrameTwo;
-	unsigned char*   PhaseCompensationData;
-	unsigned char*   SystemPhaseCompensationData;
-	unsigned char*   LUT;
+	unsigned char * FrameOne;
+	unsigned char * FrameTwo;
+	unsigned char * PhaseCompensationData;
+	unsigned char * SystemPhaseCompensationData;
+	// LUT file data
+	unsigned char * LUT;
 
+	// Filepath to LUT file being used
 	std::string LUTFileName;
+	// Filepath to phase compensation file being used
 	std::string PhaseCompensationFileName;
+	// Filepath to system phas compensation file being used
 	std::string SystemPhaseCompensationFileName;
 
-	// Defualt constructor
+	// Defualt constructor does not initialize anything
 	SLM_Board(){};
 	// Constructor
 	SLM_Board(bool isNematic, int width, int height);

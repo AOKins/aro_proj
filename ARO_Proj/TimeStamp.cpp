@@ -15,6 +15,7 @@ TimeStamp::TimeStamp(double duration, string label) {
 double TimeStamp::GetDurationSec() {
 	return duration / 1000;
 }
+
 double TimeStamp::GetDurationMSec() {
 	return duration;
 }

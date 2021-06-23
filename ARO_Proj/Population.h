@@ -5,16 +5,10 @@
 #ifndef POPULATION_H_
 #define POPULATION_H_
 #include "Individual.h"
-#include "BetterRandom.h"
-#include "Utility.h" // For printLine
+#include "BetterRandom.h"	// Randomizer in generateRandomImage() & Crossover()
+#include "Utility.h"		// For printLine() & rejoinClear()
 
-#include <thread> // For ind_threads and general multithreaded behavior
-
-////
-// TODOs:	Consider update sortIndividuals to use more efficient algorithm
-//					(currently using insertion sort but with small size may not be needed/gain much)
-//			Consider how to handle possible case of elite_size exceeding pop_size (necessarry?) currently gives warning in console
-////
+#include <thread>			// For ind_threads and multithreaded behavior
 
 template <class T>
 class Population {
@@ -53,8 +47,8 @@ public:
 
 		this->individuals_ = new Individual<T>[pop_size_];
 
-		//initialize images for each individual
-		// Lambda function to ensure that generating random image is done in parallel
+		// initialize images for each individual
+		// Lambda function to ensure that generating random image is done in parallel to speed up process
 		// Input: id - index for individual to be set
 		// Captures
 		//		individuals_ - pointer to array of individuals to store new random genomes in
@@ -70,7 +64,7 @@ public:
 		Utility::printLine("INFO: Population created!");
 	}
 
-	//Destructor - delete individuals and call rejoinClear()
+	//Destructor - delete individuals and call rejoinClear() to clear ind_threads
 	~Population() {
 		Utility::rejoinClear(this->ind_threads);
 		delete[] this->individuals_;
@@ -87,7 +81,7 @@ public:
 	}
 
 	// Generates a random image using BetterRandom
-	// Output: a randomly generated image that has size of genome_length for Population
+	// Output: a randomly generated image that has size of genome_length for Population with each value being from 0 to 255
 	vector<T>* GenerateRandomImage() {
 		static BetterRandom ran(256);
 		vector<T> * image = new vector<T>(this->genome_length_,0);

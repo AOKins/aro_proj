@@ -4,7 +4,6 @@
 // [DESCRIPTION]
 // MainDialog.h : header file for the main dialog of the program
 
-
 // [FORWARD DEFINITIONS]
 class SLMController;
 class CameraController;
@@ -15,6 +14,7 @@ class CameraController;
 #include "afxdialogex.h"
 #include <stdlib.h>
 #include <stdio.h>
+
 #include "OptimizationControlDialog.h"
 #include "SLMControlDialog.h"
 #include "CameraControlDialog.h"
@@ -22,8 +22,7 @@ class CameraController;
 #include "afxcmn.h"
 
 
-class MainDialog : public CDialog
-{
+class MainDialog : public CDialog {
 public:
 	// [GLOBAL PARAMETERS]
 	int frameRate = 200; //200 FPS or 200 HZ (valid range 1 - 1000)
@@ -104,5 +103,9 @@ public:
 	};
 	OptType opt_selection_;
 };
+
+// Worker thread process for running optimization while MainDialog continues listening for other input
+// Input: instance - pointer to MainDialog instance that called this method (will be cast to MainDialgo*)
+UINT __cdecl optThreadMethod(LPVOID instance);
 
 #endif

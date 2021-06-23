@@ -1,12 +1,13 @@
 ////////////////////
 // Optimization handler for micro genetic algorithm that inherits from base Optimization class
-// Last edited: 06/02/2021 by Andrew O'Kins
+// Last edited: 06/23/2021 by Andrew O'Kins
 ////////////////////
 #ifndef UGA_OPTIMIZATION_H_
 #define UGA_OPTIMIZATION_H_
 
 #include "Optimization.h"
 #include "uGA_Population.h"
+
 class MainDialog;
 class CameraController;
 class SLMController;

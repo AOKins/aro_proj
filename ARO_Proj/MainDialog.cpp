@@ -1,5 +1,5 @@
 // [DESCRIPTION]
-// BlinkPCIeSDKDlg.cpp: implementation file for the main dialog of the program
+// MainDialog.cpp: implementation file for the main dialog of the program
 // Authors: Benjamin Richardson, Rebecca Tucker, Kostiantyn Makrasnov and More @ ISP ASL
 
 // [DEFINITIONS/ABRIVIATIONS]
@@ -13,7 +13,6 @@
 #include "MainDialog.h"			// Header file for dialog functions
 
 // - Aglogrithm Related
-#include "Optimization.h"
 #include "uGA_Optimization.h"
 #include "SGA_Optimization.h"
 #include "BruteForce_Optimization.h"
@@ -33,7 +32,6 @@
 #include <iostream>				// Used for console output
 
 //[NAMESPACES]
-using namespace std;
 using namespace cv;
 
 #define MAX_CFileDialog_FILE_COUNT 99
@@ -173,8 +171,8 @@ BOOL MainDialog::OnInitDialog()
 	// Give a warning message if no boards have been detected
 	if (m_slmControlDlg.slmCtrl->boards.size() < 1) {
 		MessageBox((LPCWSTR)L"No SLM detected!",
-			(LPCWSTR)L"No SLM has been detected to be connected!",
-			MB_ICONWARNING | MB_OK);
+				   (LPCWSTR)L"No SLM has been detected to be connected!",
+					MB_ICONWARNING | MB_OK);
 	}
 
 	//Show the default tab (optimizations settings)
@@ -189,16 +187,17 @@ BOOL MainDialog::OnInitDialog()
 		else
 			m_CompensatePhaseCheckbox.ShowWindow(true);
 	}
-	else
+	else {
 		Utility::printLine("WARNING: SLM Control NULL");
+	}
 
 	camCtrl = new CameraController((*this));
 	if (camCtrl != nullptr)	{
 		m_aoiControlDlg.SetCameraController(camCtrl);
 	}
-	else
+	else {
 		Utility::printLine("WARNING: Camera Control NULL");
-
+	}
 	// Send the currently selected image from the PCIe card memory board
 	// to the SLM. User will immediately see first image in sequence. 
 	OnSelchangeImageListbox();
@@ -299,7 +298,7 @@ HCURSOR MainDialog::OnQueryDragIcon()
 void MainDialog::OnSelchangeImageListbox() {
 	//Figure out which image in the list was just selected
 	int sel = this->m_ImageListBox.GetCurSel();
-	if (sel == LB_ERR){ //nothing selected
+	if (sel == LB_ERR) { //nothing selected
 		return;
 	}
 	slmCtrl->ImageListBoxUpdate(sel);
@@ -314,10 +313,11 @@ void MainDialog::OnSelchangeImageListbox() {
 //   Returns: none
 //
 //   Purpose: This function is used to clean up at the close of the program. 
-//			  It is called when the user clicks the little X in the upper corner. 
-//			  MAKE SURE THE SLM POWER IS OFF BEFORE LEAVING THE PROGRAM!!
+//			  It is called when the user clicks the little X in the upper corner.
 //
 //   Modifications:
+//				Will halt closing if the optimization is still running, giving 
+//				MessageBox to user as well as console to inform them
 //
 ///////////////////////////////////////////////////
 void MainDialog::OnClose() {
@@ -327,15 +327,13 @@ void MainDialog::OnClose() {
 		MessageBox(
 			(LPCWSTR)L"Still running optimization!",
 			(LPCWSTR)L"The optimization is still running! Must be stopped first.",
-			MB_ICONWARNING | MB_OK
-			);
+			MB_ICONWARNING | MB_OK);
 	}
 	else {
 		Utility::printLine("INFO: System beginning to close closing!");
 
 		delete this->camCtrl;
 		// SLM controller is destructed by the SLM Dialog Controller
-
 		//Finish console output
 		fclose(fp);
 		if (!FreeConsole()) {
@@ -347,10 +345,7 @@ void MainDialog::OnClose() {
 }
 
 /* OnOK: perfomrs enter key functions - used to prevent accidental exit of program and equipment damag e*/
-void MainDialog::OnOK()
-{
-
-}
+void MainDialog::OnOK() {}
 
 /////////////////////////////////////////////////////
 //
@@ -385,6 +380,7 @@ void MainDialog::OnBnClickedUgaButton() {
 	this->opt_selection_ = OptType::uGA;
 	Utility::printLine("INFO: uGA optimization selected");
 
+	// Disabling uGA (now that it's selected) and enabling other options and start button
 	this->m_uGAButton.EnableWindow(false);
 	this->m_SGAButton.EnableWindow(true);
 	this->m_OptButton.EnableWindow(true);
@@ -396,6 +392,7 @@ void MainDialog::OnBnClickedSgaButton() {
 	Utility::printLine("INFO: SGA optimization selected");
 	this->opt_selection_ = OptType::SGA;
 
+	// Disabling SGA (now that it's selected) and enabling other options and start button
 	this->m_SGAButton.EnableWindow(false);
 	this->m_uGAButton.EnableWindow(true);
 	this->m_OptButton.EnableWindow(true);
@@ -407,6 +404,7 @@ void MainDialog::OnBnClickedOptButton() {
 	Utility::printLine("INFO: OPT5 optimization selected");
 	this->opt_selection_ = OptType::OPT5;
 
+	// Disabling BF (now that it's selected) and enabling other options and start button
 	this->m_OptButton.EnableWindow(false);
 	this->m_SGAButton.EnableWindow(true);
 	this->m_uGAButton.EnableWindow(true);
@@ -456,7 +454,25 @@ void MainDialog::disableMainUI(bool isMainEnabled) {
 	m_OptButton.EnableWindow(isMainEnabled);
 }
 
+// Start the selected optimization if haven't started, or attempt to stop if already running
+void MainDialog::OnBnClickedStartStopButton() {
+	if (this->running_optimization_ == true) {
+		Utility::printLine("INFO: Optimization currently running, attempting to stop safely");
+		this->stopFlag = true;
+	}
+	else {
+		Utility::printLine("INFO: No optimization currently running, attempting to start depending on selection");
+		this->stopFlag = false;
+		if (this->runOptThread != NULL) {
+			Utility::printLine("WARNING: Optimization worker thread is not null but creating another thread");
+		}
+		this->runOptThread = AfxBeginThread(optThreadMethod, LPVOID(this));
+		this->runOptThread->m_bAutoDelete = true; // Explicit setting for auto delete
+	}
+}
+
 // Worker thread process for running optimization while MainDialog continues listening for other input
+// Input: instance - pointer to MainDialog instance that called this method (will be cast to MainDialgo*)
 UINT __cdecl optThreadMethod(LPVOID instance) {
 	MainDialog * dlg = (MainDialog*)instance;
 	dlg->disableMainUI(false); // Disable main UI (except for Start/Stop Button)
@@ -496,20 +512,4 @@ UINT __cdecl optThreadMethod(LPVOID instance) {
 	dlg->disableMainUI(true);
 	Utility::printLine("INFO: End of worker optimization thread!");
 	return 0;
-}
-
-void MainDialog::OnBnClickedStartStopButton() {
-	if (this->running_optimization_ == true) {
-		Utility::printLine("INFO: Optimization currently running, attempting to stop safely");
-		this->stopFlag = true;
-	}
-	else {
-		Utility::printLine("INFO: No optimization currently running, attempting to start depending on selection");
-		this->stopFlag = false;
-		if (this->runOptThread != NULL) {
-			Utility::printLine("WARNING: Optimization worker thread is not null but creating another thread");
-		}
-		this->runOptThread = AfxBeginThread(optThreadMethod, LPVOID(this));
-		this->runOptThread->m_bAutoDelete = true; // Explicit setting for auto delete
-	}
 }

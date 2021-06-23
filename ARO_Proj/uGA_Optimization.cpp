@@ -101,6 +101,10 @@ bool uGA_Optimization::runIndividual(int indID) {
 	std::unique_lock<std::mutex> hardwareLock(hardwareMutex, std::defer_lock);
 
 	hardwareLock.lock();
+	// Pre end the result for the individual if the stop flag has been raised while waiting
+	if (this->dlg.stopFlag == true) {
+		return true;
+	}
 	// If the boolean is already true, then that means another thread is using this hardware and we have an issue
 	if (this->usingHardware) {
 		Utility::printLine("ERROR: HARDWARE BEING USED BY OTHER THREAD(S)!");
@@ -295,12 +299,7 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 	std::rename("logs/uGA_time_vs_fitness.txt", ("logs/" + curTime + "_uGA_time_vs_fitness.txt").c_str());
 	std::rename("logs/exposure.txt", ("logs/" + curTime + "_uGA_exposure.txt").c_str());
 	saveParameters(curTime, "uGA");
-
-	for (int i = 0; i < population.size(); i++) {
-		delete this->population[i];
-	}
-	this->population.clear();
-
+	
 	// - image displays
 	this->camDisplay->CloseDisplay();
 	this->slmDisplay->CloseDisplay();
@@ -308,13 +307,20 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 	this->cc->stopCamera();
 	this->cc->shutdownCamera();
 	// - pointers
+	for (int i = 0; i < this->population.size(); i++) {
+		delete this->population[i];
+	}
+	this->population.clear();
 	delete this->camDisplay;
 	delete this->slmDisplay;
 	delete this->timestamp;
 	for (int i = 0; i < this->scalers.size(); i++) {
 		delete this->scalers[i];
-		delete this->slmScaledImages[i];
 	}
 	this->scalers.clear();
+	for (int i = 0; i < this->slmScaledImages.size(); i++) {
+		delete this->slmScaledImages[i];
+	}
+	this->slmScaledImages.clear();
 	return true;
 }

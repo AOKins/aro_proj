@@ -6,29 +6,27 @@
 #include <opencv2\highgui\highgui.hpp>
 #include <opencv2\imgproc\imgproc.hpp>
 
-#include <string>
-
-using namespace cv;
-using std::string;
-
-CameraDisplay::CameraDisplay(int input_image_height, int input_image_width, string display_name) :	//ASK why twice larger?
+// Constructor
+// Display has twice the dimensions of inputted image height and width
+CameraDisplay::CameraDisplay(int input_image_height, int input_image_width, std::string display_name) :	//ASK why twice larger?
 							port_height_(input_image_height * 2), port_width_(input_image_width * 2), display_name_(display_name) {
 	Utility::printLine("INFO: opening display " + display_name + " with - (" + std::to_string(input_image_width) + ", " + std::to_string(input_image_height) + ")");
-	display_matrix_ = Mat(port_height_, port_width_, CV_8UC3);
+	display_matrix_ = cv::Mat(port_height_, port_width_, CV_8UC3);
 	_isOpened = false;
 }
 
+// If display is open, window is destroyed
 CameraDisplay::~CameraDisplay() {
 	if (_isOpened) {
-		destroyWindow(display_name_);
+		cv::destroyWindow(display_name_);
 	}
 }
 
 void CameraDisplay::OpenDisplay() {
 	if (!_isOpened)	{
-		namedWindow(display_name_, CV_WINDOW_AUTOSIZE); //Create a window for the display
+		cv::namedWindow(display_name_, CV_WINDOW_AUTOSIZE); //Create a window for the display
 		imshow(display_name_, display_matrix_);
-		waitKey(1);
+		cv::waitKey(1);
 		_isOpened = true;
 		Utility::printLine("INFO: a display has been opened with name - " + display_name_);
 	}
@@ -36,27 +34,29 @@ void CameraDisplay::OpenDisplay() {
 
 void CameraDisplay::CloseDisplay() {
 	if (_isOpened) {
-		destroyWindow(display_name_);
+		cv::destroyWindow(display_name_);
 		_isOpened = false;
 	}
 }
 
+// Update the display contents, if display not open it is also opened
+// Input: image - pointer to data that is passed into display_matrix_
 void CameraDisplay::UpdateDisplay(unsigned char* image) {
-	int kk;
-	for (int ie = 0; ie < (port_height_ / 2); ie++)	{
-		for (int je = 0; je < (port_width_ / 2); je++) {
-			kk = ie*(port_width_ / 2) + je;
-			display_matrix_.at<Vec3b>(ie * 2, je * 2) = Vec3b(image[kk], image[kk], image[kk]);
-			display_matrix_.at<Vec3b>(ie * 2, je * 2 + 1) = Vec3b(image[kk], image[kk], image[kk]);
-			display_matrix_.at<Vec3b>(ie * 2 + 1, je * 2) = Vec3b(image[kk], image[kk], image[kk]);
-			display_matrix_.at<Vec3b>(ie * 2 + 1, je * 2 + 1) = Vec3b(image[kk], image[kk], image[kk]);
+	int kk; // 1D index in display matrix (set for access into image pointer with x,y coordinates)
+	for (int ie = 0; ie < (this->port_height_ / 2); ie++)	{
+		for (int je = 0; je < (this->port_width_ / 2); je++) {
+			kk = ie*(this->port_width_ / 2) + je;
+			this->display_matrix_.at<cv::Vec3b>(ie * 2, je * 2)			= cv::Vec3b(image[kk], image[kk], image[kk]);
+			this->display_matrix_.at<cv::Vec3b>(ie * 2, je * 2 + 1)		= cv::Vec3b(image[kk], image[kk], image[kk]);
+			this->display_matrix_.at<cv::Vec3b>(ie * 2 + 1, je * 2)		= cv::Vec3b(image[kk], image[kk], image[kk]);
+			this->display_matrix_.at<cv::Vec3b>(ie * 2 + 1, je * 2 + 1) = cv::Vec3b(image[kk], image[kk], image[kk]);
 		}
 	}
 	if (!_isOpened)	{
 		OpenDisplay();
 	}
 	else {
-		imshow(display_name_, display_matrix_);
-		waitKey(1);
+		imshow(this->display_name_, this->display_matrix_);
+		cv::waitKey(1);
 	}
 }

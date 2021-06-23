@@ -1,30 +1,26 @@
 #include "stdafx.h"
 
 #include <fstream>	// used to export information to file 
-#include <string>	// output format
 #include <conio.h>	// console operations
 #include <ctime>
-#include <vector>
+#include <iostream>
 #include <algorithm>
 #include "CameraController.h"
 #include "SLMController.h"
 #include "Utility.h"
 
-
 #include <opencv2\highgui\highgui.hpp>	//image processing
 #include <opencv2\imgproc\imgproc.hpp>
-
-using std::string;
 
 // [CONSOLE FEATURES]
 void Utility::printLine(std::string msg, bool isDebug) {
 	// Comment out only when need to see debug type line pinting
-	if (isDebug)
+	if (isDebug) {
 		return;
-
+	}
 	std::cout << "\n" << msg;
 
-	string curMsg = "\n" + msg;
+	std::string curMsg = "\n" + msg;
 	const char * dimMsgC = curMsg.c_str();
 	_cprintf(dimMsgC);
 }
@@ -37,9 +33,14 @@ void Utility::print(std::string msg) {
 }
 
 // [LOGIC]
-void Utility::areEqual(std::string a, std::string b)
+bool Utility::areEqual(std::string a, std::string b)
 {
-
+	if (a == b) {
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 
 bool Utility::IsButtonText(CButton& btn, std::string text)
@@ -56,22 +57,6 @@ bool Utility::IsButtonText(CButton& btn, std::string text)
 
 
 // [TIMING FEATURES]
-void Utility::beginTimer()
-{
-
-}
-void Utility::recordTimeStamp(std::string msg)
-{
-
-}
-void Utility::pauseTimer()
-{
-
-}
-void Utility::endTimer()	//TODO: Also clears the times and stops the timer
-{
-
-}
 //getCurTime: This function returns the current time and date in Month-Day-Year Year-Minute-Second forat
 std::string Utility::getCurTime() {
 	time_t tt;
@@ -114,11 +99,9 @@ double Utility::FindAverageValue(unsigned char *Image, int* target, size_t width
 
 	printLine("FindAverageValue 1 ");
 
-	for (int i = x0 - r; i < x0 + r; i++)
-	{
-		for (int j = y0 - r; j < y0 + r; j++)
-		{
-			sum += m_ary.at<unsigned char>(i, j);// *target[j*width + i];
+	for (int i = x0 - r; i < x0 + r; i++) {
+		for (int j = y0 - r; j < y0 + r; j++) {
+			sum += m_ary.at<unsigned char>(i, j) * target[j*width + i];
 			area += 1;
 		}
 	}
@@ -229,7 +212,7 @@ void Utility::GenerateTargetMatrix_SinglePoint(int* targetMatrix, int cameraImag
  * @param: height -> height of camera image in pixels */
 void Utility::GenerateTargetMatrix_LoadFromFile(int *target, int width, int height) {
 	//Load file
-	string targfilename = "DRAWN_TARGET.TXT";
+	std::string targfilename = "DRAWN_TARGET.TXT";
 	std::ifstream targfile(targfilename);
 	if (targfile.fail()) {
 		throw new std::exception("Failed Target Matrix Load: Could Not Open File");
@@ -237,7 +220,7 @@ void Utility::GenerateTargetMatrix_LoadFromFile(int *target, int width, int heig
 	std::vector<std::vector<int>> targvec;
 	int targetwidth = 0;
 	while (!targfile.eof())	{
-		string line;
+		std::string line;
 		std::getline(targfile, line);
 		if (line.length() > targetwidth) { //find widest point
 			targetwidth = line.length();
@@ -307,7 +290,7 @@ std::vector<std::string> Utility::seperateByDelim(std::string fullString, char d
 
 // [MULTITHREADING]
 // Rejoin all the threads and clear ind_threads vector for future use
-// Note: if a thread is stuck in an indefinite duration, this will lock out
+// Note: if a thread is stuck in an indefinite duration, this will lock up
 void Utility::rejoinClear(std::vector<std::thread> & myThreads) {
 	for (int i = 0; i < myThreads.size(); i++) {
 		myThreads[i].join();

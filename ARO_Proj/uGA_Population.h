@@ -1,14 +1,11 @@
 ////////////////////
 // Population handler for micro genetic algorithm that inherits from base Population
-// Last edited: 06/21/2021 by Andrew O'Kins
+// Last edited: 06/23/2021 by Andrew O'Kins
 ////////////////////
 #ifndef UGAPOPULATION_H_
 #define UGAPOPULATION_H_
 #include "Population.h" // Using std::thread
 #include "BetterRandom.h"
-
-////
-// TODOs:	Verify/Debug uGA implementation
 
 template <class T>
 class uGAPopulation : public Population<T> {

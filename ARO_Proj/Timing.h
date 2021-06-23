@@ -2,7 +2,6 @@
 #define TIMING_H_
 #include <Windows.h>
 
-
 //Keeps track of time intervals relative to the timer's start time. Pausing
 //will stop the program until the current time interval is finished. This will
 //work well if you must stay in sync with something whose timing is persistent

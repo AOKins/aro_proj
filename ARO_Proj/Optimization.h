@@ -1,18 +1,12 @@
 #ifndef OPTIMIZATION_H_
 #define OPTIMIZATION_H_
 
-class MainDialog;
-class CameraController;
-class SLMController;
-class ImageScaler;
-class CameraDisplay;
-class TimeStampGenerator;
-
 #include <string>
 #include <fstream>				// used to export information to file for debugging
 using std::ofstream;
 #include <vector> // For managing ind_threads
 using std::vector;
+
 #include <thread> // For ind_threads used in runOptimization
 #include <mutex>  // Mutexes to protect identified critical sections
 
@@ -21,6 +15,13 @@ using std::vector;
 using namespace Spinnaker;
 using namespace Spinnaker::GenApi;
 using namespace Spinnaker::GenICam;
+
+class MainDialog;
+class CameraController;
+class SLMController;
+class ImageScaler;
+class CameraDisplay;
+class TimeStampGenerator;
 
 class Optimization {
 protected:
@@ -95,7 +96,8 @@ protected:
 	virtual bool shutdownOptimizationInstance() = 0; // Cleaning up properties as well as final saving for runOptimization()
 	virtual bool runIndividual(int indID) = 0;		 // Method for handling the execution of an individual
 
-	vector<std::thread> ind_threads; // Vector hold threads of running individuals
+	// Vector hold threads of running individuals
+	vector<std::thread> ind_threads;
 	// Mutexes to protect critical sections
 	std::mutex hardwareMutex; // Mutex to protect access to the hardware used in evaluating an individual (SLM, Camera, etc.)
 	std::mutex consoleMutex, imageMutex, camDisplayMutex;	// Mutex to protect access to i/o and lastImage dimension values

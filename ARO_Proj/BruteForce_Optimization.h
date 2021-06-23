@@ -3,8 +3,6 @@
 
 #include "Optimization.h"
 
-#include <fstream>	// used to export information to file 
-
 class MainDialog;
 class CameraController;
 class SLMController;
@@ -27,6 +25,5 @@ public:
 	// This method returns false as this isn't/shoudn't be used by this optimization
 	bool runIndividual(int indID) { return false; };
 };
-
 
 #endif

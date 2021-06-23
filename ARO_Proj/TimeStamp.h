@@ -7,22 +7,19 @@
 #include <sstream>
 #include <string>
 
-using namespace std;
-
-class TimeStamp
-{
+class TimeStamp {
 private:
-	string label;
+	std::string label;
 	double duration;
 
 public:
 	//Contructor
-	TimeStamp(double duration, string label);
+	TimeStamp(double duration, std::string label);
 	
 	//Get Time Taken
 	double GetDurationSec();
 	double GetDurationMSec();
-	string GetLabel();
+	std::string GetLabel();
 };
 
 #endif

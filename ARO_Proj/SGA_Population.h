@@ -7,10 +7,6 @@
 #include "Population.h"
 #include "BetterRandom.h"
 
-////
-// TODOs:	Debug mulithreading in StartNextGeneration
-//			General code polishin
-
 template <class T>
 class SGAPopulation : public Population<T> {
 public:
