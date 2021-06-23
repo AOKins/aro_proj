@@ -278,53 +278,53 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="headers\AOIControlDialog.h" />
-    <ClInclude Include="headers\ARO_App.h" />
-    <ClInclude Include="headers\BruteForce_Optimization.h" />
-    <ClInclude Include="headers\CameraControlDialog.h" />
-    <ClInclude Include="headers\CameraController.h" />
-    <ClInclude Include="headers\uGA_Population.h" />
-    <ClInclude Include="headers\ImageScaler.h" />
-    <ClInclude Include="headers\MainDialog.h" />
-    <ClInclude Include="headers\Blink_SDK.h" />
-    <ClInclude Include="headers\CamDisplay.h" />
-    <ClInclude Include="headers\cdib.h" />
-    <ClInclude Include="headers\Individual.h" />
-    <ClInclude Include="headers\Optimization.h" />
-    <ClInclude Include="headers\OptimizationControlDialog.h" />
-    <ClInclude Include="headers\Population.h" />
-    <ClInclude Include="headers\Resource.h" />
-    <ClInclude Include="headers\SGA_Optimization.h" />
-    <ClInclude Include="headers\SGA_Population.h" />
-    <ClInclude Include="headers\SLMControlDialog.h" />
-    <ClInclude Include="headers\SLMController.h" />
-    <ClInclude Include="headers\SLM_Board.h" />
-    <ClInclude Include="headers\stdafx.h" />
-    <ClInclude Include="headers\targetver.h" />
-    <ClInclude Include="headers\TimeStamp.h" />
-    <ClInclude Include="headers\Timing.h" />
-    <ClInclude Include="headers\uGA_Optimization.h" />
-    <ClInclude Include="headers\Utility.h" />
+    <ClInclude Include="AOIControlDialog.h" />
+    <ClInclude Include="ARO_App.h" />
+    <ClInclude Include="BruteForce_Optimization.h" />
+    <ClInclude Include="CameraControlDialog.h" />
+    <ClInclude Include="CameraController.h" />
+    <ClInclude Include="uGA_Population.h" />
+    <ClInclude Include="ImageScaler.h" />
+    <ClInclude Include="MainDialog.h" />
+    <ClInclude Include="Blink_SDK.h" />
+    <ClInclude Include="CamDisplay.h" />
+    <ClInclude Include="cdib.h" />
+    <ClInclude Include="Individual.h" />
+    <ClInclude Include="Optimization.h" />
+    <ClInclude Include="OptimizationControlDialog.h" />
+    <ClInclude Include="Population.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="SGA_Optimization.h" />
+    <ClInclude Include="SGA_Population.h" />
+    <ClInclude Include="SLMControlDialog.h" />
+    <ClInclude Include="SLMController.h" />
+    <ClInclude Include="SLM_Board.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="TimeStamp.h" />
+    <ClInclude Include="Timing.h" />
+    <ClInclude Include="uGA_Optimization.h" />
+    <ClInclude Include="Utility.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\AOIControlDialog.cpp" />
-    <ClCompile Include="source\ARO_App.cpp" />
-    <ClCompile Include="source\BruteForce_Optimization.cpp" />
-    <ClCompile Include="source\CameraControlDialog.cpp" />
-    <ClCompile Include="source\CameraController.cpp" />
-    <ClCompile Include="source\ImageScaler.cpp" />
-    <ClCompile Include="source\MainDialog.cpp" />
-    <ClCompile Include="source\CamDisplay.cpp" />
-    <ClCompile Include="source\cdib.cpp" />
-    <ClCompile Include="source\Optimization.cpp" />
-    <ClCompile Include="source\OptimizationControlDialog.cpp" />
-    <ClCompile Include="source\SGA_Optimization.cpp" />
-    <ClCompile Include="source\SLMControlDialog.cpp" />
-    <ClCompile Include="source\SLMController.cpp" />
-    <ClCompile Include="source\SLM_Board.cpp" />
-    <ClCompile Include="source\uGA_Optimization.cpp" />
-    <ClCompile Include="source\Utility.cpp" />
-    <ClCompile Include="source\stdafx.cpp">
+    <ClCompile Include="AOIControlDialog.cpp" />
+    <ClCompile Include="ARO_App.cpp" />
+    <ClCompile Include="BruteForce_Optimization.cpp" />
+    <ClCompile Include="CameraControlDialog.cpp" />
+    <ClCompile Include="CameraController.cpp" />
+    <ClCompile Include="ImageScaler.cpp" />
+    <ClCompile Include="MainDialog.cpp" />
+    <ClCompile Include="CamDisplay.cpp" />
+    <ClCompile Include="cdib.cpp" />
+    <ClCompile Include="Optimization.cpp" />
+    <ClCompile Include="OptimizationControlDialog.cpp" />
+    <ClCompile Include="SGA_Optimization.cpp" />
+    <ClCompile Include="SLMControlDialog.cpp" />
+    <ClCompile Include="SLMController.cpp" />
+    <ClCompile Include="SLM_Board.cpp" />
+    <ClCompile Include="uGA_Optimization.cpp" />
+    <ClCompile Include="Utility.cpp" />
+    <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='TestConfig|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -332,7 +332,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="source\TimeStamp.cpp" />
+    <ClCompile Include="TimeStamp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ARO_Project.rc" />

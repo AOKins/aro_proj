@@ -15,144 +15,144 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="headers\AOIControlDialog.h">
+    <ClInclude Include="AOIControlDialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\ARO_App.h">
+    <ClInclude Include="ARO_App.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\Blink_SDK.h">
+    <ClInclude Include="Blink_SDK.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\CamDisplay.h">
+    <ClInclude Include="BruteForce_Optimization.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\CameraControlDialog.h">
+    <ClInclude Include="CamDisplay.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\CameraController.h">
+    <ClInclude Include="CameraControlDialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\BruteForce_Optimization.h">
+    <ClInclude Include="CameraController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\cdib.h">
+    <ClInclude Include="cdib.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\Individual.h">
+    <ClInclude Include="ImageScaler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\ImageScaler.h">
+    <ClInclude Include="Individual.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\MainDialog.h">
+    <ClInclude Include="MainDialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\Optimization.h">
+    <ClInclude Include="Optimization.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\OptimizationControlDialog.h">
+    <ClInclude Include="OptimizationControlDialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\Population.h">
+    <ClInclude Include="Population.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\Resource.h">
+    <ClInclude Include="Resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\Utility.h">
+    <ClInclude Include="SGA_Optimization.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\uGA_Population.h">
+    <ClInclude Include="SGA_Population.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\uGA_Optimization.h">
+    <ClInclude Include="SLM_Board.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\Timing.h">
+    <ClInclude Include="SLMControlDialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\TimeStamp.h">
+    <ClInclude Include="SLMController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\targetver.h">
+    <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\stdafx.h">
+    <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\SLMController.h">
+    <ClInclude Include="TimeStamp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\SLMControlDialog.h">
+    <ClInclude Include="Timing.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\SGA_Population.h">
+    <ClInclude Include="uGA_Optimization.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\SGA_Optimization.h">
+    <ClInclude Include="uGA_Population.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\SLM_Board.h">
+    <ClInclude Include="Utility.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\ARO_App.cpp">
+    <ClCompile Include="AOIControlDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\AOIControlDialog.cpp">
+    <ClCompile Include="ARO_App.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\BruteForce_Optimization.cpp">
+    <ClCompile Include="BruteForce_Optimization.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\CamDisplay.cpp">
+    <ClCompile Include="CamDisplay.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\CameraController.cpp">
+    <ClCompile Include="CameraControlDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\CameraControlDialog.cpp">
+    <ClCompile Include="CameraController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\cdib.cpp">
+    <ClCompile Include="cdib.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\MainDialog.cpp">
+    <ClCompile Include="ImageScaler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\ImageScaler.cpp">
+    <ClCompile Include="MainDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\Optimization.cpp">
+    <ClCompile Include="Optimization.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\OptimizationControlDialog.cpp">
+    <ClCompile Include="OptimizationControlDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\SGA_Optimization.cpp">
+    <ClCompile Include="SGA_Optimization.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\Utility.cpp">
+    <ClCompile Include="SLM_Board.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\SLM_Board.cpp">
+    <ClCompile Include="SLMControlDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\TimeStamp.cpp">
+    <ClCompile Include="SLMController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\uGA_Optimization.cpp">
+    <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\SLMController.cpp">
+    <ClCompile Include="TimeStamp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\SLMControlDialog.cpp">
+    <ClCompile Include="uGA_Optimization.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\stdafx.cpp">
+    <ClCompile Include="Utility.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
