@@ -46,7 +46,7 @@ bool SGA_Optimization::runOptimization() {
 	try {	// Begin general camera exception handling while optimization loop is going
 		this->timestamp = new TimeStampGenerator();		// Starting time stamp to track elapsed time
 		// Optimization loop for each generation
-		for (this->curr_gen = 0; this->curr_gen < maxGenenerations && !stopConditionsMetFlag; this->curr_gen++) {
+		for (this->curr_gen = 0; this->curr_gen < this->maxGenenerations && !stopConditionsMetFlag; this->curr_gen++) {
 			for (int popID = 0; popID < population.size(); popID++) {
 				// Run each individual, giving them all fitness values as a result of their genome
 				for (int indID = 0; indID < population[popID]->getSize(); indID++) {
@@ -72,6 +72,9 @@ bool SGA_Optimization::runOptimization() {
 		// Cleanup & Save resulting instance
 		if (shutdownOptimizationInstance()) {
 			Utility::printLine("INFO: Successfully ended optimization instance and saved results");
+		}
+		else {
+			Utility::printLine("WARNING: Failure to properly end optimization instance!");
 		}
 	}
 	catch (Spinnaker::Exception &e) {
@@ -105,11 +108,12 @@ bool SGA_Optimization::runIndividual(int indID) {
 	hardwareLock.lock();
 	// Pre end the result for the individual if the stop flag has been raised while waiting
 	if (this->dlg.stopFlag == true) {
+		hardwareLock.unlock();
 		return true;
 	}
 	// If the hardware boolean is already true, then that means another thread is using this hardware and we have an issue
 	if (this->usingHardware) {
-		Utility::printLine("ERROR: HARDWARE BEING USED BY OTHER THREAD(S)!");
+		Utility::printLine("ERROR: HARDWARE BEING USED BY OTHER THREAD(S)! Exiting out of this individual");
 		hardwareLock.unlock();
 		return false;
 	}
@@ -216,9 +220,7 @@ bool SGA_Optimization::setupInstanceVariables() {
 	// Setting population size as well as number of elite individuals kept in the genetic repopulation
 	this->populationSize = 30;
 	this->eliteSize = 5;
-	this->bestImage = Image::Create();
 	this->ind_threads.clear();
-
 	// Set things up accordingly if doing single or multi-SLM
 	if (dlg.m_slmControlDlg.multiEnable.GetCheck() == BST_CHECKED) {
 		this->popCount = int(sc->boards.size());
@@ -230,10 +232,13 @@ bool SGA_Optimization::setupInstanceVariables() {
 	else {
 		this->popCount = 1;
 	}
+	// Setting up bestImage vector to store the best image for each population
+	this->bestImage = Image::Create();
+
 	// Setting population vector
 	this->population.clear();
 	for (int i = 0; i < this->popCount; i++) {
-		this->population.push_back( new SGAPopulation<int>(this->cc->numberOfBinsY * this->cc->numberOfBinsX * this->cc->populationDensity, this->populationSize, this->eliteSize, this->acceptedSimilarity));
+		this->population.push_back(new SGAPopulation<int>(this->cc->numberOfBinsY * this->cc->numberOfBinsX * this->cc->populationDensity, this->populationSize, this->eliteSize, this->acceptedSimilarity));
 	}
 
 	this->shortenExposureFlag = false;		// Set to true by individual if fitness is too high
@@ -316,12 +321,14 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	delete this->camDisplay;
 	delete this->slmDisplay;
 	delete this->timestamp;
+	// Delete all the scalers in the vector
 	for (int i = 0; i < this->scalers.size(); i++) {
 		delete this->scalers[i];
 	}
 	this->scalers.clear();
+	// Delete all the scaled image pointers in the vector
 	for (int i = 0; i < this->slmScaledImages.size(); i++) {
-		delete this->slmScaledImages[i];
+		delete[] this->slmScaledImages[i];
 	}
 	this->slmScaledImages.clear();
 	return true;

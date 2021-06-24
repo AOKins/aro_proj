@@ -11,6 +11,7 @@
 
 #include "MainDialog.h"
 #include "SLMController.h"
+#include "ImageScaler.h"
 #include "CameraController.h"
 #include "Blink_SDK.h"
 #include "SLM_Board.h"
@@ -91,8 +92,11 @@ bool BruteForce_Optimization::runOptimization() {
 					this->usingHardware = true;
 					// Update board with new images
 
-					for (int i = 1; i <= this->sc->boards.size(); i++) {
-						this->sc->blink_sdk->Write_image(i, this->slmImg, this->sc->getBoardHeight(i - 1), false, false, 0);
+					for (int i =0; i < this->sc->boards.size(); i++) {
+						// Scale the individual genome to fit SLMs
+						this->scalers[i]->TranslateImage(this->slmImg, this->slmScaledImages[i]); // Translate the vector genome into char array image
+						// Write to SLM
+						this->sc->blink_sdk->Write_image(i + 1, this->slmScaledImages[i], sc->getBoardHeight(i), false, false, 0);
 					}
 					//Acquire and display camera image
 					this->cc->AcquireImages(curImage, convImage);
@@ -161,7 +165,7 @@ bool BruteForce_Optimization::runOptimization() {
 bool BruteForce_Optimization::setupInstanceVariables() {
 	//this->dlg.m_slmControlDlg.dualEnable.GetCheck() == CHECKED;
 
-	this->slmImg = new unsigned char[this->sc->getBoardWidth(0) * this->sc->getBoardHeight(0) * 1];// Initialize array for storing slm images
+	this->slmImg = new int[this->cc->numberOfBinsY * this->cc->numberOfBinsX * this->cc->populationDensity];// Initialize array for storing slm images
 
 	this->cc->startCamera(); // setup camera
 
@@ -173,6 +177,17 @@ bool BruteForce_Optimization::setupInstanceVariables() {
 	this->slmDisplay = new CameraDisplay(this->sc->getBoardHeight(0), this->sc->getBoardWidth(0), "SLM Display");
 	// Setup container for best image
 	this->bestImage = Image::Create();
+
+	// Scaler Setup (using base class)
+	this->slmScaledImages.clear();
+	// Setup the scaled images vector
+	this->slmScaledImages = std::vector<unsigned char*>(this->sc->boards.size());
+	this->scalers.clear();
+	// Setup a vector for every board and initializing all slmScaledImages to 0s
+	for (int i = 0; i < sc->boards.size(); i++) {
+		this->slmScaledImages[i] = new unsigned char[sc->boards[i]->GetArea()];
+		this->scalers.push_back(setupScaler(this->slmScaledImages[i], i));
+	}
 
 	// Open files for logging algorithm progress 
 	this->lmaxfile.open("logs/lmax.txt", std::ios::app);
@@ -222,6 +237,17 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 	delete this->camDisplay;
 	delete this->slmDisplay;
 	delete this->timestamp;
+
+	// Delete all the scalers in the vector
+	for (int i = 0; i < this->scalers.size(); i++) {
+		delete this->scalers[i];
+	}
+	this->scalers.clear();
+	// Delete all the scaled image pointers in the vector
+	for (int i = 0; i < this->slmScaledImages.size(); i++) {
+		delete[] this->slmScaledImages[i];
+	}
+	this->slmScaledImages.clear();
 
 	//Reset UI State
 	this->isWorking = false;

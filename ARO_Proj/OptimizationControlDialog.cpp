@@ -30,6 +30,7 @@ void OptimizationControlDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT_NUMBER_BINS, m_numberBins);
 	DDX_Control(pDX, IDC_EDIT_TARGET_RADIUS, m_targetRadius);
 	//DDX_Control(pDX, IDC_SAMPLE_CHECKMARK, m_SampleCheckmark);
+	DDX_Control(pDX, IDC_MAX_GENERATIONS, maxGen_);
 }
 
 

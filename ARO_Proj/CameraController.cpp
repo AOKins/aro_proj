@@ -131,7 +131,7 @@ bool CameraController::shutdownCamera() {
 // Output: curImage is saved at path
 bool CameraController::saveImage(ImagePtr& curImage, std::string path) {
 	if (!curImage.IsValid()) {
-		Utility::printLine("ERROR: Camera Aquisition resulted in a NULL image!");
+		Utility::printLine("ERROR: save image given is invalid!");
 		return false;
 	}
 	ostringstream filename;
@@ -533,8 +533,17 @@ int CameraController::PrintDeviceInfo(INodeMap & nodeMap) {
  * @return - TRUE if success, FALSE if failed */
 bool CameraController::ConfigureExposureTime() {
 	finalExposureTime = initialExposureTime;
-		
+	
 	return SetExposure(finalExposureTime);
+}
+
+bool CameraController::hasCameras() {
+	if (camList.GetSize() > 0) {
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 
 // [UTILITY]

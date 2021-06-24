@@ -21,7 +21,6 @@ class CameraController;
 #include "AOIControlDialog.h"
 #include "afxcmn.h"
 
-
 class MainDialog : public CDialog {
 public:
 	// [GLOBAL PARAMETERS]
@@ -36,7 +35,8 @@ public:
 
 	// [UI UPDATES]
 	void disableMainUI(bool isMainEnabled);
-
+	// Set the UI to default values
+	void setDefaultUI();
 // DIALOG DATA
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_BLINKPCIESDK_DIALOG };
@@ -68,7 +68,8 @@ public:
 	CEdit m_MFEdit;
 	CEdit m_MSEEdit;
 	CEdit m_MFEEdit;
-	CWinThread* runOptThread; // Thread to run the optimization algorithm through
+	// Thread to run the optimization algorithm through once committed to running
+	CWinThread* runOptThread;
 
 protected:
 	afx_msg void OnSlmPwrButton();

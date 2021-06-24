@@ -67,7 +67,9 @@ public:
 	bool ConfigureExposureTime();
 
 	// [UTILITY]
-	int CameraController::PrintDeviceInfo(INodeMap & nodeMap);
+	int PrintDeviceInfo(INodeMap & nodeMap);
+	bool hasCameras(); // Return true if at least one camera in camera list
+
 	bool SetExposure(double exposureTimeToSet);
 	double GetExposureRatio();
 	void HalfExposureTime();

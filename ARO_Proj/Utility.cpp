@@ -33,8 +33,7 @@ void Utility::print(std::string msg) {
 }
 
 // [LOGIC]
-bool Utility::areEqual(std::string a, std::string b)
-{
+bool Utility::areEqual(std::string a, std::string b) {
 	if (a == b) {
 		return true;
 	}
@@ -43,8 +42,7 @@ bool Utility::areEqual(std::string a, std::string b)
 	}
 }
 
-bool Utility::IsButtonText(CButton& btn, std::string text)
-{
+bool Utility::IsButtonText(CButton& btn, std::string text) {
 	CString PowerState;
 	btn.GetWindowTextW(PowerState);
 	CStringA pState(PowerState);

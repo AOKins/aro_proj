@@ -1,4 +1,4 @@
-// This class contains a list of the time stamp object members
+// Header for TimeStamp class to generate label
 
 #ifndef TIME_STAMP
 #define TIME_STAMP
@@ -9,8 +9,8 @@
 
 class TimeStamp {
 private:
-	std::string label;
-	double duration;
+	std::string label;	// A label for identifying what this time duration refers to
+	double duration;	// Duration in milliseconds
 
 public:
 	//Contructor

@@ -2,7 +2,7 @@
 #define OPTIMIZATION_H_
 
 #include <string>
-#include <fstream>				// used to export information to file for debugging
+#include <fstream>// used to export information to file for debugging
 using std::ofstream;
 #include <vector> // For managing ind_threads
 using std::vector;
@@ -26,18 +26,18 @@ class TimeStampGenerator;
 class Optimization {
 protected:
 	//Object references
-	MainDialog& dlg;
-	CameraController* cc;
-	SLMController* sc;
+	MainDialog& dlg;		// The GUI to draw the desired settings from
+	CameraController* cc;	// Interface with camera hardware
+	SLMController* sc;		// Interface with SLM hardware
 	//Base algorithm parameters
 	double acceptedSimilarity = .97; // images considered the same when reach this threshold (has to be less than 1)
 	double maxFitnessValue = 200; // max allowed fitness value - when reached exposure is halved (TODO: check this feature)
-	double maxGenenerations = 3000;
+	double maxGenenerations = 3000; // max allowed number of generations to perform
 
 	//Base algorithm stop conditions
 	double fitnessToStop = 0;
 	double secondsToStop = 60;
-	double genEvalToStop = 0;
+	double genEvalToStop = 0; // minimum number of generations to do
 
 	//Preference-type parameters
 	bool saveImages = false;		// TRUE -> save images of the fittest individual of each gen
@@ -46,28 +46,30 @@ protected:
 
 	//Instance variables (used during optimization process)
 	// Values assigned within setupInstanceVariables(), then if needed cleared in shutdownOptimizationInstance()
-	bool isWorking = false; // true if currently actively running the optimization algorithm
+	bool isWorking = false;		// true if currently actively running the optimization algorithm
 	bool usingHardware = false; // debug flag of using hardware currently in a given thread (to know if accidentally having two threads use hardware at once!)
-	int populationSize; // Size of the population being used (number of individuals in a population class)
+	int populationSize; // Size of the populations being used (number of individuals in a population class)
 	int popCount;		// Number of populations working with (equal to sc->boards.size() if multi-SLM mode)
 	int eliteSize;		// Number of elite individuals within the population (should be less than populationSize)
 	bool shortenExposureFlag;   // Set to true by individual if fitness is too high
 	bool stopConditionsMetFlag; // Set to true if a stop condition was reached by one of the individuals
 	CameraDisplay * camDisplay; // Display for camera
-	CameraDisplay * slmDisplay; // Display for SLM
+	CameraDisplay * slmDisplay; // Display for SLM (currently [June 24th 2021] only board at index 0)
 	int curr_gen;				// Current generation being evaluated (start at 0)
 	TimeStampGenerator * timestamp; // Timer to track and store elapsed time as the algorithm executes
 
-	ImagePtr bestImage;
-	std::vector<ImageScaler*> scalers;
-	std::vector<unsigned char*> slmScaledImages;
-	// Output debug streams // TODO at finished state may seek to change/remove these to improve performance
+	ImagePtr bestImage; // Current camera image found to have best resulting fitness from elite individuals
+	std::vector<ImageScaler*> scalers; // Image scalers for each SLM (each SLM may have different dimensions so can't have just one)
+	std::vector<unsigned char*> slmScaledImages; // To easily store the scaled images from individual to what will be written
+	// Output debug streams // TODO at finished state may seek to change/remove these to improve performance while running
 	ofstream tfile;				// Record elite individual progress over generations
 	ofstream timeVsFitnessFile;	// Recoding general fitness progress
 	ofstream efile;				// Expsoure file to record when exposure is shortened
 
 	// Methods for use in runOptimization()
+	// Pull GUI settings to set parameters
 	bool prepareStopConditions();
+	// Setup camera and slm controllers
 	bool prepareSoftwareHardware();
 
 	// Creates a scaler with given SLMController

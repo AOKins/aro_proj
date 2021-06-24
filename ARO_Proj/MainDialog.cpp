@@ -91,37 +91,17 @@ END_MESSAGE_MAP()
 //					only one board for now.
 //
 ///////////////////////////////////////////////////////
-BOOL MainDialog::OnInitDialog()
-{
+BOOL MainDialog::OnInitDialog() {
 	//[CONSOLE OUTPUT]
-	//Enable console output
-	//#ifdef _DEBUG
-
 	if (!AllocConsole()) {
 		AfxMessageBox(L"Console will not be shown!");
 	}
 	freopen_s(&fp, "CONOUT$", "w", stdout);
 	std::cout.clear();
-
-	/*
-	else
-	{
-		freopen("CONOUT$", "w", stdout);
-		AfxMessageBox(L"Output WILL be shown!");
-		std::cout << "!!!!!" << std::endl;
-	}*/
-	//#endif
-
+	
 	//[UI SETUP]
 	CDialog::OnInitDialog();
 	SetIcon(m_hIcon, TRUE);
-
-	//[SET UI DEFAULTS]
-	// - image names to the listbox and select the first image
-	// TODO: check if this the correct image setup 
-	m_ImageListBox.AddString(_T("ImageOne.bmp"));
-	m_ImageListBox.AddString(_T("ImageTwo.zrn"));
-	m_ImageListBox.SetCurSel(0);
 
 	//Setup the tab control that hosts all of the app's settings
 	//1) https://stackoverflow.com/questions/1044315/setwindowpos-function-not-moving-window
@@ -147,26 +127,14 @@ BOOL MainDialog::OnInitDialog()
 	m_aoiControlDlg.Create(IDD_AOI_CONTROL, &m_TabControl);
 	m_aoiControlDlg.SetWindowPos(NULL, rect.top + 5, rect.left + 30, rect.Width() - 10, rect.Height() - 35, SWP_HIDEWINDOW | SWP_NOZORDER);
 
+
+	//[SET UI DEFAULTS]
 	// - set all default settings
-	m_cameraControlDlg.m_FramesPerSecond.SetWindowTextW(_T("200"));
-	m_cameraControlDlg.m_initialExposureTimeInput.SetWindowTextW(_T("2000"));
-	m_cameraControlDlg.m_gammaValue.SetWindowTextW(_T("1.25"));
-	m_optimizationControlDlg.m_binSize.SetWindowTextW(_T("16"));
-	m_optimizationControlDlg.m_numberBins.SetWindowTextW(_T("32"));
-	m_optimizationControlDlg.m_targetRadius.SetWindowTextW(_T("2"));
-	m_optimizationControlDlg.m_minFitness.SetWindowTextW(_T("0"));
-	m_optimizationControlDlg.m_minSeconds.SetWindowTextW(_T("60"));
-	m_optimizationControlDlg.m_minGenerations.SetWindowTextW(_T("0"));
-	m_aoiControlDlg.m_leftInput.SetWindowTextW(_T("896"));
-	m_aoiControlDlg.m_rightInput.SetWindowTextW(_T("568"));
-	m_aoiControlDlg.m_widthInput.SetWindowTextW(_T("64"));
-	m_aoiControlDlg.m_heightInput.SetWindowTextW(_T("64"));
-	m_slmControlDlg.m_SlmPwrButton.SetWindowTextW(_T("Turn power ON")); // - power button (TODO: determine if SLM is actually off at start)
+	setDefaultUI();
 
 	// - get reference to slm controller
-	slmCtrl = m_slmControlDlg.getSLMCtrl();
-	slmCtrl->SetMainDlg(this);
-	m_slmControlDlg.populateSLMlist(); // Simple method to setup the list of selections
+	this->slmCtrl = m_slmControlDlg.getSLMCtrl();
+	this->slmCtrl->SetMainDlg(this);
 
 	// Give a warning message if no boards have been detected
 	if (m_slmControlDlg.slmCtrl->boards.size() < 1) {
@@ -178,22 +146,9 @@ BOOL MainDialog::OnInitDialog()
 	//Show the default tab (optimizations settings)
 	m_pwndShow = &m_optimizationControlDlg;
 
-	//Use slm control reference to set additional settings
-	// - if the liquid crystal type is nematic, then allow the user the option to
-	//compensate for phase imperfections by applying a phase compensation image
-	if (slmCtrl != nullptr)	{
-		if (!slmCtrl->IsAnyNematic())
-			m_CompensatePhaseCheckbox.ShowWindow(false);
-		else
-			m_CompensatePhaseCheckbox.ShowWindow(true);
-	}
-	else {
-		Utility::printLine("WARNING: SLM Control NULL");
-	}
-
-	camCtrl = new CameraController((*this));
-	if (camCtrl != nullptr)	{
-		m_aoiControlDlg.SetCameraController(camCtrl);
+	this->camCtrl = new CameraController((*this));
+	if (this->camCtrl != nullptr)	{
+		m_aoiControlDlg.SetCameraController(this->camCtrl);
 	}
 	else {
 		Utility::printLine("WARNING: Camera Control NULL");
@@ -203,6 +158,48 @@ BOOL MainDialog::OnInitDialog()
 	OnSelchangeImageListbox();
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
+}
+
+// Set the UI to default values
+void MainDialog::setDefaultUI() {
+	// - image names to the listbox and select the first image
+	// TODO: check if this the correct image setup 
+	this->m_ImageListBox.ResetContent();
+	this->m_ImageListBox.AddString(_T("ImageOne.bmp"));
+	this->m_ImageListBox.AddString(_T("ImageTwo.zrn"));
+	this->m_ImageListBox.SetCurSel(0);
+
+	this->m_cameraControlDlg.m_FramesPerSecond.SetWindowTextW(_T("200"));
+	this->m_cameraControlDlg.m_initialExposureTimeInput.SetWindowTextW(_T("2000"));
+	this->m_cameraControlDlg.m_gammaValue.SetWindowTextW(_T("1.25"));
+	this->m_optimizationControlDlg.m_binSize.SetWindowTextW(_T("16"));
+	this->m_optimizationControlDlg.m_numberBins.SetWindowTextW(_T("32"));
+	this->m_optimizationControlDlg.m_targetRadius.SetWindowTextW(_T("2"));
+	this->m_optimizationControlDlg.m_minFitness.SetWindowTextW(_T("0"));
+	this->m_optimizationControlDlg.m_minSeconds.SetWindowTextW(_T("60"));
+	this->m_optimizationControlDlg.m_minGenerations.SetWindowTextW(_T("0"));
+	this->m_optimizationControlDlg.m_maxGenerations.SetWindowTextW(_T("3000"));
+	this->m_aoiControlDlg.m_leftInput.SetWindowTextW(_T("896"));
+	this->m_aoiControlDlg.m_rightInput.SetWindowTextW(_T("568"));
+	this->m_aoiControlDlg.m_widthInput.SetWindowTextW(_T("64"));
+	this->m_aoiControlDlg.m_heightInput.SetWindowTextW(_T("64"));
+	this->m_slmControlDlg.m_SlmPwrButton.SetWindowTextW(_T("Turn power ON")); // - power button (TODO: determine if SLM is actually off at start)
+
+	//Use slm control reference to set additional settings
+	// - if the liquid crystal type is nematic, then allow the user the option to
+	//compensate for phase imperfections by applying a phase compensation image
+	if (this->slmCtrl != nullptr)	{
+		if (!this->slmCtrl->IsAnyNematic())
+			m_CompensatePhaseCheckbox.ShowWindow(false);
+		else
+			m_CompensatePhaseCheckbox.ShowWindow(true);
+	}
+	else {
+		Utility::printLine("WARNING: SLM Control NULL");
+	}
+
+	this->m_slmControlDlg.populateSLMlist(); // Simple method to setup the list of selections
+
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -457,14 +454,26 @@ void MainDialog::disableMainUI(bool isMainEnabled) {
 // Start the selected optimization if haven't started, or attempt to stop if already running
 void MainDialog::OnBnClickedStartStopButton() {
 	if (this->running_optimization_ == true) {
-		Utility::printLine("INFO: Optimization currently running, attempting to stop safely");
+		Utility::printLine("INFO: Optimization currently running, attempting to stop safely.");
 		this->stopFlag = true;
 	}
 	else {
-		Utility::printLine("INFO: No optimization currently running, attempting to start depending on selection");
+		Utility::printLine("INFO: No optimization currently running, attempting to start depending on selection.");
 		this->stopFlag = false;
-		if (this->runOptThread != NULL) {
-			Utility::printLine("WARNING: Optimization worker thread is not null but creating another thread");
+
+		// Give an error message if no boards were detected to optimize
+		if (this->slmCtrl->boards.size() < 1) {
+			MessageBox((LPCWSTR)L"No SLM detected!",
+				(LPCWSTR)L"No SLM has been detected to be optimize! Cancelling action.",
+				MB_ICONERROR| MB_OK);
+			return;
+		}
+		// Give an error message if no camera
+		if (this->camCtrl->hasCameras()) {
+			MessageBox((LPCWSTR)L"No camera detected!",
+				(LPCWSTR)L"No camera has been detected to possibly use! Cancelling action.",
+				MB_ICONERROR | MB_OK);
+			return;
 		}
 		this->runOptThread = AfxBeginThread(optThreadMethod, LPVOID(this));
 		this->runOptThread->m_bAutoDelete = true; // Explicit setting for auto delete

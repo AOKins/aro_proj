@@ -26,4 +26,6 @@ public:
 	CEdit m_binSize;
 	CEdit m_numberBins;
 	CEdit m_targetRadius;
+	// GUI input for maximum number of generations
+	CEdit m_maxGenerations;
 };

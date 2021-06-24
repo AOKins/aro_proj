@@ -10,7 +10,7 @@ class SLMController;
 class BruteForce_Optimization : public Optimization {
 	std::ofstream lmaxfile;
 	std::ofstream rtime;
-	unsigned char* slmImg;
+	int* slmImg;
 	bool multiEnable_;
 public:
 	// Constructor - inherits from base class

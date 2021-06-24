@@ -46,26 +46,42 @@ bool Optimization::prepareStopConditions() {
 	try	{
 		CString path;
 		this->dlg.m_optimizationControlDlg.m_minSeconds.GetWindowTextW(path);
-		if (path.IsEmpty()) throw new std::exception();
-		secondsToStop = _tstof(path);
+		if (path.IsEmpty()) {
+			throw new std::exception();
+		}
+		this->secondsToStop = _tstof(path);
 	}
 	catch (...)	{
 		Utility::printLine("ERROR: Can't Parse Minimum Seconds Elapsed");
 		result = false;
 	}
 
-	// Generations evaluations to stop at
+	// Generations evaluations to at least do (minimum)
 	try	{
 		CString path;
 		this->dlg.m_optimizationControlDlg.m_minGenerations.GetWindowTextW(path);
-		if (path.IsEmpty()) throw new std::exception();
-		genEvalToStop = _tstof(path);
+		if (path.IsEmpty()) {
+			throw new std::exception();
+		}
+		this->genEvalToStop = _tstof(path);
 	}
 	catch (...)	{
 		Utility::printLine("ERROR: Can't Parse Minimum Function Evaluations");
 		result = false;
 	}
-
+	// Generations evaluations to stop at (maximum)
+	try	{
+		CString path;
+		this->dlg.m_optimizationControlDlg.m_maxGenerations.GetWindowTextW(path);
+		if (path.IsEmpty()) {
+			throw new std::exception();
+		}
+		this->maxGenenerations = _tstof(path);
+	}
+	catch (...)	{
+		Utility::printLine("ERROR: Can't Parse Minimum Function Evaluations");
+		result = false;
+	}
 	return result;
 }
 
@@ -98,7 +114,7 @@ bool Optimization::prepareSoftwareHardware() {
 		Utility::printLine("ERROR: Preparing stop conditions has failed!");
 		return false;
 	}
-	Utility::printLine("INFO: Stop conditions updated!");
+	Utility::printLine("INFO: Hardware ready!");
 
 	// - configure proper UI states
 	this->isWorking = true;
@@ -154,7 +170,7 @@ void Optimization::saveParameters(std::string time, std::string optType) {
 
 //[CHECKS]
 bool Optimization::stopConditionsReached(double curFitness, double curSecPassed, double curGenerations) {
-	if ((curFitness > this->fitnessToStop && curSecPassed > this->secondsToStop && curGenerations > this->genEvalToStop) || dlg.stopFlag == true) {
+	if ((curFitness > this->fitnessToStop && curSecPassed > this->secondsToStop && curGenerations > this->genEvalToStop && curGenerations < this->maxGenenerations) || dlg.stopFlag == true) {
 		return true;
 	}
 	return false;
