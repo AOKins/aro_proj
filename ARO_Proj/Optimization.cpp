@@ -49,13 +49,24 @@ bool Optimization::prepareStopConditions() {
 		if (path.IsEmpty()) {
 			throw new std::exception();
 		}
-		this->secondsToStop = _tstof(path);
+		this->minSecondsToStop = _tstof(path);
 	}
 	catch (...)	{
 		Utility::printLine("ERROR: Can't Parse Minimum Seconds Elapsed");
 		result = false;
 	}
-
+	try	{
+		CString path;
+		this->dlg.m_optimizationControlDlg.m_maxSeconds.GetWindowTextW(path);
+		if (path.IsEmpty()) {
+			throw new std::exception();
+		}
+		this->maxSecondsToStop= _tstof(path);
+	}
+	catch (...)	{
+		Utility::printLine("ERROR: Can't Parse Minimum Seconds Elapsed");
+		result = false;
+	}
 	// Generations evaluations to at least do (minimum)
 	try	{
 		CString path;
@@ -170,7 +181,20 @@ void Optimization::saveParameters(std::string time, std::string optType) {
 
 //[CHECKS]
 bool Optimization::stopConditionsReached(double curFitness, double curSecPassed, double curGenerations) {
-	if ((curFitness > this->fitnessToStop && curSecPassed > this->secondsToStop && curGenerations > this->genEvalToStop && curGenerations < this->maxGenenerations) || dlg.stopFlag == true) {
+	// If reached fitness to stop and minimum time and minimum generations to perform
+	if ((curFitness > this->fitnessToStop && curSecPassed > this->minSecondsToStop && curGenerations > this->genEvalToStop) ) {
+		return true;
+	}
+	// If the stop button was pressed
+	if (dlg.stopFlag == true) {
+		return true;
+	}
+	// If exceeded the maximum allowed time (negative or zero value indicated indefinite)
+	if (this->maxSecondsToStop > 0 && curSecPassed >= this->maxSecondsToStop) {
+		return true;
+	}
+	// If exceeded the maximum allowed time (negative or zero value indicated indefinite)
+	if (this->maxGenenerations > 0 && curGenerations >= this->maxGenenerations) {
 		return true;
 	}
 	return false;

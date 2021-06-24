@@ -28,4 +28,6 @@ public:
 	CEdit m_targetRadius;
 	// GUI input for maximum number of generations
 	CEdit m_maxGenerations;
+	// The maximum amount of time (in seconds) to run the optimization algorithm, set to 0 for indefinite time
+	CEdit m_maxSeconds;
 };

@@ -37,6 +37,14 @@ public:
 	void disableMainUI(bool isMainEnabled);
 	// Set the UI to default values
 	void setDefaultUI();
+	// Set the UI according to given file path
+	bool setUIfromFile(std::string filePath);
+	// Set a value in the UI according to a given name and value as string (used by setUIfromFile)
+	bool setValueByName(std::string varName, std::string varValue);
+
+	// Write current UI values to given file location
+	bool saveUItoFile(std::string filePath);
+
 // DIALOG DATA
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_BLINKPCIESDK_DIALOG };
@@ -103,6 +111,8 @@ public:
 		uGA
 	};
 	OptType opt_selection_;
+	afx_msg void OnBnClickedLoadSettings();
+	afx_msg void OnBnClickedSaveSettings();
 };
 
 // Worker thread process for running optimization while MainDialog continues listening for other input

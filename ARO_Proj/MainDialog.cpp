@@ -72,6 +72,8 @@ BEGIN_MESSAGE_MAP(MainDialog, CDialog)
 	ON_BN_CLICKED(IDC_OPT_BUTTON, &MainDialog::OnBnClickedOptButton)
 	ON_NOTIFY(TCN_SELCHANGE, IDC_TAB1, &MainDialog::OnTcnSelchangeTab1)
 	ON_BN_CLICKED(IDC_START_STOP_BUTTON, &MainDialog::OnBnClickedStartStopButton)
+	ON_BN_CLICKED(IDC_LOAD_SETTINGS, &MainDialog::OnBnClickedLoadSettings)
+	ON_BN_CLICKED(IDC_SAVE_SETTINGS, &MainDialog::OnBnClickedSaveSettings)
 END_MESSAGE_MAP()
 
 //////////////////////////////////////////////////////////////
@@ -131,6 +133,7 @@ BOOL MainDialog::OnInitDialog() {
 	//[SET UI DEFAULTS]
 	// - set all default settings
 	setDefaultUI();
+	this->m_slmControlDlg.m_SlmPwrButton.SetWindowTextW(_T("Turn power ON")); // - power button (TODO: determine if SLM is actually off at start)
 
 	// - get reference to slm controller
 	this->slmCtrl = m_slmControlDlg.getSLMCtrl();
@@ -142,7 +145,6 @@ BOOL MainDialog::OnInitDialog() {
 				   (LPCWSTR)L"No SLM has been detected to be connected!",
 					MB_ICONWARNING | MB_OK);
 	}
-
 	//Show the default tab (optimizations settings)
 	m_pwndShow = &m_optimizationControlDlg;
 
@@ -152,6 +154,13 @@ BOOL MainDialog::OnInitDialog() {
 	}
 	else {
 		Utility::printLine("WARNING: Camera Control NULL");
+	}
+	// Give a warning message if no camera
+	if (this->camCtrl->hasCameras()) {
+		MessageBox((LPCWSTR)L"No camera detected!",
+			(LPCWSTR)L"No camera has been detected!.",
+			MB_ICONWARNING | MB_OK);
+		return;
 	}
 	// Send the currently selected image from the PCIe card memory board
 	// to the SLM. User will immediately see first image in sequence. 
@@ -172,18 +181,20 @@ void MainDialog::setDefaultUI() {
 	this->m_cameraControlDlg.m_FramesPerSecond.SetWindowTextW(_T("200"));
 	this->m_cameraControlDlg.m_initialExposureTimeInput.SetWindowTextW(_T("2000"));
 	this->m_cameraControlDlg.m_gammaValue.SetWindowTextW(_T("1.25"));
+	
 	this->m_optimizationControlDlg.m_binSize.SetWindowTextW(_T("16"));
 	this->m_optimizationControlDlg.m_numberBins.SetWindowTextW(_T("32"));
 	this->m_optimizationControlDlg.m_targetRadius.SetWindowTextW(_T("2"));
 	this->m_optimizationControlDlg.m_minFitness.SetWindowTextW(_T("0"));
 	this->m_optimizationControlDlg.m_minSeconds.SetWindowTextW(_T("60"));
+	this->m_optimizationControlDlg.m_maxSeconds.SetWindowTextW(_T("0")); // 0 or less indicates indefinite
 	this->m_optimizationControlDlg.m_minGenerations.SetWindowTextW(_T("0"));
 	this->m_optimizationControlDlg.m_maxGenerations.SetWindowTextW(_T("3000"));
+
 	this->m_aoiControlDlg.m_leftInput.SetWindowTextW(_T("896"));
 	this->m_aoiControlDlg.m_rightInput.SetWindowTextW(_T("568"));
 	this->m_aoiControlDlg.m_widthInput.SetWindowTextW(_T("64"));
 	this->m_aoiControlDlg.m_heightInput.SetWindowTextW(_T("64"));
-	this->m_slmControlDlg.m_SlmPwrButton.SetWindowTextW(_T("Turn power ON")); // - power button (TODO: determine if SLM is actually off at start)
 
 	//Use slm control reference to set additional settings
 	// - if the liquid crystal type is nematic, then allow the user the option to
@@ -235,10 +246,8 @@ void MainDialog::OnSysCommand(UINT nID, LPARAM lParam)
 //   Modifications:
 //
 /////////////////////////////////////////////////////////////////////////
-void MainDialog::OnPaint()
-{
-	if (IsIconic())
-	{
+void MainDialog::OnPaint() {
+	if (IsIconic()) 	{
 		CPaintDC dc(this); // device context for painting
 
 		SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
@@ -254,8 +263,7 @@ void MainDialog::OnPaint()
 		// Draw the icon
 		dc.DrawIcon(x, y, m_hIcon);
 	}
-	else
-	{
+	else {
 		CDialog::OnPaint();
 	}
 }
@@ -274,8 +282,7 @@ void MainDialog::OnPaint()
 //   Modifications:
 //
 /////////////////////////////////////////////////////////////////////////////
-HCURSOR MainDialog::OnQueryDragIcon()
-{
+HCURSOR MainDialog::OnQueryDragIcon() {
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
@@ -362,8 +369,7 @@ void MainDialog::OnOK() {}
 //   Modifications:
 //
 //////////////////////////////////////////////////
-void MainDialog::OnCompensatePhaseCheckbox()
-{
+void MainDialog::OnCompensatePhaseCheckbox() {
 	UpdateData(true);
 
 	//Re-load the sequence if apropriate checkbox pressed
@@ -445,10 +451,10 @@ void MainDialog::disableMainUI(bool isMainEnabled) {
 	// - enabled: when nothing is running
 	// - disabled when the algorithm is running
 
-	m_ImageListBox.EnableWindow(isMainEnabled);
-	m_uGAButton.EnableWindow(isMainEnabled);
-	m_SGAButton.EnableWindow(isMainEnabled);
-	m_OptButton.EnableWindow(isMainEnabled);
+	this->m_ImageListBox.EnableWindow(isMainEnabled);
+	this->m_uGAButton.EnableWindow(isMainEnabled);
+	this->m_SGAButton.EnableWindow(isMainEnabled);
+	this->m_OptButton.EnableWindow(isMainEnabled);
 }
 
 // Start the selected optimization if haven't started, or attempt to stop if already running
@@ -521,4 +527,167 @@ UINT __cdecl optThreadMethod(LPVOID instance) {
 	dlg->disableMainUI(true);
 	Utility::printLine("INFO: End of worker optimization thread!");
 	return 0;
+}
+
+void MainDialog::OnBnClickedLoadSettings() {
+	// TODO: Add your control notification handler code here
+	bool tryAgain;
+	CString fileName;
+	LPWSTR p = fileName.GetBuffer(FILE_LIST_BUFFER_SIZE);
+	std::string filePath;
+	do {
+		tryAgain = false;
+		
+		// Default to .cfg file extension (this program uses that in it's generation of saving settings)
+		static TCHAR BASED_CODE filterFiles[] = _T("Config Files (*.cfg)|*.LUT|ALL Files (*.*)|*.*||");
+
+		CFileDialog dlgFile(TRUE, NULL, L"./", OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, filterFiles);
+
+		OPENFILENAME& ofn = dlgFile.GetOFN();
+		ofn.lpstrFile = p;
+		ofn.nMaxFile = FILE_LIST_BUFFER_SIZE;
+
+		if (dlgFile.DoModal() == IDOK) {
+			fileName = dlgFile.GetPathName();
+			fileName.ReleaseBuffer();
+		}
+		filePath = CT2A(fileName);
+
+		if (!setUIfromFile(filePath)) {
+			int err_response = MessageBox(
+				(LPCWSTR)L"ERROR in file load!",
+				(LPCWSTR)L"An error occurred while trying load the file\nTry Again?",
+				MB_ICONERROR | MB_RETRYCANCEL);
+			// Respond to decision
+			switch (err_response) {
+				case IDRETRY:
+					tryAgain = true;
+					break;
+				default: // Cancel or other unknown response will not have try again to make sure not stuck in undesired loop
+					tryAgain= false;
+			}
+		}
+
+	} while (tryAgain);
+}
+
+bool MainDialog::setUIfromFile(std::string filePath) {
+	FILE* file = fopen(filePath.c_str(), "r");
+	if (file == NULL) {
+		return false;
+	}
+	const int buffSize = 320; // Will only read in this many characters for each side
+	char varName[buffSize];
+	char varValue[buffSize];
+	try {
+		// Read through each line and set the value according to the name read
+		// Give warning if wasn't successful
+		while (fscanf(file, "%s=%s", varName, varValue) != EOF) {
+			if (!setValueByName(std::string(varName), std::string(varValue))) {
+				Utility::printLine("WARNING: Failure to interpret variable '" + std::string(varName) + "' with value '" + std::string(varValue) +"'!");
+			}
+		}
+		return true;
+	}
+	catch (std::exception &e) {
+		Utility::printLine("ERROR: " + std::string(e.what()));
+		return false;
+	}
+}
+
+bool MainDialog::setValueByName(std::string name, std::string value) {
+	CString valueStr(value.c_str());
+	// Do a pre-emptive check if either name or value are empty
+	if (name == "" || value == "") {
+		return false;
+	}
+	// Camera Dialog
+	else if (name == "framesPerSecond")
+		this->m_cameraControlDlg.m_FramesPerSecond.SetWindowTextW(valueStr);
+	else if (name == "initialExposureTime")
+		this->m_cameraControlDlg.m_initialExposureTimeInput.SetWindowTextW(valueStr);
+	else if (name == "gamma")
+		this->m_cameraControlDlg.m_gammaValue.SetWindowTextW(valueStr);
+	// AOI Dialog
+	else if (name == "leftAOI")
+		this->m_aoiControlDlg.m_leftInput.SetWindowTextW(valueStr);
+	else if (name == "rightAOI")
+		this->m_aoiControlDlg.m_rightInput.SetWindowTextW(valueStr);
+	else if (name == "widthAOI")
+		this->m_aoiControlDlg.m_widthInput.SetWindowTextW(valueStr);
+	else if (name == "heightAOI")
+		this->m_aoiControlDlg.m_heightInput.SetWindowTextW(valueStr);
+	// Optimization Dialog
+	else if (name == "binSize")
+		this->m_optimizationControlDlg.m_binSize.SetWindowTextW(valueStr);
+	else if (name == "binNumber")
+		this->m_optimizationControlDlg.m_numberBins.SetWindowTextW(valueStr);
+	else if (name == "targetRadius")
+		this->m_optimizationControlDlg.m_targetRadius.SetWindowTextW(valueStr);
+	else if (name == "minFitness")
+		this->m_optimizationControlDlg.m_minFitness.SetWindowTextW(valueStr);
+	else if (name == "minSeconds")
+		this->m_optimizationControlDlg.m_minSeconds.SetWindowTextW(valueStr);
+	else if (name == "maxSeconds")
+		this->m_optimizationControlDlg.m_maxSeconds.SetWindowTextW(valueStr);
+	else if (name == "minGenerations")
+		this->m_optimizationControlDlg.m_minGenerations.SetWindowTextW(valueStr);
+	else if (name == "maxGenerations")
+		this->m_optimizationControlDlg.m_maxGenerations.SetWindowTextW(valueStr);
+	// TODO: Implement system for loading up LUT files and the like
+
+	// Unidentfied variable name
+	else {
+		return false;
+	}
+}
+
+void MainDialog::OnBnClickedSaveSettings() {
+	bool tryAgain;
+	CString fileName;
+	LPWSTR p = fileName.GetBuffer(FILE_LIST_BUFFER_SIZE);
+	std::string filePath;
+	do {
+		tryAgain = false;
+
+		// Default Save As dialog box with extension as .cfg
+		CFileDialog dlgFile(FALSE, L".cfg");
+
+		OPENFILENAME& ofn = dlgFile.GetOFN();
+		ofn.lpstrFile = p;
+		ofn.nMaxFile = FILE_LIST_BUFFER_SIZE;
+
+		if (dlgFile.DoModal() == IDOK) {
+			fileName = dlgFile.GetPathName();
+			fileName.ReleaseBuffer();
+		}
+		
+		filePath = CT2A(fileName);
+
+		if (!saveUItoFile(filePath)) {
+			int err_response = MessageBox(
+				(LPCWSTR)L"ERROR in saving!",
+				(LPCWSTR)L"An error occurred while trying save settings\nTry Again?",
+				MB_ICONERROR | MB_RETRYCANCEL);
+			// Respond to decision
+			switch (err_response) {
+			case IDRETRY:
+				tryAgain = true;
+				break;
+			default: // Cancel or other unknown response will not have try again to make sure not stuck in undesired loop
+				tryAgain = false;
+			}
+		}
+		else {
+			// Success!
+			MessageBox((LPCWSTR)L"Success!",
+				(LPCWSTR)L"Successfully saved settings.",
+				MB_ICONINFORMATION | MB_OK);
+		}
+	} while (tryAgain);
+}
+
+bool MainDialog::saveUItoFile(std::string filePath) {
+	//TODO: Implement method of saving settings to given file path
+	return true;
 }

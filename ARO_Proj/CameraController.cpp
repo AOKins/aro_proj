@@ -24,6 +24,7 @@ CameraController::~CameraController() {
 }
 
 // [CAMERA CONTROL]
+// Connect to camera (if not already) and pull info from GUI to configure the camera
 bool CameraController::setupCamera() {
 	Utility::printLine(); // break in output
 	
@@ -38,20 +39,17 @@ bool CameraController::setupCamera() {
 	if (!UpdateImageParameters()) {
 		return false;
 	}
-	Utility::printLine("INFO: updated image parameters!");
 
 	if (!cam->IsValid() || !cam->IsInitialized()) {
 		shutdownCamera();
 		if (!UpdateConnectedCameraInfo()) {
 			return false;
 		}
-		Utility::printLine("INFO: updated connected camera info!");
 	}
 	
 	if (!ConfigureCustomImageSettings()) {
 		return false;
 	}
-	Utility::printLine("INFO: configured image settings on camera!");
 	
 	if (!ConfigureExposureTime()) {
 		return false;

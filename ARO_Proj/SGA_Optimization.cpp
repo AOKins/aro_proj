@@ -284,21 +284,24 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	this->tfile.close();
 	this->efile.close();
 
-	// Get elite info
-	unsigned char* eliteImage = static_cast<unsigned char*>(this->bestImage->GetData());
-	size_t imgHeight = this->bestImage->GetHeight();
-	size_t imgWidth = this->bestImage->GetWidth();
+	// Only save images if not aborting (successful results
+	if (dlg.stopFlag == false) {
+		// Get elite info
+		unsigned char* eliteImage = static_cast<unsigned char*>(this->bestImage->GetData());
+		size_t imgHeight = this->bestImage->GetHeight();
+		size_t imgWidth = this->bestImage->GetWidth();
 
-	// Save how final optimization looks through camera
-	std::string curTime = Utility::getCurTime();
-	Mat Opt_ary = Mat(int(imgHeight), int(imgWidth), CV_8UC1, eliteImage);
-	cv::imwrite("logs/" + curTime + "_SGA_Optimized.bmp", Opt_ary);
+		// Save how final optimization looks through camera
+		std::string curTime = Utility::getCurTime();
+		Mat Opt_ary = Mat(int(imgHeight), int(imgWidth), CV_8UC1, eliteImage);
+		cv::imwrite("logs/" + curTime + "_SGA_Optimized.bmp", Opt_ary);
 
-	// Save final (most fit SLM images)
-	for (int popID = 0; popID < this->population.size(); popID++) {
-		scalers[popID]->TranslateImage(this->population[popID]->getGenome(this->population[popID]->getSize() - 1), this->slmScaledImages[popID]);
-		Mat m_ary = Mat(512, 512, CV_8UC1, this->slmScaledImages[popID]);
-		imwrite("logs/" + curTime + "_SGA_phaseopt_SLM" + std::to_string(popID) + ".bmp", m_ary);
+		// Save final (most fit SLM images)
+		for (int popID = 0; popID < this->population.size(); popID++) {
+			scalers[popID]->TranslateImage(this->population[popID]->getGenome(this->population[popID]->getSize() - 1), this->slmScaledImages[popID]);
+			Mat m_ary = Mat(512, 512, CV_8UC1, this->slmScaledImages[popID]);
+			imwrite("logs/" + curTime + "_SGA_phaseopt_SLM" + std::to_string(popID) + ".bmp", m_ary);
+		}
 	}
 
 	// Generic file renaming to have time stamps of run

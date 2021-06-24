@@ -36,7 +36,8 @@ protected:
 
 	//Base algorithm stop conditions
 	double fitnessToStop = 0;
-	double secondsToStop = 60;
+	double minSecondsToStop = 60;
+	double maxSecondsToStop = 0;
 	double genEvalToStop = 0; // minimum number of generations to do
 
 	//Preference-type parameters
