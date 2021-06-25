@@ -636,8 +636,7 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 		this->m_optimizationControlDlg.m_maxGenerations.SetWindowTextW(valueStr);
 	// TODO: Implement system for loading up LUT files and the like
 
-	// Unidentfied variable name
-	else {
+	else {	// Unidentfied variable name, return false
 		return false;
 	}
 }
