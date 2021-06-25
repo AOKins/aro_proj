@@ -156,7 +156,7 @@ void Optimization::saveParameters(std::string time, std::string optType) {
 	paramFile << "Type - " << optType << std::endl;
 	if (optType != "OPT5") {
 		paramFile << "Stop Fitness - " << std::to_string(fitnessToStop) << std::endl;
-		paramFile << "Stop Time - " << std::to_string(secondsToStop) << std::endl;
+		paramFile << "Max Stop Time - " << std::to_string(maxSecondsToStop) << std::endl;
 		paramFile << "Stop Generation - " << std::to_string(genEvalToStop) << std::endl;
 	}
 	paramFile << "----------------------------------------------------------------" << std::endl;

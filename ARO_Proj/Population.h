@@ -107,6 +107,13 @@ public:
 		this->individuals_[i].set_fitness(fitness);
 	}
 
+	// Gett for fitness of an individual in the population
+	// Input:
+	//	i - individual at index i (population not guranteed sorted)
+	double getFitness(int i) {
+		return this->individuals_[i].fitness();
+	}
+
 	// Crosses over information between individuals.
 	// Input:
 	//	a - First individual to be crossed over.

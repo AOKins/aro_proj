@@ -131,13 +131,14 @@ BOOL MainDialog::OnInitDialog() {
 
 
 	//[SET UI DEFAULTS]
+	// - get reference to slm controller
+	this->slmCtrl = m_slmControlDlg.getSLMCtrl();
+	this->slmCtrl->SetMainDlg(this);
+
 	// - set all default settings
 	setDefaultUI();
 	this->m_slmControlDlg.m_SlmPwrButton.SetWindowTextW(_T("Turn power ON")); // - power button (TODO: determine if SLM is actually off at start)
 
-	// - get reference to slm controller
-	this->slmCtrl = m_slmControlDlg.getSLMCtrl();
-	this->slmCtrl->SetMainDlg(this);
 
 	// Give a warning message if no boards have been detected
 	if (m_slmControlDlg.slmCtrl->boards.size() < 1) {
@@ -155,13 +156,7 @@ BOOL MainDialog::OnInitDialog() {
 	else {
 		Utility::printLine("WARNING: Camera Control NULL");
 	}
-	// Give a warning message if no camera
-	if (this->camCtrl->hasCameras()) {
-		MessageBox((LPCWSTR)L"No camera detected!",
-			(LPCWSTR)L"No camera has been detected!.",
-			MB_ICONWARNING | MB_OK);
-		return;
-	}
+
 	// Send the currently selected image from the PCIe card memory board
 	// to the SLM. User will immediately see first image in sequence. 
 	OnSelchangeImageListbox();
@@ -475,12 +470,12 @@ void MainDialog::OnBnClickedStartStopButton() {
 			return;
 		}
 		// Give an error message if no camera
-		if (this->camCtrl->hasCameras()) {
+		/*if (this->camCtrl->hasCameras()) {
 			MessageBox((LPCWSTR)L"No camera detected!",
 				(LPCWSTR)L"No camera has been detected to possibly use! Cancelling action.",
 				MB_ICONERROR | MB_OK);
 			return;
-		}
+		}*/
 		this->runOptThread = AfxBeginThread(optThreadMethod, LPVOID(this));
 		this->runOptThread->m_bAutoDelete = true; // Explicit setting for auto delete
 	}
