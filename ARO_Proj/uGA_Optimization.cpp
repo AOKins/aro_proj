@@ -58,8 +58,10 @@ bool uGA_Optimization::runOptimization() {
 			Utility::rejoinClear(this->ind_threads);
 			// Perform GA crossover/breeding to produce next generation
 			for (int popID = 0; popID < population.size(); popID++) {
-				this->population[popID]->nextGeneration();
+				this->ind_threads.push_back(std::thread([this](int popID) {population[popID]->nextGeneration(); }, popID));
 			}
+			Utility::rejoinClear(this->ind_threads);
+
 			// Half exposure time if fitness value is too high
 			if (this->shortenExposureFlag) {
 				this->cc->HalfExposureTime();
@@ -283,6 +285,7 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 	this->efile.close();
 
 	// Only save images if not aborting (successful results
+	std::string curTime = Utility::getCurTime();
 	if (dlg.stopFlag == false) {
 		// Get elite info
 		unsigned char* eliteImage = static_cast<unsigned char*>(this->bestImage->GetData());
@@ -290,7 +293,6 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 		size_t imgWidth = this->bestImage->GetWidth();
 
 		// Save how final optimization looks through camera
-		std::string curTime = Utility::getCurTime();
 		Mat Opt_ary = Mat(int(imgHeight), int(imgWidth), CV_8UC1, eliteImage);
 		cv::imwrite("logs/" + curTime + "_uGA_Optimized.bmp", Opt_ary);
 
@@ -300,7 +302,10 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 			Mat m_ary = Mat(512, 512, CV_8UC1, this->slmScaledImages[popID]);
 			imwrite("logs/" + curTime + "_uGA_phaseopt_SLM" + std::to_string(popID) + ".bmp", m_ary);
 		}
-	}
+	}	
+	
+	Utility::printLine("Final Fitness: " + std::to_string(this->population[0]->getFitness(this->population[0]->getSize() - 1)));
+
 	// Generic file renaming to have time stamps of run
 	std::rename("logs/uGA_functionEvals_vs_fitness.txt", ("logs/" + curTime + "_uGA_functionEvals_vs_fitness.txt").c_str());
 	std::rename("logs/uGA_time_vs_fitness.txt", ("logs/" + curTime + "_uGA_time_vs_fitness.txt").c_str());

@@ -60,8 +60,10 @@ bool SGA_Optimization::runOptimization() {
 			Utility::rejoinClear(this->ind_threads);
 			// Perform GA crossover/breeding to produce next generation
 			for (int popID = 0; popID < population.size(); popID++) {
-				population[popID]->nextGeneration();
+				this->ind_threads.push_back(std::thread([this](int popID) {population[popID]->nextGeneration(); }, popID));
 			}
+			Utility::rejoinClear(this->ind_threads);
+
 			// Half exposure time if fitness value is too high
 			if (this->shortenExposureFlag) {
 				this->cc->HalfExposureTime();
@@ -285,6 +287,7 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	this->efile.close();
 
 	std::string curTime = Utility::getCurTime();
+
 	// Only save images if not aborting (successful results)
 	if (dlg.stopFlag == false) {
 		// Get elite info
@@ -303,7 +306,7 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 			imwrite("logs/" + curTime + "_SGA_phaseopt_SLM" + std::to_string(popID) + ".bmp", m_ary);
 		}
 	}
-
+	Utility::printLine("Final Fitness: " + std::to_string(this->population[0]->getFitness(this->population[0]->getSize() - 1)));
 	// Generic file renaming to have time stamps of run
 	std::rename("logs/SGA_functionEvals_vs_fitness.txt", ("logs/" + curTime + "_SGA_functionEvals_vs_fitness.txt").c_str());
 	std::rename("logs/SGA_time_vs_fitness.txt", ("logs/" + curTime + "_SGA_time_vs_fitness.txt").c_str());
