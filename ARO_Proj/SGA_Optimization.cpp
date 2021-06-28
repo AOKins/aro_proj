@@ -46,7 +46,7 @@ bool SGA_Optimization::runOptimization() {
 	try {	// Begin general camera exception handling while optimization loop is going
 		this->timestamp = new TimeStampGenerator();		// Starting time stamp to track elapsed time
 		// Optimization loop for each generation
-		for (this->curr_gen = 0; this->curr_gen < this->maxGenenerations && !stopConditionsMetFlag; this->curr_gen++) {
+		for (this->curr_gen = 0; this->curr_gen < this->maxGenenerations && !this->stopConditionsMetFlag; this->curr_gen++) {
 			for (int popID = 0; popID < population.size(); popID++) {
 				// Run each individual, giving them all fitness values as a result of their genome
 				for (int indID = 0; indID < population[popID]->getSize(); indID++) {
@@ -284,7 +284,8 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	this->tfile.close();
 	this->efile.close();
 
-	// Only save images if not aborting (successful results
+	std::string curTime = Utility::getCurTime();
+	// Only save images if not aborting (successful results)
 	if (dlg.stopFlag == false) {
 		// Get elite info
 		unsigned char* eliteImage = static_cast<unsigned char*>(this->bestImage->GetData());
@@ -292,7 +293,6 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 		size_t imgWidth = this->bestImage->GetWidth();
 
 		// Save how final optimization looks through camera
-		std::string curTime = Utility::getCurTime();
 		Mat Opt_ary = Mat(int(imgHeight), int(imgWidth), CV_8UC1, eliteImage);
 		cv::imwrite("logs/" + curTime + "_SGA_Optimized.bmp", Opt_ary);
 

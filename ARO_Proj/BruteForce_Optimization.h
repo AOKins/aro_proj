@@ -10,8 +10,11 @@ class SLMController;
 class BruteForce_Optimization : public Optimization {
 	std::ofstream lmaxfile;
 	std::ofstream rtime;
-	int* slmImg;
+
+	std::vector<int*> finalImages_; // Once finished, contains the resulting optimized SLM images for all the boards used
 	bool multiEnable_;
+	bool dualEnable_;
+	double allTimeBestFitness;
 public:
 	// Constructor - inherits from base class
 	BruteForce_Optimization(MainDialog& dlg, CameraController* cc, SLMController* sc) : Optimization(dlg, cc, sc){};
@@ -22,8 +25,14 @@ public:
 
 	bool setupInstanceVariables();
 	bool shutdownOptimizationInstance();
-	// This method returns false as this isn't/shoudn't be used by this optimization
-	bool runIndividual(int indID) { return false; };
+
+	// Run individual for BF refers to the board being used
+	// Input: boardID - index of SLM board being used (0 based)
+	// Output: Result stored in slmImg
+	bool runIndividual(int boardID);
+
+	// Initialize slmImg with 0's
+	void setBlankSlmImg();
 };
 
 #endif

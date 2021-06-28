@@ -1,6 +1,6 @@
 ////////////////////
 // Optimization handler methods implementation for brute force algorithm
-// Last edited: 06/18/2021 by Andrew O'Kins
+// Last edited: 06/28/2021 by Andrew O'Kins
 ////////////////////
 #include "stdafx.h"						// Required in source
 #include "BruteForce_Optimization.h"	// Header file
@@ -22,7 +22,7 @@
 using std::ofstream;
 using namespace cv;
 
-// TODO: Consider how to go about using multi-SLM approach with this algorithm
+// TODO: Debug refactored/multi-SLM setup
 
 bool BruteForce_Optimization::runOptimization() {
 	Utility::printLine("OPT 5 BUTTON CLICKED!");
@@ -36,35 +36,6 @@ bool BruteForce_Optimization::runOptimization() {
 		Utility::printLine("ERROR: Failed to prepare values and files for OPT 5 Optimization");
 		return false;
 	}
-	//Declare variables
-	// TODO: which of these can be combined which can be deleted or implified ALSO make them understandable!
-	double dblN;
-	int binCol, binRow, nn, mm, slmWidth, slmHeight, ll, lMax, kk;
-	int bin, dphi;
-	double allTimeBestFitness = 0;
-	double rMax;
-	double exposureTimesRatio;
-	// set values
-	slmWidth = this->sc->getBoardWidth(0);
-	slmHeight = this->sc->getBoardHeight(0);
-	bin = 8;
-	dblN = (slmWidth / bin) * (slmWidth / bin);
-	dphi = 16;
-
-	//Initialize array with 0
-	for (binCol = 0; binCol < slmWidth; binCol++) {
-		for (binRow = 0; binRow < slmHeight; binRow++) {
-			kk = binCol * 512 + binRow;
-			this->slmImg[kk] = 0;
-		}
-	}
-
-	// Generation monitoring variables
-	int index = 0;
-	double fitness = 0;
-
-	// Instance variables we need
-	ImagePtr convImage, curImage;
 	// Creating displays if desired
 	if (displayCamImage) {
 		this->camDisplay->OpenDisplay();
@@ -74,84 +45,19 @@ bool BruteForce_Optimization::runOptimization() {
 	}
 	try	{
 		this->timestamp = new TimeStampGenerator();
-		bool endOpt = false; // Initialy assume we are not going to end the optimziation
-		// Iterate over bins
-		for (binCol = 0; binCol < slmWidth && endOpt != true; binCol += bin) { // row
-			for (binRow = 0; binRow < slmHeight && endOpt != true; binRow += bin) { // column
-				lMax = 0;
-				rMax = 0;
-				//find max phase for this bin
-				for (ll = 0; ll < 256 && endOpt != true; ll += dphi) {
-					//bin phase
-					for (nn = 0; nn < bin; nn++) {
-						for (mm = 0; mm < bin; mm++) {
-							kk = (binCol + nn) * slmWidth + (mm + binRow);
-							this->slmImg[kk] = ll;
-						}
-					}
-					this->usingHardware = true;
-					// Update board with new images
+		// By default run the first SLM (since with any option will be running with this
+		//	TODO: If having "choose SLM to optimize" option, this will be here
+		runIndividual(0);
 
-					for (int i =0; i < this->sc->boards.size(); i++) {
-						// Scale the individual genome to fit SLMs
-						this->scalers[i]->TranslateImage(this->slmImg, this->slmScaledImages[i]); // Translate the vector genome into char array image
-						// Write to SLM
-						this->sc->blink_sdk->Write_image(i + 1, this->slmScaledImages[i], sc->getBoardHeight(i), false, false, 0);
-					}
-					//Acquire and display camera image
-					this->cc->AcquireImages(curImage, convImage);
-
-					unsigned char* camImg = static_cast<unsigned char*>(convImage->GetData());
-					if (camImg == NULL)	{
-						Utility::printLine("ERROR: Image Acquisition has failed!");
-						continue;
-					}
-					if (this->displayCamImage) {
-						this->camDisplay->UpdateDisplay(camImg);
-					}
-					this->usingHardware = false;
-
-					exposureTimesRatio = this->cc->GetExposureRatio();
-					fitness = Utility::FindAverageValue(camImg, convImage->GetWidth(), curImage->GetHeight(), this->cc->targetRadius);
-
-					//Record current performance to file //Ask what kind of calcualtion is this?
-					double ms = index*dphi + ll / dphi;
-					this->timeVsFitnessFile << this->timestamp->MS_SinceStart() << " " << fitness * this->cc->GetExposureRatio() << " " << this->cc->GetExposureRatio() << std::endl;
-					this->tfile << ms << " " << fitness * this->cc->GetExposureRatio() << " " << this->cc->GetExposureRatio() << std::endl;
-
-					// Keep record of the best fitness value and image
-					if (fitness * exposureTimesRatio > rMax) {
-						lMax = ll;
-						rMax = fitness * exposureTimesRatio;
-						this->bestImage->DeepCopy(convImage);
-					}
-					curImage->Release(); //important to not fill camera buffer
-
-					// Halve the exposure time if over max fitness allowed
-					if (fitness > maxFitnessValue) {
-						this->cc->HalfExposureTime();
-					}
-					endOpt = dlg.stopFlag;
-				}
-
-				//Print current optimization progress to conosle
-				if (rMax > allTimeBestFitness)	{
-					allTimeBestFitness = rMax;
-					Utility::printLine("INFO: Current best fitness value updated to - " + std::to_string(allTimeBestFitness));
-				}
-
-				//set maximal phase
-				for (nn = 0; nn < bin; nn++) {
-					for (mm = 0; mm < bin; mm++) {
-						kk = (binCol + nn) * slmWidth + (mm + binRow);
-						this->slmImg[kk] = lMax;
-					}
-				}
-				lmaxfile << lMax << " " << rMax << std::endl;
-
-				// Save progress data
-				rtime << this->timestamp->MS_SinceStart() << " ms  " << lMax << "   " << this->cc->finalExposureTime << std::endl;
-				index += 1;
+		// If dual or multi, run second SLM
+		if ( (this->dualEnable_ || this->multiEnable_) && this->dlg.stopFlag != true) {
+			runIndividual(1);
+		}
+		
+		// If multi, run rest of boards
+		if (this->multiEnable_  && this->dlg.stopFlag != true) {
+			for (int boardID = 2; boardID < this->sc->boards.size() && this->dlg.stopFlag != true; boardID++) {
+				runIndividual(boardID);
 			}
 		}
 	}
@@ -162,10 +68,124 @@ bool BruteForce_Optimization::runOptimization() {
 	return shutdownOptimizationInstance();;
 }
 
-bool BruteForce_Optimization::setupInstanceVariables() {
-	//this->dlg.m_slmControlDlg.dualEnable.GetCheck() == CHECKED;
 
-	this->slmImg = new int[this->cc->numberOfBinsY * this->cc->numberOfBinsX * this->cc->populationDensity];// Initialize array for storing slm images
+// Run individual for BF refers to the board being used
+// Input: indID - index of SLM board being used (0 based)
+// Output: Result stored in
+bool BruteForce_Optimization::runIndividual(int boardID) {
+	if (boardID < 0 || boardID >= this->sc->boards.size()) {
+		return false;
+	}
+	int slmWidth = this->sc->getBoardWidth(boardID);
+	int slmHeight = this->sc->getBoardHeight(boardID);
+
+	// Initialize array for storing slm images
+	int * slmImg = new int[this->cc->numberOfBinsY * this->cc->numberOfBinsX * this->cc->populationDensity];
+
+	int bin = 8; // TODO: Figure out these hardcoded value
+	int dphi = 16;
+
+	bool endOpt;
+	//Initialize array of SLM image with 0s (note that the size of slmImg is dependent on the camera and not SLM!)
+	setBlankSlmImg();
+
+	ImagePtr curImage, convImage;
+	try {
+		// Iterate through columns
+		for (int binCol = 0; binCol < slmWidth; binCol++) {
+			// Iterate through rows
+			for (int binRow = 0; binRow < slmHeight; binRow += bin) {
+				int binValMax = 0;
+				int	fitValMax = 0;
+				// Current bin
+				int binIndex = (binCol + binRow*this->cc->numberOfBinsX)*this->cc->populationDensity;
+
+				// Find max phase for this bin
+				for (int curBinVal = 0; curBinVal< 256; curBinVal += dphi) {
+					// Assign at current bin the new value to test
+					slmImg[binIndex] = curBinVal;
+
+					// Scale and Write to board
+					this->scalers[boardID]->TranslateImage(slmImg, this->slmScaledImages[boardID]);
+
+					this->usingHardware = true;
+
+					this->sc->blink_sdk->Write_image(boardID + 1, this->slmScaledImages[boardID], this->sc->getBoardHeight(boardID), false, false, 0);
+
+					//Acquire camera image
+					this->cc->AcquireImages(curImage, convImage);
+
+					unsigned char* camImg = static_cast<unsigned char*>(convImage->GetData());
+					if (camImg == NULL)	{
+						Utility::printLine("ERROR: Image Acquisition has failed!");
+						continue;
+					}
+					// Display cam image
+					if (this->displayCamImage) {
+						this->camDisplay->UpdateDisplay(camImg);
+					}
+					this->usingHardware = false;
+					// Determine fitness
+
+					double exposureTimesRatio = this->cc->GetExposureRatio();
+					double fitness = Utility::FindAverageValue(camImg, convImage->GetWidth(), curImage->GetHeight(), this->cc->targetRadius);
+
+					//Record current performance to file //Ask what kind of calcualtion is this?
+					double ms = boardID*dphi + curBinVal / dphi;
+					this->timeVsFitnessFile << this->timestamp->MS_SinceStart() << " " << fitness * this->cc->GetExposureRatio() << " " << this->cc->GetExposureRatio() << std::endl;
+					this->tfile << ms << " " << fitness * this->cc->GetExposureRatio() << " " << this->cc->GetExposureRatio() << std::endl;
+
+					// Keep record of the best fitness value and image
+					if (fitness * exposureTimesRatio > fitValMax) {
+						binValMax = curBinVal;
+						fitValMax = fitness * exposureTimesRatio;
+						this->bestImage->DeepCopy(convImage);
+					}
+					curImage->Release(); //important to not fill camera buffer
+
+					// Halve the exposure time if over max fitness allowed
+					if (fitness > maxFitnessValue) {
+						this->cc->HalfExposureTime();
+					}
+					endOpt = dlg.stopFlag;
+				}  // ... curBinVal loop
+
+				if (fitValMax > this->allTimeBestFitness) {
+					this->allTimeBestFitness = fitValMax;
+					Utility::printLine("INFO: Current best fitness value updated to - " + std::to_string(allTimeBestFitness));
+					this->bestImage->DeepCopy(convImage);
+				}
+
+				slmImg[binIndex] = binValMax;
+
+				// Save progress data
+				lmaxfile << binValMax << " " << fitValMax << std::endl;
+				rtime << this->timestamp->MS_SinceStart() << " ms  " << fitValMax << "   " << this->cc->finalExposureTime << std::endl;
+			} // ... binRow loop
+		} // ... binCol loop
+
+		this->finalImages_.push_back(slmImg);
+		slmImg = NULL;
+	}
+	catch (Spinnaker::Exception &e) {
+		Utility::printLine("ERROR: OPT5 ran into issue with board #" + std::to_string(boardID));
+		Utility::printLine(std::string(e.what()));
+		return false;
+	}
+	// With no errors, slmImg should now contain optimal image
+	return true;
+}
+
+bool BruteForce_Optimization::setupInstanceVariables() {
+	this->multiEnable_ = false;
+	this->dualEnable_ = false;
+	if (dlg.m_slmControlDlg.multiEnable.GetCheck() == BST_CHECKED) {
+		this->multiEnable_ = true;
+	}
+	else if (dlg.m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED) {
+		this->dualEnable_ = true;
+	}
+
 
 	this->cc->startCamera(); // setup camera
 
@@ -188,6 +208,8 @@ bool BruteForce_Optimization::setupInstanceVariables() {
 		this->slmScaledImages[i] = new unsigned char[sc->boards[i]->GetArea()];
 		this->scalers.push_back(setupScaler(this->slmScaledImages[i], i));
 	}
+
+	this->allTimeBestFitness = 0;
 
 	// Open files for logging algorithm progress 
 	this->lmaxfile.open("logs/lmax.txt", std::ios::app);
@@ -219,14 +241,9 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 	Mat Opt_ary = Mat(this->bestImage->GetHeight(), this->bestImage->GetWidth(), CV_8UC1, camImg);
 	cv::imwrite("logs/" + curTime + "_OPT5_Optimized.bmp", Opt_ary);
 
-	//Record the final (most fit) slm image
-	Mat m_ary = Mat(512, 512, CV_8UC1, this->slmImg);
-	cv::imwrite("logs/" + curTime + "_OPT5_phaseopt.bmp", m_ary);
-
 	this->lmaxfile.close();
 	this->rtime.close();
 
-	delete[] this->slmImg;
 	// - camera shutdown
 	this->cc->stopCamera();
 	this->cc->shutdownCamera();
@@ -249,9 +266,29 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 	}
 	this->slmScaledImages.clear();
 
+	//Record the final (most fit) slm images followed by deleting them
+	for (int i = this->finalImages_.size(); i >= 0; i--) {
+		// Save image
+		Mat m_ary = Mat(512, 512, CV_8UC1, this->finalImages_[i]);
+		cv::imwrite("logs/" + curTime + "_OPT5_phaseopt.bmp", m_ary);
+
+		delete[] this->finalImages_[i]; // deallocate
+		this->finalImages_.pop_back();  // remove from vector
+	}
+	this->finalImages_.clear();
+	
 	//Reset UI State
 	this->isWorking = false;
 	this->dlg.disableMainUI(!isWorking);
 
 	return true;
+}
+
+void BruteForce_Optimization::setBlankSlmImg() {
+	for (int y = 0; y < this->cc->numberOfBinsY; y++) {
+		for (int x = 0; x < this->cc->numberOfBinsX; x++) {
+			int index = (x + y*this->cc->numberOfBinsX)*this->cc->populationDensity;
+			this->slmImg_[index] = 0;
+		}
+	}
 }
