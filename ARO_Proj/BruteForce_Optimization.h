@@ -32,7 +32,7 @@ public:
 	bool runIndividual(int boardID);
 
 	// Initialize slmImg with 0's
-	void setBlankSlmImg();
+	void setBlankSlmImg(int* slmImg);
 };
 
 #endif

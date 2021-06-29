@@ -47,15 +47,13 @@ bool SGA_Optimization::runOptimization() {
 		this->timestamp = new TimeStampGenerator();		// Starting time stamp to track elapsed time
 		// Optimization loop for each generation
 		for (this->curr_gen = 0; this->curr_gen < this->maxGenenerations && !this->stopConditionsMetFlag; this->curr_gen++) {
-			for (int popID = 0; popID < population.size(); popID++) {
-				// Run each individual, giving them all fitness values as a result of their genome
-				for (int indID = 0; indID < population[popID]->getSize(); indID++) {
-					// Lambda function to access this instance of Optimization to perform runIndividual
-					// Input: indID - index location to run individual from in population
-					// Captures: this - pointer to current SGA_Optimization instance
-					this->ind_threads.push_back(std::thread([this](int indID, int popID) {	this->runIndividual(indID); }, indID, popID)); // Parallel
-					//this->runIndividual(indID); // Serial
-				}
+			// Run each individual, giving them all fitness values as a result of their genome
+			for (int indID = 0; indID < population[0]->getSize(); indID++) {
+				// Lambda function to access this instance of Optimization to perform runIndividual
+				// Input: indID - index location to run individual from in population
+				// Captures: this - pointer to current SGA_Optimization instance
+				this->ind_threads.push_back(std::thread([this](int indID) {	this->runIndividual(indID); }, indID)); // Parallel
+				//this->runIndividual(indID); // Serial
 			}
 			Utility::rejoinClear(this->ind_threads);
 			// Perform GA crossover/breeding to produce next generation
@@ -165,27 +163,27 @@ bool SGA_Optimization::runIndividual(int indID) {
 	// Get current exposure setting of camera (relative to initial)
 	double exposureTimesRatio = this->cc->GetExposureRatio();	// needed for proper fitness value across changing exposure time
 	// Determine the fitness by intensity of the image within circle of target radius
-	double fitness = Utility::FindAverageValue(camImg, imgWidth, imgHeight, cc->targetRadius);
+	double fitness = Utility::FindAverageValue(camImg, imgWidth, imgHeight, this->cc->targetRadius);
 
 	// Display first individual
-	if (indID == 0 && displayCamImage) {
+	if (indID == 0 && this->displayCamImage) {
 		std::unique_lock<std::mutex> camLock(camDisplayMutex, std::defer_lock);
 		camLock.lock();
-		camDisplay->UpdateDisplay(camImg);
+		this->camDisplay->UpdateDisplay(camImg);
 		camLock.unlock();
 	}
 	// Record values for the top six individuals in each generation
 	if (indID > 23) {
 		std::unique_lock<std::mutex> tVfLock(timeVsFitMutex, std::defer_lock);
 		tVfLock.lock();
-		this->timeVsFitnessFile << timestamp->MS_SinceStart() << "," << fitness*exposureTimesRatio << "," << cc->finalExposureTime << "," << exposureTimesRatio << std::endl;
+		this->timeVsFitnessFile << this->timestamp->MS_SinceStart() << "," << fitness*exposureTimesRatio << "," << this->cc->finalExposureTime << "," << exposureTimesRatio << std::endl;
 		tVfLock.unlock();
 	}
 	//Save elite info of last generation
 	if (indID == (population[0]->getSize() - 1)) {
 		std::unique_lock<std::mutex> tFileLock(tfileMutex, std::defer_lock);
 		tFileLock.lock();
-		this->tfile << "SGA GENERATION," << curr_gen << "," << fitness*exposureTimesRatio << std::endl;
+		this->tfile << "SGA GENERATION," << this->curr_gen << "," << fitness*exposureTimesRatio << std::endl;
 		tFileLock.unlock();
 		if (saveImages) {
 			std::string imgFilePath = "logs/SGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite.jpg";
@@ -208,7 +206,7 @@ bool SGA_Optimization::runIndividual(int indID) {
 		this->population[popID]->setFitness(indID, fitness * exposureTimesRatio);
 	}
 	// If the fitness value is too high, flag that the exposure needs to be shortened
-	if (fitness > maxFitnessValue) {
+	if (fitness > this->maxFitnessValue) {
 		std::unique_lock<std::mutex> expsureFlagLock(exposureFlagMutex, std::defer_lock);
 		expsureFlagLock.lock();
 		this->shortenExposureFlag = true;
@@ -223,6 +221,7 @@ bool SGA_Optimization::setupInstanceVariables() {
 	this->populationSize = 30;
 	this->eliteSize = 5;
 	this->ind_threads.clear();
+
 	// Set things up accordingly if doing single or multi-SLM
 	if (dlg.m_slmControlDlg.multiEnable.GetCheck() == BST_CHECKED) {
 		this->popCount = int(sc->boards.size());
@@ -263,7 +262,7 @@ bool SGA_Optimization::setupInstanceVariables() {
 	this->scalers.clear();
 	// Setup a vector for every board
 	for (int i = 0; i < sc->boards.size(); i++) {
-		this->slmScaledImages[i] = new unsigned char[sc->boards[i]->GetArea()];
+		this->slmScaledImages[i] = new unsigned char[this->sc->boards[i]->GetArea()];
 		this->scalers.push_back(setupScaler(this->slmScaledImages[i], i));
 	}
 

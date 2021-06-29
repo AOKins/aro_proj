@@ -126,7 +126,7 @@ bool uGA_Optimization::runIndividual(int indID) {
 		// Scale the individual genome to fit SLMs
 		this->scalers[i]->TranslateImage(this->population[i]->getGenome(indID), this->slmScaledImages[i]); // Translate the vector genome into char array image
 		// Write to SLM
-		this->sc->blink_sdk->Write_image(i+1, this->slmScaledImages[i], sc->getBoardHeight(i), false, false, 0);
+		this->sc->blink_sdk->Write_image(i+1, this->slmScaledImages[i], this->sc->getBoardHeight(i), false, false, 0);
 	}
 
 	// Acquire images // - take image
@@ -140,7 +140,8 @@ bool uGA_Optimization::runIndividual(int indID) {
 	}
 	catch (Spinnaker::Exception &e) {
 		consoleLock.lock();
-		Utility::printLine("WARNING: current image release failed. no need to release image at this point "+ '\n'+'\t' + string(e.what()));
+		Utility::printLine("WARNING: current image release failed. no need to release image at this point\n");
+		Utility::printLine(e.what());
 		consoleLock.unlock();
 	}
 	this->usingHardware = false;
@@ -205,7 +206,7 @@ bool uGA_Optimization::runIndividual(int indID) {
 		this->population[popID]->setFitness(indID, fitness * exposureTimesRatio);
 	}
 	// If the fitness value is too high, flag that the exposure needs to be shortened
-	if (fitness > maxFitnessValue) {
+	if (fitness > this->maxFitnessValue) {
 		std::unique_lock<std::mutex> expsureFlagLock(exposureFlagMutex, std::defer_lock);
 		expsureFlagLock.lock();
 		this->shortenExposureFlag = true;
@@ -284,8 +285,9 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 	this->tfile.close();
 	this->efile.close();
 
-	// Only save images if not aborting (successful results
 	std::string curTime = Utility::getCurTime();
+
+	// Only save images if not aborting (successful results
 	if (dlg.stopFlag == false) {
 		// Get elite info
 		unsigned char* eliteImage = static_cast<unsigned char*>(this->bestImage->GetData());
@@ -303,9 +305,7 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 			imwrite("logs/" + curTime + "_uGA_phaseopt_SLM" + std::to_string(popID) + ".bmp", m_ary);
 		}
 	}	
-	
 	Utility::printLine("Final Fitness: " + std::to_string(this->population[0]->getFitness(this->population[0]->getSize() - 1)));
-
 	// Generic file renaming to have time stamps of run
 	std::rename("logs/uGA_functionEvals_vs_fitness.txt", ("logs/" + curTime + "_uGA_functionEvals_vs_fitness.txt").c_str());
 	std::rename("logs/uGA_time_vs_fitness.txt", ("logs/" + curTime + "_uGA_time_vs_fitness.txt").c_str());

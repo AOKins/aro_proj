@@ -140,7 +140,7 @@ bool CameraController::saveImage(ImagePtr& curImage, std::string path) {
 
 //AcquireImages: get one image from the camera
 void CameraController::AcquireImages(ImagePtr& curImage, ImagePtr& convertedImage) {
-	//convertedImage = Image::Create();
+	// convertedImage = Image::Create();
 	try {
 		// Retrieve next received image
 		curImage = cam->GetNextImage();
