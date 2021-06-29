@@ -1,6 +1,6 @@
 ////////////////////
 // Optimization handler methods implementation for simple genetic algorithm
-// Last edited: 06/22/2021 by Andrew O'Kins
+// Last edited: 06/29/2021 by Andrew O'Kins
 ////////////////////
 #include "stdafx.h"				// Required in source
 #include "SGA_Optimization.h"	// Header file
@@ -31,7 +31,7 @@ using namespace cv;
 // Method for executing the optimization
 // Output: returns true if successful ran without error, false if error occurs
 bool SGA_Optimization::runOptimization() {
-	Utility::printLine("SGA BUTTON PRESSED!");
+	Utility::printLine("INFO: Starting SGA Optimization!");
 
 	//Setup before optimization (see base class for implementation)
 	if (!prepareSoftwareHardware()) {
@@ -53,7 +53,6 @@ bool SGA_Optimization::runOptimization() {
 				// Input: indID - index location to run individual from in population
 				// Captures: this - pointer to current SGA_Optimization instance
 				this->ind_threads.push_back(std::thread([this](int indID) {	this->runIndividual(indID); }, indID)); // Parallel
-				//this->runIndividual(indID); // Serial
 			}
 			Utility::rejoinClear(this->ind_threads);
 			// Perform GA crossover/breeding to produce next generation

@@ -95,8 +95,6 @@ double Utility::FindAverageValue(unsigned char *Image, int* target, size_t width
 	y0 = 32;
 	r = 2;
 
-	printLine("FindAverageValue 1 ");
-
 	for (int i = x0 - r; i < x0 + r; i++) {
 		for (int j = y0 - r; j < y0 + r; j++) {
 			sum += m_ary.at<unsigned char>(i, j) * target[j*width + i];
@@ -104,13 +102,10 @@ double Utility::FindAverageValue(unsigned char *Image, int* target, size_t width
 		}
 	}
 
-	printLine("FindAverageValue 2 ");
-
 	// DEBUG
 	// ofstream efile("target.txt", ios::app);
 	// efile << sum << "  " << area << endl;
 	// efile.close();
-	printLine("INFO: current average - " + std::to_string(sum / area));
 	return sum / area;
 }
 

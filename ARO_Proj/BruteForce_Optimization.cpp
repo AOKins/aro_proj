@@ -25,7 +25,7 @@ using namespace cv;
 // TODO: Debug refactored/multi-SLM setup
 
 bool BruteForce_Optimization::runOptimization() {
-	Utility::printLine("OPT 5 BUTTON CLICKED!");
+	Utility::printLine("INFO: Starting OPT5 Optimization!");
 	//Setup before optimization (see base class for implementation)
 	if (!prepareSoftwareHardware()) {
 		Utility::printLine("ERROR: Failed to prepare software or/and hardware for Brute Force Optimization");
@@ -75,7 +75,7 @@ bool BruteForce_Optimization::runOptimization() {
 
 // Run individual for BF refers to the board being used
 // Input: indID - index of SLM board being used (0 based)
-// Output: Result stored in
+// Output: Result added to finalImages_ vector
 bool BruteForce_Optimization::runIndividual(int boardID) {
 	if (boardID < 0 || boardID >= this->sc->boards.size()) {
 		return false;
@@ -217,6 +217,7 @@ bool BruteForce_Optimization::setupInstanceVariables() {
 	this->slmScaledImages.clear();
 	// Setup the scaled images vector
 	this->slmScaledImages = std::vector<unsigned char*>(this->sc->boards.size());
+
 	this->scalers.clear();
 	// Setup a vector for every board and initializing all slmScaledImages to 0s
 	for (int i = 0; i < sc->boards.size(); i++) {
@@ -287,7 +288,7 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 		Mat m_ary = Mat(512, 512, CV_8UC1, this->finalImages_[i]);
 		cv::imwrite("logs/" + curTime + "_OPT5_phaseopt.bmp", m_ary);
 
-		delete[] this->finalImages_[i]; // deallocate
+		delete[] this->finalImages_[i]; // deallocate then
 		this->finalImages_.pop_back();  // remove from vector
 	}
 	this->finalImages_.clear();

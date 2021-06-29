@@ -31,8 +31,8 @@ using namespace cv;
 // Method for executing the optimization
 // Output: returns true if successful ran without error, false if error occurs
 bool uGA_Optimization::runOptimization() {
-	Utility::printLine("uGA BUTTON CLICKED!");
-	
+	Utility::printLine("INFO: Starting uGA Optimization!");
+
 	//Setup before optimization (see base class for implementation)
 	if (!prepareSoftwareHardware()) {
 		Utility::printLine("ERROR: Failed to prepare software or/and hardware for UGA Optimization");

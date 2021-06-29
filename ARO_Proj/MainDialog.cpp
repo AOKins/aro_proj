@@ -139,7 +139,6 @@ BOOL MainDialog::OnInitDialog() {
 	setDefaultUI();
 	this->m_slmControlDlg.m_SlmPwrButton.SetWindowTextW(_T("Turn power ON")); // - power button (TODO: determine if SLM is actually off at start)
 
-
 	// Give a warning message if no boards have been detected
 	if (m_slmControlDlg.slmCtrl->boards.size() < 1) {
 		MessageBox((LPCWSTR)L"No SLM detected!",
@@ -167,7 +166,7 @@ BOOL MainDialog::OnInitDialog() {
 // Set the UI to default values
 void MainDialog::setDefaultUI() {
 	// - image names to the listbox and select the first image
-	// TODO: check if this the correct image setup 
+	// TODO: check if this is the correct image list box setup 
 	this->m_ImageListBox.ResetContent();
 	this->m_ImageListBox.AddString(_T("ImageOne.bmp"));
 	this->m_ImageListBox.AddString(_T("ImageTwo.zrn"));
@@ -567,22 +566,29 @@ void MainDialog::OnBnClickedLoadSettings() {
 }
 
 bool MainDialog::setUIfromFile(std::string filePath) {
-	FILE* file = fopen(filePath.c_str(), "r");
-	if (file == NULL) {
-		return false;
-	}
-	const int buffSize = 320; // Will only read in this many characters for each side
-	char varName[buffSize];
-	char varValue[buffSize];
+
+	std::ifstream inputFile(filePath);
+	std::string lineBuffer;
 	try {
-		// Read through each line and set the value according to the name read
-		// Give warning if wasn't successful
-		while (fscanf(file, "%s=%s", varName, varValue) != EOF) {
-			if (!setValueByName(std::string(varName), std::string(varValue))) {
-				Utility::printLine("WARNING: Failure to interpret variable '" + std::string(varName) + "' with value '" + std::string(varValue) +"'!");
+		while (std::getline(inputFile, lineBuffer)) {
+			if (lineBuffer != "" && (lineBuffer.find("#") != 0)) {
+				// Locate the "=" and use as pivot where prior is the variable name and after is variable value
+				int equals_pivot = lineBuffer.find("=");
+				// Assumption made that there are no spaces from variable name to variable value, rather only occurring after a variable is assigned a value and afterwards may be an in-line comment
+				int end_point = lineBuffer.find_first_of(" ");
+
+				if (equals_pivot != end_point) {
+					// With the two positions acquired, capture the varable's name and the value it is being assigned
+					std::string variableName = lineBuffer.substr(0, equals_pivot);
+					std::string variableValue = lineBuffer.substr(equals_pivot + 1, end_point - equals_pivot - 1);
+
+					if (!setValueByName(variableName, variableValue)) {
+						Utility::printLine("WARNING: Failure to interpret variable '" + variableName + "' with value '" + variableValue + "'!");
+					}
+				}
 			}
+			return true;
 		}
-		return true;
 	}
 	catch (std::exception &e) {
 		Utility::printLine("ERROR: " + std::string(e.what()));
