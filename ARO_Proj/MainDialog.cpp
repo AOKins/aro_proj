@@ -533,7 +533,7 @@ void MainDialog::OnBnClickedLoadSettings() {
 		tryAgain = false;
 		
 		// Default to .cfg file extension (this program uses that in it's generation of saving settings)
-		static TCHAR BASED_CODE filterFiles[] = _T("Config Files (*.cfg)|*.LUT|ALL Files (*.*)|*.*||");
+		static TCHAR BASED_CODE filterFiles[] = _T("Config Files (*.cfg)|*.cfg|ALL Files (*.*)|*.*||");
 
 		CFileDialog dlgFile(TRUE, NULL, L"./", OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, filterFiles);
 
@@ -549,8 +549,8 @@ void MainDialog::OnBnClickedLoadSettings() {
 
 			if (!setUIfromFile(filePath)) {
 				int err_response = MessageBox(
-					(LPCWSTR)L"ERROR in file load!",
 					(LPCWSTR)L"An error occurred while trying load the file\nTry Again?",
+					(LPCWSTR)L"ERROR in file load!",
 					MB_ICONERROR | MB_RETRYCANCEL);
 				// Respond to decision
 				switch (err_response) {
@@ -576,9 +576,9 @@ bool MainDialog::setUIfromFile(std::string filePath) {
 		while (std::getline(inputFile, lineBuffer)) {
 			if (lineBuffer != "" && (lineBuffer.find("#") != 0)) {
 				// Locate the "=" and use as pivot where prior is the variable name and after is variable value
-				int equals_pivot = lineBuffer.find("=");
+				int equals_pivot = int(lineBuffer.find("="));
 				// Assumption made that there are no spaces from variable name to variable value, rather only occurring after a variable is assigned a value and afterwards may be an in-line comment
-				int end_point = lineBuffer.find_first_of(" ");
+				int end_point = int(lineBuffer.find_first_of(" "));
 
 				if (equals_pivot != end_point) {
 					// With the two positions acquired, capture the varable's name and the value it is being assigned
@@ -590,13 +590,13 @@ bool MainDialog::setUIfromFile(std::string filePath) {
 					}
 				}
 			}
-			return true;
 		}
 	}
 	catch (std::exception &e) {
 		Utility::printLine("ERROR: " + std::string(e.what()));
 		return false;
 	}
+	return true;
 }
 
 bool MainDialog::setValueByName(std::string name, std::string value) {
@@ -657,28 +657,50 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 	//		Also may need to add more robust form of getting boardID (rn assumes that there are at most 9 boards, anymore will lead to issues)
 	else if (name.substr(0, 14) == "slmLutFilePath") {
 		// We are dealing with LUT file setting
-		int boardID = std::stoi(name.substr(14, 1))-1;
+		int boardID = std::stoi(name.substr(14, 1)) - 1;
+		Utility::printLine("DEBUG: LUT boardID->" + std::to_string(boardID));
 		if (this->slmCtrl != NULL) {
-			if (boardID < this->slmCtrl->boards.size() && boardID > 0) {
+			if (boardID < this->slmCtrl->boards.size() && boardID >= 0) {
 				CT2CA converString(valueStr); // Resource for conversion https://stackoverflow.com/questions/258050/how-do-you-convert-cstring-and-stdstring-stdwstring-to-each-other
 				this->m_slmControlDlg.attemptLUTload(boardID, std::string(converString));
-			}	
+			}
+			else {
+				Utility::printLine("WARNING: Load setting attempted to assign LUT file out of bounds!");
+				return false;
+			}
 		}
-		return false;
+		else {
+			return false;
+		}
 	}
 	else if (name.substr(0, 14) == "slmWfcFilePath") {
 		// We are dealing with WFC file setting
 		int boardID = std::stoi(name.substr(14, 1))-1;
+		Utility::printLine("DEBUG: WFC boardID->" + std::to_string(boardID));
 		if (this->slmCtrl != NULL) {
-			if (boardID < this->slmCtrl->boards.size() && boardID > 0) {
+			if (boardID < this->slmCtrl->boards.size() && boardID >= 0) {
 				CT2CA converString(valueStr); // Resource for conversion https://stackoverflow.com/questions/258050/how-do-you-convert-cstring-and-stdstring-stdwstring-to-each-other
 				this->m_slmControlDlg.attemptWFCload(boardID, std::string(converString));
 			}
+			else {
+				Utility::printLine("WARNING: Load setting attempted to assign WFC file out of bounds!");
+			}
 		}
 	}
+
+	if (name == "phaseCompensation") {
+		if (value == "true") {
+			this->m_CompensatePhaseCheckbox.SetCheck(BST_CHECKED);
+		}
+		else {
+			this->m_CompensatePhaseCheckbox.SetCheck(BST_UNCHECKED);
+		}
+	}
+
 	else {	// Unidentfied variable name, return false
 		return false;
 	}
+	return true;
 }
 
 void MainDialog::OnBnClickedSaveSettings() {
@@ -690,7 +712,7 @@ void MainDialog::OnBnClickedSaveSettings() {
 		tryAgain = false;
 
 		// Default Save As dialog box with extension as .cfg
-		CFileDialog dlgFile(FALSE, L".cfg");
+		CFileDialog dlgFile(FALSE, L"cfg");
 
 		OPENFILENAME& ofn = dlgFile.GetOFN();
 		ofn.lpstrFile = p;
@@ -705,8 +727,8 @@ void MainDialog::OnBnClickedSaveSettings() {
 
 			if (!saveUItoFile(filePath)) {
 				int err_response = MessageBox(
-					(LPCWSTR)L"ERROR in saving!",
 					(LPCWSTR)L"An error occurred while trying save settings\nTry Again?",
+					(LPCWSTR)L"ERROR in saving!",
 					MB_ICONERROR | MB_RETRYCANCEL);
 				// Respond to decision
 				switch (err_response) {
@@ -718,8 +740,8 @@ void MainDialog::OnBnClickedSaveSettings() {
 				}
 			}
 			else {// Give success message when no issues
-				MessageBox((LPCWSTR)L"Success!",
-					(LPCWSTR)L"Successfully saved settings.",
+				MessageBox((LPCWSTR)L"Successfully saved settings.",
+					(LPCWSTR)L"Success!",
 					MB_ICONINFORMATION | MB_OK);
 				tryAgain = false;
 			}
@@ -735,41 +757,41 @@ void MainDialog::OnBnClickedSaveSettings() {
 bool MainDialog::saveUItoFile(std::string filePath) {
 	//TODO: Implement method of saving settings to given file path
 	std::ofstream outFile; // output stream
-	LPTSTR tempBuff; // Store the read value to then output into file
+	CString tempBuff;
 	outFile.open(filePath);
 	// Camera Dialog
-	this->m_cameraControlDlg.m_FramesPerSecond.GetWindowTextW(tempBuff, 320);
-	outFile << "framesPerSecond=" << tempBuff << std::endl;
-	this->m_cameraControlDlg.m_initialExposureTimeInput.GetWindowTextW(tempBuff, 320);
-	outFile << "initialExposureTime=" << tempBuff << std::endl;
-	this->m_cameraControlDlg.m_gammaValue.GetWindowTextW(tempBuff, 320);
-	outFile << "gamma=" << tempBuff << std::endl;
+	this->m_cameraControlDlg.m_FramesPerSecond.GetWindowTextW(tempBuff);
+	outFile << "framesPerSecond=" << _tstof(tempBuff) << std::endl;
+	this->m_cameraControlDlg.m_initialExposureTimeInput.GetWindowTextW(tempBuff);
+	outFile << "initialExposureTime=" << _tstof(tempBuff) << std::endl;
+	this->m_cameraControlDlg.m_gammaValue.GetWindowTextW(tempBuff);
+	outFile << "gamma=" << _tstof(tempBuff) << std::endl;
 	// AOI Dialog
-	this->m_aoiControlDlg.m_leftInput.GetWindowTextW(tempBuff, 320);
-	outFile << "leftAOI=" << tempBuff << std::endl;
-	this->m_aoiControlDlg.m_rightInput.GetWindowTextW(tempBuff, 320);
-	outFile << "rightAOI=" << tempBuff << std::endl;
-	this->m_aoiControlDlg.m_widthInput.GetWindowTextW(tempBuff, 320);
-	outFile << "widthAOI=" << tempBuff << std::endl;
-	this->m_aoiControlDlg.m_heightInput.GetWindowTextW(tempBuff, 320);
-	outFile << "heightAOI=" << tempBuff << std::endl;
+	this->m_aoiControlDlg.m_leftInput.GetWindowTextW(tempBuff);
+	outFile << "leftAOI=" << _tstof(tempBuff) << std::endl;
+	this->m_aoiControlDlg.m_rightInput.GetWindowTextW(tempBuff);
+	outFile << "rightAOI=" << _tstof(tempBuff) << std::endl;
+	this->m_aoiControlDlg.m_widthInput.GetWindowTextW(tempBuff);
+	outFile << "widthAOI=" << _tstof(tempBuff) << std::endl;
+	this->m_aoiControlDlg.m_heightInput.GetWindowTextW(tempBuff);
+	outFile << "heightAOI=" << _tstof(tempBuff) << std::endl;
 	// Optimization Dialog
-	this->m_optimizationControlDlg.m_binSize.GetWindowTextW(tempBuff, 320);
-	outFile << "binSize=" << tempBuff << std::endl;
-	this->m_optimizationControlDlg.m_numberBins.GetWindowTextW(tempBuff, 320);
-	outFile << "binNumber=" << tempBuff << std::endl;
-	this->m_optimizationControlDlg.m_targetRadius.GetWindowTextW(tempBuff, 320);
-	outFile << "targetRadius=" << tempBuff << std::endl;
-	this->m_optimizationControlDlg.m_minFitness.GetWindowTextW(tempBuff, 320);
-	outFile << "minFitness=" << tempBuff << std::endl;
-	this->m_optimizationControlDlg.m_minSeconds.GetWindowTextW(tempBuff, 320);
-	outFile << "minSeconds=" << tempBuff << std::endl;
-	this->m_optimizationControlDlg.m_maxSeconds.GetWindowTextW(tempBuff, 320);
-	outFile << "maxSeconds=" << tempBuff << std::endl;
-	this->m_optimizationControlDlg.m_minGenerations.GetWindowTextW(tempBuff, 320);
-	outFile << "minGenerations=" << tempBuff << std::endl;
-	this->m_optimizationControlDlg.m_maxGenerations.GetWindowTextW(tempBuff, 320);
-	outFile << "maxGenerations=" << tempBuff << std::endl;
+	this->m_optimizationControlDlg.m_binSize.GetWindowTextW(tempBuff);
+	outFile << "binSize=" << _tstof(tempBuff) << std::endl;
+	this->m_optimizationControlDlg.m_numberBins.GetWindowTextW(tempBuff);
+	outFile << "binNumber=" << _tstof(tempBuff) << std::endl;
+	this->m_optimizationControlDlg.m_targetRadius.GetWindowTextW(tempBuff);
+	outFile << "targetRadius=" << _tstof(tempBuff) << std::endl;
+	this->m_optimizationControlDlg.m_minFitness.GetWindowTextW(tempBuff);
+	outFile << "minFitness=" << _tstof(tempBuff) << std::endl;
+	this->m_optimizationControlDlg.m_minSeconds.GetWindowTextW(tempBuff);
+	outFile << "minSeconds=" << _tstof(tempBuff) << std::endl;
+	this->m_optimizationControlDlg.m_maxSeconds.GetWindowTextW(tempBuff);
+	outFile << "maxSeconds=" << _tstof(tempBuff) << std::endl;
+	this->m_optimizationControlDlg.m_minGenerations.GetWindowTextW(tempBuff);
+	outFile << "minGenerations=" << _tstof(tempBuff) << std::endl;
+	this->m_optimizationControlDlg.m_maxGenerations.GetWindowTextW(tempBuff);
+	outFile << "maxGenerations=" << _tstof(tempBuff) << std::endl;
 	// SLM Dialog Settings
 	outFile << "slmConfigMode=";
 	if (this->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED) {outFile << "dual\n"; }
@@ -782,6 +804,14 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 			outFile << "slmLutFilePath" << std::to_string(i + 1) << "=" << this->slmCtrl->boards[i]->LUTFileName << "\n";
 			outFile << "slmWfcFilePath" << std::to_string(i + 1) << "=" << this->slmCtrl->boards[i]->PhaseCompensationFileName << "\n";
 		}
+	}
+
+	outFile << "phaseCompensation=";
+	if (this->m_CompensatePhaseCheckbox.GetCheck() == BST_CHECKED) {
+		outFile << "true\n";
+	}
+	else {
+		outFile << "false\n";
 	}
 
 	return true;

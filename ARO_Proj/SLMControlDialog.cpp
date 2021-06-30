@@ -81,8 +81,8 @@ bool SLMControlDialog::attemptLUTload(int slmNum, std::string filePath) {
 	if (slmNum < 0 || slmNum >= this->slmCtrl->boards.size()) {
 		noErrors = false;
 		MessageBox(
-			(LPCWSTR)L"ERROR in SLM selection!",
 			(LPCWSTR)L"Failed to load WFC file as SLM selected is not in boards list.",
+			(LPCWSTR)L"ERROR in SLM selection!",
 			MB_ICONERROR | MB_OK
 		);
 		return noErrors;
@@ -93,8 +93,8 @@ bool SLMControlDialog::attemptLUTload(int slmNum, std::string filePath) {
 		Utility::printLine("ERROR: Failed to assign given file " + filePath + " to board " + std::to_string(slmNum) + "!");
 		// Resource: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-messagebox
 		int err_response = MessageBox(
-			(LPCWSTR)L"ERROR in file load!",
 			(LPCWSTR)L"Failed to load LUT file\nTry Again? Canceling may leave with undefined issues with SLM",
+			(LPCWSTR)L"ERROR in file load!",
 			MB_ICONERROR | MB_RETRYCANCEL
 		);
 		// Respond to decision
@@ -132,19 +132,24 @@ void SLMControlDialog::OnBnClickedSetlut() {
 		if (dlgFile.DoModal() == IDOK) {
 			fileName = dlgFile.GetPathName();
 			fileName.ReleaseBuffer();
-		}
-		filePath = CT2A(fileName);
 
-		if (this->SLM_SetALLSame_.GetCheck() == BST_UNCHECKED) {
-			// Get the SLM being assinged the LUT file, asssumes the index poistion of the selection is consistent with board selection
-			//		for example if the user selects 1 (out of 2) the value should be 0.  This is done currently (June 15th as a shortcut instead of parsing text of selection)
-			tryAgain = !attemptLUTload(this->slmSelectionID_, filePath);
+			filePath = CT2A(fileName);
+
+			if (this->SLM_SetALLSame_.GetCheck() == BST_UNCHECKED) {
+				// Get the SLM being assinged the LUT file, asssumes the index poistion of the selection is consistent with board selection
+				//		for example if the user selects 1 (out of 2) the value should be 0.  This is done currently (June 15th as a shortcut instead of parsing text of selection)
+				tryAgain = !attemptLUTload(this->slmSelectionID_, filePath);
+			}
+			else {
+				// SLM set all setting is checked, so assign the same LUT file to all the boards
+				for (int slmNum = 0; slmNum < this->slmCtrl->boards.size() && !tryAgain; slmNum++) {
+					tryAgain = !attemptLUTload(slmNum, filePath);
+				}
+			}
 		}
 		else {
-			// SLM set all setting is checked, so assign the same LUT file to all the boards
-			for (int  slmNum = 0; slmNum < this->slmCtrl->boards.size() && !tryAgain; slmNum++) {
-				tryAgain = !attemptLUTload(slmNum, filePath);
-			}
+			Utility::printLine("INFO: Cancelled setting LUT file, no change made.");
+			tryAgain = false;
 		}
 	} while (tryAgain);
 }
@@ -167,14 +172,13 @@ bool SLMControlDialog::attemptWFCload(int slmNum, std::string filePath) {
 		return noErrors;
 	}
 	SLM_Board * board = slmCtrl->boards[slmNum];
-	board->PhaseCompensationFileName = filePath;
 	if (!slmCtrl->ReadAndScaleBitmap(board, board->PhaseCompensationData, board->PhaseCompensationFileName)) {
 		// Notify user of error in LUT file loading and get response action
-		Utility::printLine("ERROR: Failed to assign given WFC file " + filePath + " to board " + std::to_string(slmNum) + "!");
+		Utility::printLine("ERROR: Failed to assign given WFC file \"" + filePath + "\" to board " + std::to_string(slmNum) + "!");
 		// Resource: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-messagebox
 		int err_response = MessageBox(
+			(LPCWSTR)L"Failed to load WFC file for board \nTry Again? Canceling may leave with undefined issues with SLM",
 			(LPCWSTR)L"ERROR in file load!",
-			(LPCWSTR)L"Failed to load WFC file\nTry Again? Canceling may leave with undefined issues with SLM",
 			MB_ICONERROR | MB_RETRYCANCEL
 			);
 		// Respond to decision
@@ -185,6 +189,9 @@ bool SLMControlDialog::attemptWFCload(int slmNum, std::string filePath) {
 		default: // Cancel or other unknown response will not have try again to make sure not stuck in undesired loop
 			noErrors = true;
 		}
+	}
+	else { // If no issue update the file name
+		board->PhaseCompensationFileName = filePath;
 	}
 	return noErrors;
 }
@@ -205,18 +212,22 @@ void SLMControlDialog::OnBnClickedSetwfc() {
 		if (dlgFile.DoModal() == IDOK)	{
 			fileName = dlgFile.GetPathName();
 			fileName.ReleaseBuffer();
-		}
-		filePath = CT2A(fileName);
-		int slmNum;
-		// If not set to set all SLMs, then get current selection and set only that one
-		if (this->SLM_SetALLSame_.GetCheck() == BST_UNCHECKED) {
-			slmNum = this->slmSelection_.GetCurSel(); // NOTE: GetCurSel is index of selection and doesn't refer to "face value" of the selection
-			tryAgain = !attemptWFCload(slmNum, filePath);
-		}
-		else {
-			for (slmNum = 0; slmNum < this->slmCtrl->boards.size() && !tryAgain; slmNum++) {
+			filePath = CT2A(fileName);
+			int slmNum;
+			// If not set to set all SLMs, then get current selection and set only that one
+			if (this->SLM_SetALLSame_.GetCheck() == BST_UNCHECKED) {
+				slmNum = this->slmSelection_.GetCurSel(); // NOTE: GetCurSel is index of selection and doesn't refer to "face value" of the selection
 				tryAgain = !attemptWFCload(slmNum, filePath);
 			}
+			else {
+				for (slmNum = 0; slmNum < this->slmCtrl->boards.size() && !tryAgain; slmNum++) {
+					tryAgain = !attemptWFCload(slmNum, filePath);
+				}
+			}
+		}
+		else {
+			Utility::printLine("INFO: Cancelled setting WFC file, no change made.");
+			tryAgain = false;
 		}
 	} while (tryAgain);
 }
