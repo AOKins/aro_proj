@@ -544,29 +544,32 @@ void MainDialog::OnBnClickedLoadSettings() {
 		if (dlgFile.DoModal() == IDOK) {
 			fileName = dlgFile.GetPathName();
 			fileName.ReleaseBuffer();
-		}
-		filePath = CT2A(fileName);
 
-		if (!setUIfromFile(filePath)) {
-			int err_response = MessageBox(
-				(LPCWSTR)L"ERROR in file load!",
-				(LPCWSTR)L"An error occurred while trying load the file\nTry Again?",
-				MB_ICONERROR | MB_RETRYCANCEL);
-			// Respond to decision
-			switch (err_response) {
+			filePath = CT2A(fileName);
+
+			if (!setUIfromFile(filePath)) {
+				int err_response = MessageBox(
+					(LPCWSTR)L"ERROR in file load!",
+					(LPCWSTR)L"An error occurred while trying load the file\nTry Again?",
+					MB_ICONERROR | MB_RETRYCANCEL);
+				// Respond to decision
+				switch (err_response) {
 				case IDRETRY:
 					tryAgain = true;
 					break;
 				default: // Cancel or other unknown response will not have try again to make sure not stuck in undesired loop
-					tryAgain= false;
+					tryAgain = false;
+				}
 			}
+		}
+		else {
+			tryAgain = false;
 		}
 
 	} while (tryAgain);
 }
 
 bool MainDialog::setUIfromFile(std::string filePath) {
-
 	std::ifstream inputFile(filePath);
 	std::string lineBuffer;
 	try {
@@ -635,8 +638,44 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 		this->m_optimizationControlDlg.m_minGenerations.SetWindowTextW(valueStr);
 	else if (name == "maxGenerations")
 		this->m_optimizationControlDlg.m_maxGenerations.SetWindowTextW(valueStr);
-	// TODO: Implement system for loading up LUT files and the like
-
+	// SLM Dialog
+	else if (name == "slmConfigMode") {
+		if (valueStr == "multi") {
+			this->m_slmControlDlg.multiEnable.SetCheck(BST_CHECKED);
+			this->m_slmControlDlg.dualEnable.SetCheck(BST_UNCHECKED);
+		}
+		else if (valueStr == "dual") {
+			this->m_slmControlDlg.multiEnable.SetCheck(BST_UNCHECKED);
+			this->m_slmControlDlg.dualEnable.SetCheck(BST_CHECKED);
+		}
+		else {
+			this->m_slmControlDlg.multiEnable.SetCheck(BST_UNCHECKED);
+			this->m_slmControlDlg.dualEnable.SetCheck(BST_UNCHECKED);
+		}
+	}
+	// TODO: More error handling and inform if there are issues or discrepencies (such as not setting all the SLMs or trying to write to one that is not connected)
+	//		Also may need to add more robust form of getting boardID (rn assumes that there are at most 9 boards, anymore will lead to issues)
+	else if (name.substr(0, 14) == "slmLutFilePath") {
+		// We are dealing with LUT file setting
+		int boardID = std::stoi(name.substr(14, 1))-1;
+		if (this->slmCtrl != NULL) {
+			if (boardID < this->slmCtrl->boards.size() && boardID > 0) {
+				CT2CA converString(valueStr); // Resource for conversion https://stackoverflow.com/questions/258050/how-do-you-convert-cstring-and-stdstring-stdwstring-to-each-other
+				this->m_slmControlDlg.attemptLUTload(boardID, std::string(converString));
+			}	
+		}
+		return false;
+	}
+	else if (name.substr(0, 14) == "slmWfcFilePath") {
+		// We are dealing with WFC file setting
+		int boardID = std::stoi(name.substr(14, 1))-1;
+		if (this->slmCtrl != NULL) {
+			if (boardID < this->slmCtrl->boards.size() && boardID > 0) {
+				CT2CA converString(valueStr); // Resource for conversion https://stackoverflow.com/questions/258050/how-do-you-convert-cstring-and-stdstring-stdwstring-to-each-other
+				this->m_slmControlDlg.attemptWFCload(boardID, std::string(converString));
+			}
+		}
+	}
 	else {	// Unidentfied variable name, return false
 		return false;
 	}
@@ -657,37 +696,93 @@ void MainDialog::OnBnClickedSaveSettings() {
 		ofn.lpstrFile = p;
 		ofn.nMaxFile = FILE_LIST_BUFFER_SIZE;
 
+		// If action is OK
 		if (dlgFile.DoModal() == IDOK) {
 			fileName = dlgFile.GetPathName();
 			fileName.ReleaseBuffer();
-		}
-		
-		filePath = CT2A(fileName);
 
-		if (!saveUItoFile(filePath)) {
-			int err_response = MessageBox(
-				(LPCWSTR)L"ERROR in saving!",
-				(LPCWSTR)L"An error occurred while trying save settings\nTry Again?",
-				MB_ICONERROR | MB_RETRYCANCEL);
-			// Respond to decision
-			switch (err_response) {
-			case IDRETRY:
-				tryAgain = true;
-				break;
-			default: // Cancel or other unknown response will not have try again to make sure not stuck in undesired loop
+			filePath = CT2A(fileName);
+
+			if (!saveUItoFile(filePath)) {
+				int err_response = MessageBox(
+					(LPCWSTR)L"ERROR in saving!",
+					(LPCWSTR)L"An error occurred while trying save settings\nTry Again?",
+					MB_ICONERROR | MB_RETRYCANCEL);
+				// Respond to decision
+				switch (err_response) {
+				case IDRETRY:
+					tryAgain = true;
+					break;
+				default: // Cancel or other unknown response will not have try again to make sure not stuck in undesired loop
+					tryAgain = false;
+				}
+			}
+			else {// Give success message when no issues
+				MessageBox((LPCWSTR)L"Success!",
+					(LPCWSTR)L"Successfully saved settings.",
+					MB_ICONINFORMATION | MB_OK);
 				tryAgain = false;
 			}
 		}
+		// If action is cancel
 		else {
-			// Success!
-			MessageBox((LPCWSTR)L"Success!",
-				(LPCWSTR)L"Successfully saved settings.",
-				MB_ICONINFORMATION | MB_OK);
+			tryAgain = false;
 		}
+		
 	} while (tryAgain);
 }
 
 bool MainDialog::saveUItoFile(std::string filePath) {
 	//TODO: Implement method of saving settings to given file path
+	std::ofstream outFile; // output stream
+	LPTSTR tempBuff; // Store the read value to then output into file
+	outFile.open(filePath);
+	// Camera Dialog
+	this->m_cameraControlDlg.m_FramesPerSecond.GetWindowTextW(tempBuff, 320);
+	outFile << "framesPerSecond=" << tempBuff << std::endl;
+	this->m_cameraControlDlg.m_initialExposureTimeInput.GetWindowTextW(tempBuff, 320);
+	outFile << "initialExposureTime=" << tempBuff << std::endl;
+	this->m_cameraControlDlg.m_gammaValue.GetWindowTextW(tempBuff, 320);
+	outFile << "gamma=" << tempBuff << std::endl;
+	// AOI Dialog
+	this->m_aoiControlDlg.m_leftInput.GetWindowTextW(tempBuff, 320);
+	outFile << "leftAOI=" << tempBuff << std::endl;
+	this->m_aoiControlDlg.m_rightInput.GetWindowTextW(tempBuff, 320);
+	outFile << "rightAOI=" << tempBuff << std::endl;
+	this->m_aoiControlDlg.m_widthInput.GetWindowTextW(tempBuff, 320);
+	outFile << "widthAOI=" << tempBuff << std::endl;
+	this->m_aoiControlDlg.m_heightInput.GetWindowTextW(tempBuff, 320);
+	outFile << "heightAOI=" << tempBuff << std::endl;
+	// Optimization Dialog
+	this->m_optimizationControlDlg.m_binSize.GetWindowTextW(tempBuff, 320);
+	outFile << "binSize=" << tempBuff << std::endl;
+	this->m_optimizationControlDlg.m_numberBins.GetWindowTextW(tempBuff, 320);
+	outFile << "binNumber=" << tempBuff << std::endl;
+	this->m_optimizationControlDlg.m_targetRadius.GetWindowTextW(tempBuff, 320);
+	outFile << "targetRadius=" << tempBuff << std::endl;
+	this->m_optimizationControlDlg.m_minFitness.GetWindowTextW(tempBuff, 320);
+	outFile << "minFitness=" << tempBuff << std::endl;
+	this->m_optimizationControlDlg.m_minSeconds.GetWindowTextW(tempBuff, 320);
+	outFile << "minSeconds=" << tempBuff << std::endl;
+	this->m_optimizationControlDlg.m_maxSeconds.GetWindowTextW(tempBuff, 320);
+	outFile << "maxSeconds=" << tempBuff << std::endl;
+	this->m_optimizationControlDlg.m_minGenerations.GetWindowTextW(tempBuff, 320);
+	outFile << "minGenerations=" << tempBuff << std::endl;
+	this->m_optimizationControlDlg.m_maxGenerations.GetWindowTextW(tempBuff, 320);
+	outFile << "maxGenerations=" << tempBuff << std::endl;
+	// SLM Dialog Settings
+	outFile << "slmConfigMode=";
+	if (this->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED) {outFile << "dual\n"; }
+	else if (this->m_slmControlDlg.multiEnable.GetCheck() == BST_CHECKED) {	outFile << "multi\n"; }
+	else { outFile << "single\n"; }
+
+	if (this->slmCtrl != NULL) {
+		// Output the LUT file being used for every board and PhaseCompensationFile
+		for (int i = 0; i < this->slmCtrl->boards.size(); i++) {
+			outFile << "slmLutFilePath" << std::to_string(i + 1) << "=" << this->slmCtrl->boards[i]->LUTFileName << "\n";
+			outFile << "slmWfcFilePath" << std::to_string(i + 1) << "=" << this->slmCtrl->boards[i]->PhaseCompensationFileName << "\n";
+		}
+	}
+
 	return true;
 }
