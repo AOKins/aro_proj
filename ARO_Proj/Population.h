@@ -24,7 +24,7 @@ protected:
 	// genome length for individual images
 	int genome_length_;
 	// vector for managing the multithreads for individuals used in genetic algorithm
-	vector<std::thread> ind_threads;
+	std::vector<std::thread> ind_threads;
 public:
 	// Constructor
 	// Input:
@@ -82,9 +82,9 @@ public:
 
 	// Generates a random image using BetterRandom
 	// Output: a randomly generated image that has size of genome_length for Population with each value being from 0 to 255
-	vector<T>* GenerateRandomImage() {
+	std::vector<T>* GenerateRandomImage() {
 		static BetterRandom ran(256);
-		vector<T> * image = new vector<T>(this->genome_length_,0);
+		std::vector<T> * image = new std::vector<T>(this->genome_length_, 0);
 		for (int j = 0; j < this->genome_length_; j++) {
 			(*image)[j] = (T)ran();
 		} // ... for each pixel in image
@@ -94,7 +94,7 @@ public:
 	// Getter for image of individual at inputted index
 	// Input: i - individual at given index (population not guranteed sorted)
 	// Output: the image for the individual
-	vector<T>* getGenome(int i) {
+	std::vector<T>* getGenome(int i) {
 		return this->individuals_[i].genome();
 	}
 
@@ -121,8 +121,8 @@ public:
 	//	same_check - boolean will be set to false if the arrays are different.
 	//  useMutation - boolean set if to perform mutation or not, defaults to true (enable).
 	// Output: returns new individual as result of crossover algorithm
-	vector<T> * Crossover(vector<T> * a, vector<T> * b, bool& same_check, bool useMutation = true) {
-		vector<T> * temp = new vector<T>(this->genome_length_, 0);
+	std::vector<T> * Crossover(std::vector<T> * a, std::vector<T> * b, bool& same_check, bool useMutation = true) {
+		std::vector<T> * temp = new std::vector<T>(this->genome_length_, 0);
 		double same_counter = 0; // counter keeping track of how many indices in the genomes are the same
 		static BetterRandom ran(100);
 		static BetterRandom mut(200);
@@ -199,8 +199,8 @@ public:
 	// Output: to is contains deep copy of from
 	void DeepCopyIndividual(Individual<T> & to, Individual<T> & from) {
 		to.set_fitness(from.fitness());
-		vector<T> * temp_genome1 = new vector<T>(this->genome_length_, 0);
-		vector<T> * temp_genome2 = from.genome();
+		std::vector<T> * temp_genome1 = new std::vector<T>(this->genome_length_, 0);
+		std::vector<T> * temp_genome2 = from.genome();
 		for (int i = 0; i < this->genome_length_; i++) {
 			(*temp_genome1)[i] = (*temp_genome2)[i];
 		}

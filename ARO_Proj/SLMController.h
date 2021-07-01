@@ -2,12 +2,10 @@
 #define SLM_CONTROLLER_H_
 
 #include "SLM_Board.h"
-#include <vector>
+#include "MainDialog.h"
+#include "Blink_SDK.h"
 
-// [FORWARD DEFINITIONS]
-class MainDialog;
-class Blink_SDK;
-class SLM_Board;
+#include <vector>
 
 // Class to encapsulate interactions with SLM boards
 class SLMController {
@@ -17,8 +15,8 @@ private:
 
 public:
 	//Board control
-	Blink_SDK* blink_sdk;			//Library that controlls the SLMs
-	bool isBlinkSuccess = true;		//TRUE -> if SLM control wrpper was constructed correctly
+	Blink_SDK* blink_sdk;			//Library that controls the SLMs
+	bool isBlinkSuccess = true;		//TRUE -> if SLM control wrapper was constructed correctly
 	//Board parameters
 	unsigned int numBoards = 0;		//Number of boards populated after creation of the SDK
 	unsigned short trueFrames = 3;	//3 -> non-overdrive operation, 5 -> overdrive operation (assign correct one)

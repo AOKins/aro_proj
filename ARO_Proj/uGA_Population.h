@@ -48,7 +48,6 @@ public:
 		this->ind_threads.push_back(std::thread(genInd, 2, 3, 2));
 		this->ind_threads.push_back(std::thread(genInd, 3, 3, 2));
 			// Keeping current best onto next generation
-//		temp[4].set_genome(sorted_temp[4].genome());		// Doing here since it's just a simple assignment while other threads perform genInd()
 		DeepCopyIndividual(temp[4], sorted_temp[4]);
 
 		Utility::rejoinClear(this->ind_threads);	// rejoin

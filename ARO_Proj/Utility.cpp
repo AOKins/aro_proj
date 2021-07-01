@@ -1,10 +1,9 @@
 #include "stdafx.h"
 
-#include <fstream>	// used to export information to file 
+#include <fstream>	// used to export information to file in generating target matrix
 #include <conio.h>	// console operations
 #include <ctime>
-#include <iostream>
-#include <algorithm>
+//#include <iostream>
 #include "CameraController.h"
 #include "SLMController.h"
 #include "Utility.h"
@@ -18,7 +17,7 @@ void Utility::printLine(std::string msg, bool isDebug) {
 	if (isDebug) {
 		return;
 	}
-	std::cout << "\n" << msg;
+	//std::cout << "\n" << msg;
 
 	std::string curMsg = "\n" + msg;
 	const char * dimMsgC = curMsg.c_str();
@@ -26,10 +25,10 @@ void Utility::printLine(std::string msg, bool isDebug) {
 }
 
 void Utility::print(std::string msg) {
-	std::cout << msg;
+	//std::cout << msg;
 
-	//const char * dimMsgC = msg.c_str();
-	//_cprintf(dimMsgC);
+	const char * dimMsgC = msg.c_str();
+	_cprintf(dimMsgC);
 }
 
 // [LOGIC]
@@ -47,7 +46,7 @@ bool Utility::IsButtonText(CButton& btn, std::string text) {
 	btn.GetWindowTextW(PowerState);
 	CStringA pState(PowerState);
 
-	if (strcmp(pState, text.c_str()) == 0) //the strings are equal, power is off
+	if (strcmp(pState, text.c_str()) == 0) //the strings are equal
 		return true;
 	else
 		return false;

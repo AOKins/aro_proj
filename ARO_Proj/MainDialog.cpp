@@ -755,11 +755,13 @@ void MainDialog::OnBnClickedSaveSettings() {
 }
 
 bool MainDialog::saveUItoFile(std::string filePath) {
-	//TODO: Implement method of saving settings to given file path
 	std::ofstream outFile; // output stream
-	CString tempBuff;
+	CString tempBuff; // Temporary hold of what's in dialog window
 	outFile.open(filePath);
+	
+	outFile << "# ARO PROJECT CONFIGURATION FILE" << std::endl;
 	// Camera Dialog
+	outFile << "# Camera Settings" << std::endl;
 	this->m_cameraControlDlg.m_FramesPerSecond.GetWindowTextW(tempBuff);
 	outFile << "framesPerSecond=" << _tstof(tempBuff) << std::endl;
 	this->m_cameraControlDlg.m_initialExposureTimeInput.GetWindowTextW(tempBuff);
@@ -767,6 +769,7 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	this->m_cameraControlDlg.m_gammaValue.GetWindowTextW(tempBuff);
 	outFile << "gamma=" << _tstof(tempBuff) << std::endl;
 	// AOI Dialog
+	outFile << "# AOI Settings" << std::endl;
 	this->m_aoiControlDlg.m_leftInput.GetWindowTextW(tempBuff);
 	outFile << "leftAOI=" << _tstof(tempBuff) << std::endl;
 	this->m_aoiControlDlg.m_rightInput.GetWindowTextW(tempBuff);
@@ -776,6 +779,7 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	this->m_aoiControlDlg.m_heightInput.GetWindowTextW(tempBuff);
 	outFile << "heightAOI=" << _tstof(tempBuff) << std::endl;
 	// Optimization Dialog
+	outFile << "# Optimization Settings" << std::endl;
 	this->m_optimizationControlDlg.m_binSize.GetWindowTextW(tempBuff);
 	outFile << "binSize=" << _tstof(tempBuff) << std::endl;
 	this->m_optimizationControlDlg.m_numberBins.GetWindowTextW(tempBuff);
@@ -793,8 +797,9 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	this->m_optimizationControlDlg.m_maxGenerations.GetWindowTextW(tempBuff);
 	outFile << "maxGenerations=" << _tstof(tempBuff) << std::endl;
 	// SLM Dialog Settings
+	outFile << "# SLM Configuratoin Settings" << std::endl;
 	outFile << "slmConfigMode=";
-	if (this->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED) {outFile << "dual\n"; }
+	if (this->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED) { outFile << "dual\n"; }
 	else if (this->m_slmControlDlg.multiEnable.GetCheck() == BST_CHECKED) {	outFile << "multi\n"; }
 	else { outFile << "single\n"; }
 

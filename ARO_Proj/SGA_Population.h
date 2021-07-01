@@ -4,6 +4,7 @@
 ////////////////////
 #ifndef SGAPOPULATION_H_
 #define SGAPOPULATION_H_
+
 #include "Population.h"
 #include "BetterRandom.h"
 

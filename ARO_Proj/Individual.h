@@ -33,7 +33,7 @@ public:
 	}
 
 	// Returns the array(genome) associated with the individual.
-	vector<T>* genome() {
+	std::vector<T>* genome() {
 		return this->genome_;
 	}
 

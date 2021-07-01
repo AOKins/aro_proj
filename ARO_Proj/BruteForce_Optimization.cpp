@@ -43,30 +43,29 @@ bool BruteForce_Optimization::runOptimization() {
 	if (displaySLMImage) {
 		this->slmDisplay->OpenDisplay();
 	}
-	try	{
-		this->timestamp = new TimeStampGenerator();
 
-		Utility::printLine("INFO: Optimizing board 0");
-		// By default run the first SLM (since with any option will be running with this
-		//	TODO: If having "choose SLM to optimize" option, this will be here
-		runIndividual(0);
+	this->timestamp = new TimeStampGenerator();
 
-		// If dual or multi, run second SLM
-		if ( (this->dualEnable_ || this->multiEnable_) && this->dlg.stopFlag != true) {
-			Utility::printLine("INFO: Optimizing board 1");
-			runIndividual(1);
-		}
-		
-		// If multi, run rest of boards
-		if (this->multiEnable_  && this->dlg.stopFlag != true) {
-			for (int boardID = 2; boardID < this->sc->boards.size() && this->dlg.stopFlag != true; boardID++) {
-				Utility::printLine("INFO: Optimizing board "+std::to_string(boardID));
-				runIndividual(boardID);
-			}
-		}
+	Utility::printLine("INFO: Currently optimizing board 0");
+	// By default run the first SLM (since with any option will be running with this
+	//	TODO: If having "choose SLM to optimize" option, this will be here
+	runIndividual(0);
+	Utility::printLine("INFO: Finished optimizing board 0");
+
+	// If dual or multi, run second SLM
+	if ( (this->dualEnable_ || this->multiEnable_) && this->dlg.stopFlag != true) {
+		Utility::printLine("INFO: Currently optimizing board 1");
+		runIndividual(1);
+		Utility::printLine("INFO: Finished optimizing board 1");
 	}
-	catch (Spinnaker::Exception &e) {
-		Utility::printLine("ERROR: " + string(e.what()));
+	
+	// If multi, run rest of boards
+	if (this->multiEnable_  && this->dlg.stopFlag != true) {
+		for (int boardID = 2; boardID < this->sc->boards.size() && this->dlg.stopFlag != true; boardID++) {
+			Utility::printLine("INFO: Optimizing board "+std::to_string(boardID));
+			runIndividual(boardID);
+			Utility::printLine("INFO: Finished optimizing board " + std::to_string(boardID));
+		}
 	}
 	// Cleanup
 	return shutdownOptimizationInstance();;

@@ -4,8 +4,6 @@
 #include "stdafx.h"
 #include "SLM_Board.h"
 
-#include <string>
-
 SLM_Board::SLM_Board(bool isNematic, int width, int height) {
 	is_LC_Nematic = isNematic;
 	imageWidth = width;

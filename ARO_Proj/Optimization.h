@@ -3,9 +3,7 @@
 
 #include <string>
 #include <fstream>// used to export information to file for debugging
-using std::ofstream;
 #include <vector> // For managing ind_threads
-using std::vector;
 
 #include <thread> // For ind_threads used in runOptimization
 #include <mutex>  // Mutexes to protect identified critical sections
@@ -63,9 +61,9 @@ protected:
 	std::vector<ImageScaler*> scalers; // Image scalers for each SLM (each SLM may have different dimensions so can't have just one)
 	std::vector<unsigned char*> slmScaledImages; // To easily store the scaled images from individual to what will be written
 	// Output debug streams // TODO at finished state may seek to change/remove these to improve performance while running
-	ofstream tfile;				// Record elite individual progress over generations
-	ofstream timeVsFitnessFile;	// Recoding general fitness progress
-	ofstream efile;				// Expsoure file to record when exposure is shortened
+	std::ofstream tfile;				// Record elite individual progress over generations
+	std::ofstream timeVsFitnessFile;	// Recoding general fitness progress
+	std::ofstream efile;				// Expsoure file to record when exposure is shortened
 
 	// Methods for use in runOptimization()
 	// Pull GUI settings to set parameters
@@ -100,7 +98,7 @@ protected:
 	virtual bool runIndividual(int indID) = 0;		 // Method for handling the execution of an individual
 
 	// Vector hold threads of running individuals
-	vector<std::thread> ind_threads;
+	std::vector<std::thread> ind_threads;
 	// Mutexes to protect critical sections
 	std::mutex hardwareMutex; // Mutex to protect access to the hardware used in evaluating an individual (SLM, Camera, etc.)
 	std::mutex consoleMutex, imageMutex, camDisplayMutex;	// Mutex to protect access to i/o and lastImage dimension values

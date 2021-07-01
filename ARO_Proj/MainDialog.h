@@ -66,17 +66,17 @@ public:
 	BOOL m_CompensatePhase;
 	CButton m_CompensatePhaseCheckbox;
 	CListBox m_ImageListBox;
-	CButton m_uGAButton;
-	CButton m_SGAButton;
-	CButton m_OptButton;
-	CButton m_StartStopButton;
+	CButton m_uGAButton; // Select uGA button
+	CButton m_SGAButton; // Select SGA button
+	CButton m_OptButton; // Select OPT5 (BruteForce) button
+	CButton m_StartStopButton; // Start selected optimization button (or if opt is running will stop)
 	CEdit m_BSEdit;
 	CEdit m_NBEdit;
 	CEdit m_IREdit;
 	CEdit m_MFEdit;
 	CEdit m_MSEEdit;
 	CEdit m_MFEEdit;
-	// Thread to run the optimization algorithm through once committed to running
+	// Thread property to run the optimization algorithm through once committed to running
 	CWinThread* runOptThread;
 
 protected:
@@ -110,8 +110,10 @@ public:
 		SGA,
 		uGA
 	};
-	OptType opt_selection_;
+	OptType opt_selection_; // Current selected optimization algorithm
+	// Handle process of loading settings, requesting file to select and attempt load
 	afx_msg void OnBnClickedLoadSettings();
+	// Handle process of saving settings, requesting file path/name to save to
 	afx_msg void OnBnClickedSaveSettings();
 };
 

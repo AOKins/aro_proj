@@ -3,9 +3,9 @@
 
 #include "Optimization.h"
 
-class MainDialog;
-class CameraController;
-class SLMController;
+#include "MainDialog.h"
+#include "CameraController.h"
+#include "SLMController.h"
 
 class BruteForce_Optimization : public Optimization {
 	std::ofstream lmaxfile;

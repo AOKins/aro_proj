@@ -25,6 +25,7 @@ Optimization::Optimization(MainDialog& dlg_, CameraController* cc, SLMController
 }
 
 // [SETUP]
+// Draw from GUI the optimization stop conditions
 bool Optimization::prepareStopConditions() {
 	bool result = true;
 
@@ -97,6 +98,7 @@ bool Optimization::prepareStopConditions() {
 }
 
 //[SETUP]
+// Setup camera, verify SLM is ready and prepare stop conditions
 bool Optimization::prepareSoftwareHardware() {
 	Utility::printLine("INFO: Preparing equipment and software for optimization!");
 
@@ -133,11 +135,14 @@ bool Optimization::prepareSoftwareHardware() {
 	return true;
 }
 
+// For a given board setup and return a scaler
+// Input: slmNum (default 0 and 0 based) - index of board to set scaler with
+//        slmImg - char pointer to array with size equal to total area of board
+// Output: - returns pointer to a new ImageScaler based on width & height of SLM at slmNum
+//		   - slmImg is filled with zeros
 ImageScaler* Optimization::setupScaler(unsigned char *slmImg, int slmNum = 0) {
 	int width = int(sc->getBoardWidth(slmNum));
 	int height = int(sc->getBoardHeight(slmNum));
-
-	slmImg = new unsigned char[width*height];
 
 	ImageScaler* scaler = new ImageScaler(width, height, 1, NULL);
 	scaler->SetBinSize(cc->binSizeX, cc->binSizeY);
@@ -149,33 +154,35 @@ ImageScaler* Optimization::setupScaler(unsigned char *slmImg, int slmNum = 0) {
 }
 
 // [SAVE/LOAD FEATURES]
+// Output information of the parameters used in the optimization in to logs
 void Optimization::saveParameters(std::string time, std::string optType) {
-	std::ofstream paramFile("logs/" + time + "_" + optType + "_Optimization_Parameters.txt", std::ios::app);
+	std::ofstream paramFile("logs/" + time + "_" + optType + "_Optimization_Parameters.txt");
 	paramFile << "----------------------------------------------------------------" << std::endl;
 	paramFile << "OPTIMIZATION SETTINGS:" << std::endl;
 	paramFile << "Type - " << optType << std::endl;
 	if (optType != "OPT5") {
-		paramFile << "Stop Fitness - " << std::to_string(fitnessToStop) << std::endl;
-		paramFile << "Max Stop Time - " << std::to_string(maxSecondsToStop) << std::endl;
-		paramFile << "Stop Generation - " << std::to_string(genEvalToStop) << std::endl;
+		paramFile << "Stop Fitness - " << std::to_string(this->fitnessToStop) << std::endl;
+		paramFile << "Max Stop Time - " << std::to_string(this->maxSecondsToStop) << std::endl;
+		paramFile << "Stop Generation - " << std::to_string(this->genEvalToStop) << std::endl;
+		paramFile << "Max Generation - " << std::to_string(this->maxGenenerations) << std::endl;
 	}
 	paramFile << "----------------------------------------------------------------" << std::endl;
 	paramFile << "CAMERA SETTINGS:" << std::endl;
-	paramFile << "AOI x0 - " << std::to_string(cc->x0) << std::endl;
-	paramFile << "AOI y0 - " << std::to_string(cc->y0) << std::endl;
-	paramFile << "AOI Image Width - " << std::to_string(cc->cameraImageWidth) << std::endl;
-	paramFile << "AOI Image Height - " << std::to_string(cc->cameraImageHeight) << std::endl;
-	paramFile << "Acquisition Gamma - " << std::to_string(cc->gamma) << std::endl;
-	paramFile << "Acquisition FPS - " << std::to_string(cc->fps) << std::endl;
-	paramFile << "Acquisition Initial Exposure Time - " << std::to_string(cc->initialExposureTime) << std::endl;
-	paramFile << "Number of Bins X - " << std::to_string(cc->numberOfBinsX) << std::endl;
-	paramFile << "Number of Bins Y - " << std::to_string(cc->numberOfBinsY) << std::endl;
-	paramFile << "Bins Size X - " << std::to_string(cc->numberOfBinsX) << std::endl;
-	paramFile << "Bins Size Y - " << std::to_string(cc->numberOfBinsY) << std::endl;
-	paramFile << "Target Radius - " << std::to_string(cc->targetRadius) << std::endl;
+	paramFile << "AOI x0 - " << std::to_string(this->cc->x0) << std::endl;
+	paramFile << "AOI y0 - " << std::to_string(this->cc->y0) << std::endl;
+	paramFile << "AOI Image Width - " << std::to_string(this->cc->cameraImageWidth) << std::endl;
+	paramFile << "AOI Image Height - " << std::to_string(this->cc->cameraImageHeight) << std::endl;
+	paramFile << "Acquisition Gamma - " << std::to_string(this->cc->gamma) << std::endl;
+	paramFile << "Acquisition FPS - " << std::to_string(this->cc->fps) << std::endl;
+	paramFile << "Acquisition Initial Exposure Time - " << std::to_string(this->cc->initialExposureTime) << std::endl;
+	paramFile << "Number of Bins X - " << std::to_string(this->cc->numberOfBinsX) << std::endl;
+	paramFile << "Number of Bins Y - " << std::to_string(this->cc->numberOfBinsY) << std::endl;
+	paramFile << "Bins Size X - " << std::to_string(this->cc->numberOfBinsX) << std::endl;
+	paramFile << "Bins Size Y - " << std::to_string(this->cc->numberOfBinsY) << std::endl;
+	paramFile << "Target Radius - " << std::to_string(this->cc->targetRadius) << std::endl;
 	paramFile << "----------------------------------------------------------------" << std::endl;
 	paramFile << "SLM SETTINGS:" << std::endl;
-	paramFile << "Board Amount - " << std::to_string(sc->numBoards) << std::endl;
+	paramFile << "Board Amount - " << std::to_string(this->sc->numBoards) << std::endl;
 	paramFile.close();
 }
 

@@ -305,7 +305,7 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 			imwrite("logs/" + curTime + "_uGA_phaseopt_SLM" + std::to_string(popID) + ".bmp", m_ary);
 		}
 	}	
-	Utility::printLine("Final Fitness: " + std::to_string(this->population[0]->getFitness(this->population[0]->getSize() - 1)));
+	Utility::printLine("INFO: Final Fitness: " + std::to_string(this->population[0]->getFitness(this->population[0]->getSize() - 1)));
 	// Generic file renaming to have time stamps of run
 	std::rename("logs/uGA_functionEvals_vs_fitness.txt", ("logs/" + curTime + "_uGA_functionEvals_vs_fitness.txt").c_str());
 	std::rename("logs/uGA_time_vs_fitness.txt", ("logs/" + curTime + "_uGA_time_vs_fitness.txt").c_str());
