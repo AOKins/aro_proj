@@ -4,8 +4,6 @@
 #include <conio.h>	// console operations
 #include <ctime>
 //#include <iostream>
-#include "CameraController.h"
-#include "SLMController.h"
 #include "Utility.h"
 
 #include <opencv2\highgui\highgui.hpp>	//image processing

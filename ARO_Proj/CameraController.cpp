@@ -1,9 +1,7 @@
 #include "stdafx.h"				// Required in source
 #include "CameraController.h"	// Header file
-#include "MainDialog.h"
 #include "Utility.h"
 
-#include <string>
 using std::ostringstream;
 
 // [CONSTRUCTOR(S)]
@@ -36,10 +34,11 @@ bool CameraController::setupCamera() {
 	if (!dlg) {
 		return false;
 	}
+	// Update image parameters according to dialog inputs
 	if (!UpdateImageParameters()) {
 		return false;
 	}
-
+	// Check for any possible issue with camera and restart if needed
 	if (!cam->IsValid() || !cam->IsInitialized()) {
 		shutdownCamera();
 		if (!UpdateConnectedCameraInfo()) {
@@ -175,7 +174,7 @@ bool CameraController::UpdateImageParameters() {
 		frameRateMS = 1000 / fps;
 	}
 	catch (...)	{
-		Utility::printLine("ERROR: Was unable to parse the frames per second time input feild!");
+		Utility::printLine("ERROR: Was unable to parse the frames per second time input field!");
 		result = false;
 	}
 	// Gamma value
@@ -186,7 +185,7 @@ bool CameraController::UpdateImageParameters() {
 		gamma = _tstof(path);
 	}
 	catch (...)	{
-		Utility::printLine("ERROR: Was unable to parse the frames per second time input feild!");
+		Utility::printLine("ERROR: Was unable to parse the gamma input field!");
 		result = false;
 	}
 	// Initial exposure time
@@ -197,24 +196,28 @@ bool CameraController::UpdateImageParameters() {
 		initialExposureTime = _tstof(path);
 	}
 	catch (...)	{
-		Utility::printLine("ERROR: Was unable to parse the initial exposure time input feild!");
+		Utility::printLine("ERROR: Was unable to parse the initial exposure time input field!");
 		result = false;
 	}
 	// Get all AOI settings
 	try	{
 		CString path("");
+		// Left offset
 		dlg.m_aoiControlDlg.m_leftInput.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
 		x0 = _tstoi(path);
 		path = L"";
+		// Top Offset
 		dlg.m_aoiControlDlg.m_rightInput.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
 		y0 = _tstoi(path);
 		path = L"";
+		// Width of AOI
 		dlg.m_aoiControlDlg.m_widthInput.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
 		cameraImageWidth = _tstoi(path);
 		path = L"";
+		// Hieght of AOI
 		dlg.m_aoiControlDlg.m_heightInput.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
 		cameraImageHeight = _tstoi(path);
@@ -229,25 +232,25 @@ bool CameraController::UpdateImageParameters() {
 		dlg.m_optimizationControlDlg.m_numberBins.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
 		numberOfBinsX = _tstof(path);
+		numberOfBinsY = numberOfBinsX; // Number of bins in Y direction is equal to in X direction (square)
 	}
 	catch (...)	{
-		Utility::printLine("ERROR: Was unable to parse the number of bins input feild!");
+		Utility::printLine("ERROR: Was unable to parse the number of bins input field!");
 		result = false;
 	}
-	numberOfBinsY = numberOfBinsX;
 	//Size of bins X and Y (ASK: if actually thesame xy? and isn't stating the # of bins already determine size?)
 	try	{
 		CString path("");
 		dlg.m_optimizationControlDlg.m_binSize.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
 		binSizeX = _tstof(path);
+		binSizeY = binSizeX; // Square shape in size
 	}
 	catch (...)	{
 		Utility::printLine("ERROR: Was unable to parse bin size input feild!");
 		result = false;
 	}
-	binSizeY = binSizeX;
-	//Integration/target radius (ASK: what is this for?)
+	// Integration/target radius
 	try	{
 		CString path("");
 		dlg.m_optimizationControlDlg.m_targetRadius.GetWindowTextW(path);
@@ -277,25 +280,25 @@ bool CameraController::UpdateConnectedCameraInfo() {
 			Utility::printLine("ERROR: Camera system not avaliable!");
 			return false;
 		}
-		if (camList.GetSize() == 0)	{
+
+		int camAmount = camList.GetSize();
+		if (camAmount <= 0)	{
 			Utility::printLine("ERROR: No cameras avaliable!");
 			return false;
 		}
-		else
-			Utility::printLine("INFO: There are " + std::to_string(camList.GetSize()) + " cameras avaliable!");
-
-		//Check if only one camera
-		int camAmount = camList.GetSize();
-		if (camAmount != 1)	{
+		else {
+			Utility::printLine("INFO: There are " + std::to_string(camAmount) + " camera(s) avaliable!");
+		}
+		//Check if more than one camera
+		if (camAmount > 1)	{
 			//clear camera list before releasing system
 			camList.Clear();
 			system->ReleaseInstance();
-			Utility::printLine("ERROR: only 1 camera has to be connected, but you have" + std::to_string(camAmount));
-			return false;
+			Utility::printLine("WARNING: only 1 camera has to be connected, but you have " + std::to_string(camAmount));
 		}
 
 		//Get camera reference
-		cam = camList.GetByIndex(0);
+		this->cam = camList.GetByIndex(0);
 		if (!cam.IsValid())	{
 			Utility::printLine("ERROR: Retrieved Camera not Valid!");
 			return false;
@@ -333,20 +336,6 @@ bool CameraController::ConfigureCustomImageSettings() {
 		Utility::printLine("ERROR: trying to configure invalid or nonexistant camera");
 		return false;
 	}
-
-	//Default centering of image AOI
-	//int maxHeight = (int)cam->HeightMax.GetValue();
-	//int maxWidth = (int)cam->WidthMax.GetValue();
-	//// - X axis center
-	//if (x0 = -1 && ((maxWidth / 2) - (cameraImageWidth / 2)) < 0)
-	//	x0 = 0;
-	//else
-	//	x0 = (maxWidth / 2) - (cameraImageWidth / 2);
-	//// - Y axis center
-	//if (y0 == -1 && ((maxHeight / 2) - (cameraImageHeight / 2)) < 0)
-	//	y0 = 0;
-	//else
-	//	y0 = (maxHeight / 2) - (cameraImageHeight / 2);
 	
 	//XY factor check (axes offsets need to be certain factor to be valid see above)
 	if (x0 % 4 != 0)

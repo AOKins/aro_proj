@@ -25,12 +25,6 @@
 #include "Blink_SDK.h"			// SLM SDK functions
 #include "SLM_Board.h"
 
-//	- System
-#include <fstream>				// Used to export information to file 
-#include <string>				// Used as the primary "letters" datatype
-#include <vector>				// Used for image value storage
-#include <iostream>				// Used for console output
-
 //[NAMESPACES]
 using namespace cv;
 
@@ -639,9 +633,11 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 	if (name == "phaseCompensation") {
 		if (value == "true") {
 			this->m_slmControlDlg.m_CompensatePhaseCheckbox.SetCheck(BST_CHECKED);
+			this->m_slmControlDlg.m_CompensatePhase = true;
 		}
 		else {
 			this->m_slmControlDlg.m_CompensatePhaseCheckbox.SetCheck(BST_UNCHECKED);
+			this->m_slmControlDlg.m_CompensatePhase = false;
 		}
 	}
 
@@ -651,6 +647,7 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 	return true;
 }
 
+// When the Save Settings button is pressed, prompt the user to give where to save the file to for storing all parameters & preferences
 void MainDialog::OnBnClickedSaveSettings() {
 	bool tryAgain;
 	CString fileName;
@@ -750,7 +747,7 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	if (this->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED) { outFile << "dual\n"; }
 	else if (this->m_slmControlDlg.multiEnable.GetCheck() == BST_CHECKED) {	outFile << "multi\n"; }
 	else { outFile << "single\n"; }
-
+	// Quick Check for SLMs
 	if (this->slmCtrl != NULL) {
 		// Output the LUT file being used for every board and PhaseCompensationFile
 		for (int i = 0; i < this->slmCtrl->boards.size(); i++) {
@@ -758,9 +755,8 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 			outFile << "slmWfcFilePath" << std::to_string(i + 1) << "=" << this->slmCtrl->boards[i]->PhaseCompensationFileName << "\n";
 		}
 	}
-
 	outFile << "phaseCompensation=";
-	if (this->m_slmControlDlg.m_CompensatePhaseCheckbox.GetCheck() == BST_CHECKED) {
+	if (this->m_slmControlDlg.m_CompensatePhase) {
 		outFile << "true\n";
 	}
 	else {

@@ -4,15 +4,11 @@
 ////////////////////
 #include "stdafx.h"				// Required in source
 #include "SGA_Optimization.h"	// Header file
-#include "SGA_Population.h"
 
 #include "Utility.h"
 #include "Timing.h"
 #include "CamDisplay.h"
 
-#include "MainDialog.h"
-#include "SLMController.h"
-#include "CameraController.h"
 #include "ImageScaler.h"
 #include "Blink_SDK.h"
 #include "SLM_Board.h"

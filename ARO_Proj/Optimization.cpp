@@ -1,18 +1,7 @@
 #include "stdafx.h"				// Required in source
 #include "Optimization.h"		// Header file
 
-#include "MainDialog.h"			// used for UI reference
-#include "CameraController.h"
-#include "SLMController.h"
-#include "Utility.h"			// used for debug statements
-#include "Timing.h"				// contains time keeping functions
-#include "ImageScaler.h"		// changes size of image to fit slm //ASK: is this correct? 
-
-#include <fstream>				// used to export information to file 
 #include <chrono>
-#include <thread>
-#include <string>
-using std::string;
 
 Optimization::Optimization(MainDialog& dlg_, CameraController* cc, SLMController* sc) : dlg(dlg_) {
 	if (cc == nullptr)

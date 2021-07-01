@@ -23,10 +23,8 @@
 using namespace cv;
 
 ////
-// TODOs:	Debug multithreading as needed
-//			Properly Address how to handle if image acquisition failed (currently just moves on to next individual without assigning a default fitness value)
+// TODOs:	Properly Address how to handle if image acquisition failed (currently just moves on to next individual without assigning a default fitness value)
 //			send final scaled image to the SLM //ASK needed?
-//			Remove undesired i/o once debugging is complete
 
 // Method for executing the optimization
 // Output: returns true if successful ran without error, false if error occurs

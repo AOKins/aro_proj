@@ -4,12 +4,7 @@
 // [DESCRIPTION]
 // MainDialog.h : header file for the main dialog of the program
 
-// [FORWARD DEFINITIONS]
-class SLMController;
-class CameraController;
-
 // [INCUDE FILES]
-//	- Dialog and and IDE
 #include "afxwin.h"
 #include "afxdialogex.h"
 #include <stdlib.h>
@@ -20,6 +15,8 @@ class CameraController;
 #include "CameraControlDialog.h"
 #include "AOIControlDialog.h"
 #include "afxcmn.h"
+
+#include <string>
 
 class MainDialog : public CDialog {
 public:
@@ -88,14 +85,17 @@ public:
 private:
 	CString m_ReadyRunning;
 public:
+	// Sub dialogs
 	OptimizationControlDialog m_optimizationControlDlg;
 	SLMControlDialog m_slmControlDlg;
 	CameraControlDialog m_cameraControlDlg;
 	AOIControlDialog m_aoiControlDlg;
+
 	CWnd* m_pwndShow;
 	CTabCtrl m_TabControl;
 	afx_msg void OnTcnSelchangeTab1(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnBnClickedStartStopButton();
+	
 	bool stopFlag = false;
 	bool running_optimization_;
 	bool opt_success;
@@ -114,6 +114,7 @@ public:
 
 // Worker thread process for running optimization while MainDialog continues listening for other input
 // Input: instance - pointer to MainDialog instance that called this method (will be cast to MainDialgo*)
+// Output: optimization according to dlg.opt_selection_ is performed
 UINT __cdecl optThreadMethod(LPVOID instance);
 
 #endif

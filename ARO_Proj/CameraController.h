@@ -9,8 +9,7 @@ using namespace Spinnaker;
 using namespace Spinnaker::GenApi;
 using namespace Spinnaker::GenICam;
 
-// [FORWARD DEFINITIONS]
-class MainDialog;
+#include "MainDialog.h"
 
 class CameraController {
 public:

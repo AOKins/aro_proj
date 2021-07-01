@@ -1,7 +1,7 @@
 #ifndef OPTIMIZATION_H_
 #define OPTIMIZATION_H_
 
-#include <string>
+#include <string> // used in saveParameters()
 #include <fstream>// used to export information to file for debugging
 #include <vector> // For managing ind_threads
 
@@ -14,12 +14,12 @@ using namespace Spinnaker;
 using namespace Spinnaker::GenApi;
 using namespace Spinnaker::GenICam;
 
-class MainDialog;
-class CameraController;
-class SLMController;
-class ImageScaler;
-class CameraDisplay;
-class TimeStampGenerator;
+#include "MainDialog.h"			// used for UI reference
+#include "CameraController.h"	// pointer to access custom interface with camera
+#include "SLMController.h"		// pointer to access custom interface with slm
+#include "Utility.h"			// used for debug statements
+#include "Timing.h"				// contains time keeping functions
+#include "ImageScaler.h"		// changes size of image to fit slm
 
 class Optimization {
 protected:
@@ -30,7 +30,7 @@ protected:
 	//Base algorithm parameters
 	double acceptedSimilarity = .97; // images considered the same when reach this threshold (has to be less than 1)
 	double maxFitnessValue = 200; // max allowed fitness value - when reached exposure is halved (TODO: check this feature)
-	double maxGenenerations = 3000; // max allowed number of generations to perform
+	double maxGenenerations = 3000; // max number of generations to perform
 
 	//Base algorithm stop conditions
 	double fitnessToStop = 0;
@@ -46,7 +46,7 @@ protected:
 	//Instance variables (used during optimization process)
 	// Values assigned within setupInstanceVariables(), then if needed cleared in shutdownOptimizationInstance()
 	bool isWorking = false;		// true if currently actively running the optimization algorithm
-	bool usingHardware = false; // debug flag of using hardware currently in a given thread (to know if accidentally having two threads use hardware at once!)
+	bool usingHardware = false; // debug flag of using hardware currently in a run of an individual (to know if accidentally having two threads use hardware at once!)
 	int populationSize; // Size of the populations being used (number of individuals in a population class)
 	int popCount;		// Number of populations working with (equal to sc->boards.size() if multi-SLM mode)
 	int eliteSize;		// Number of elite individuals within the population (should be less than populationSize)

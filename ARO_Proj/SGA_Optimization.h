@@ -7,9 +7,6 @@
 
 #include "Optimization.h"
 #include "SGA_Population.h"
-class MainDialog;
-class CameraController;
-class SLMController;
 
 class SGA_Optimization : public Optimization {
 	// Method to setup specific properties runOptimziation() instance

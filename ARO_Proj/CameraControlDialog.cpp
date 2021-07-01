@@ -1,8 +1,8 @@
 // CameraControlDialog.cpp : implementation file
 //
 
-#include "stdafx.h"
 #include "CameraControlDialog.h"
+#include "stdafx.h"
 #include "afxdialogex.h"
 
 
