@@ -73,11 +73,11 @@ void AOIControlDialog::OnBnClickedCenterAoiButton()
 		CString path("");
 		m_widthInput.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
-		curWidth = _tstof(path);
+		curWidth = _tstoi(path);
 
 		m_heightInput.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
-		curHeight = _tstof(path);
+		curHeight = _tstoi(path);
 	}
 	catch (...)
 	{

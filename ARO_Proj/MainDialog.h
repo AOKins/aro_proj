@@ -63,9 +63,6 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 public:
-	BOOL m_CompensatePhase;
-	CButton m_CompensatePhaseCheckbox;
-	CListBox m_ImageListBox;
 	CButton m_uGAButton; // Select uGA button
 	CButton m_SGAButton; // Select SGA button
 	CButton m_OptButton; // Select OPT5 (BruteForce) button
@@ -81,11 +78,9 @@ public:
 
 protected:
 	afx_msg void OnSlmPwrButton();
-	afx_msg void OnSelchangeImageListbox();
 	virtual void OnOK();
 	//afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnClose();
-	afx_msg void OnCompensatePhaseCheckbox();
 public:
 	afx_msg void OnBnClickedUgaButton();
 	afx_msg void OnBnClickedSgaButton();

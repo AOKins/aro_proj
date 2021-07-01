@@ -44,7 +44,12 @@ public:
 	// If TRUE then treat all the SLMs as the same rather than distinct
 	CButton SLM_SetALLSame_;
 	afx_msg void OnCbnSelchangeSlmSelect();
-	afx_msg void OnBnClickedCompensatePhaseCheckbox();
+	afx_msg void OnCompensatePhaseCheckbox();
 	CButton dualEnable;
 	afx_msg void OnBnClickedSlmDual();
+	CListBox m_ImageListBox;
+	afx_msg void OnSelchangeImageListbox();
+	BOOL m_CompensatePhase;
+	CButton m_CompensatePhaseCheckbox;
+
 };

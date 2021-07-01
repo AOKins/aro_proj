@@ -32,11 +32,14 @@ SLMControlDialog::~SLMControlDialog()
 void SLMControlDialog::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Check(pDX, IDC_COMPENSATE_PHASE_CHECKBOX, m_CompensatePhase);
+	DDX_Control(pDX, IDC_COMPENSATE_PHASE_CHECKBOX, m_CompensatePhaseCheckbox);
 	DDX_Control(pDX, IDC_SLM_PWR_BUTTON, m_SlmPwrButton);
 	DDX_Control(pDX, ID_SLM_SELECT, slmSelection_);
 	DDX_Control(pDX, IDC_SLM_MULTI, multiEnable);
 	DDX_Control(pDX, IDC_SLM_ALLSAME, SLM_SetALLSame_);
 	DDX_Control(pDX, IDC_SLM_DUAL, dualEnable);
+	DDX_Control(pDX, IDC_IMAGE_LISTBOX, m_ImageListBox);
 }
 
 BEGIN_MESSAGE_MAP(SLMControlDialog, CDialogEx)
@@ -46,8 +49,9 @@ BEGIN_MESSAGE_MAP(SLMControlDialog, CDialogEx)
 	ON_BN_CLICKED(IDC_SLM_MULTI, &SLMControlDialog::OnBnClickedMultiSLM)
 	ON_CBN_SELCHANGE(IDC_SLM_ALLSAME, &SLMControlDialog::OnCbnChangeSlmAll)
 	ON_CBN_SELCHANGE(ID_SLM_SELECT, &SLMControlDialog::OnCbnSelchangeSlmSelect)
-	ON_BN_CLICKED(IDC_COMPENSATE_PHASE_CHECKBOX, &SLMControlDialog::OnBnClickedCompensatePhaseCheckbox)
+	ON_BN_CLICKED(IDC_COMPENSATE_PHASE_CHECKBOX, &SLMControlDialog::OnCompensatePhaseCheckbox)
 	ON_BN_CLICKED(IDC_SLM_DUAL, &SLMControlDialog::OnBnClickedSlmDual)
+	ON_LBN_SELCHANGE(IDC_IMAGE_LISTBOX, OnSelchangeImageListbox)
 END_MESSAGE_MAP()
 
 // SLMControlDialog message handlers
@@ -123,7 +127,7 @@ void SLMControlDialog::OnBnClickedSetlut() {
 		// Initially only show LUT files (end in .LUT extension) but also provide option to show all files
 		static TCHAR BASED_CODE filterFiles[] = _T("LUT Files (*.LUT)|*.LUT|ALL Files (*.*)|*.*||");
 		// Construct and open standard Windows file dialog box with default filename being "./slm3986_at532_P8.LUT"
-		CFileDialog dlgFile(TRUE, NULL, L"./slm3986_at532_P8.LUT", OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, filterFiles);
+		CFileDialog dlgFile(TRUE, NULL, L"./slm3986_at532_P8.LUT", OFN_FILEMUSTEXIST, filterFiles);
 
 		OPENFILENAME& ofn = dlgFile.GetOFN();
 		ofn.lpstrFile = p;
@@ -266,12 +270,6 @@ void SLMControlDialog::populateSLMlist() {
 // Update selection ID value
 void SLMControlDialog::OnCbnSelchangeSlmSelect() { this->slmSelectionID_ = this->slmSelection_.GetCurSel(); }
 
-
-void SLMControlDialog::OnBnClickedCompensatePhaseCheckbox()
-{
-	// TODO: Add your control notification handler code here
-}
-
 void SLMControlDialog::OnBnClickedMultiSLM() {
 	// When attempting to enable Multi SLM setup, will confirm that there are enough boards
 	if (this->multiEnable.GetCheck() == BST_CHECKED) {
@@ -316,4 +314,53 @@ void SLMControlDialog::OnBnClickedSlmDual() {
 	else {
 		Utility::printLine("INFO: Dual-SLM has been disabled");
 	}
+}
+
+//////////////////////////////////////////////
+//
+//   OnSelchangeImageListbox()
+//
+//   Inputs: none
+//
+//   Returns: none
+//
+//   Purpose: This function allows the user to select an image from the image list, then see the image on the SLM
+//
+//   Modifications:
+//
+//////////////////////////////////////////////
+void SLMControlDialog::OnSelchangeImageListbox() {
+	//Figure out which image in the list was just selected
+	int sel = this->m_ImageListBox.GetCurSel();
+	if (sel == LB_ERR) { //nothing selected
+		return;
+	}
+	this->slmCtrl->ImageListBoxUpdate(sel);
+}
+
+/////////////////////////////////////////////////////
+//
+//   OnCompensatePhaseCheckbox()
+//
+//   Inputs: none
+//
+//   Returns: none
+//
+//   Purpose: This function is called if the ser clicks on the checkbox labeled "apply phase compensation."
+//			  This will superimpose a phase correction image with the desired image
+//			  being downloaded to the SLM. This option should ony be used if the user
+//			  is driving a nematic SLM using a phase setup (interferometer). Using the
+//			  appropriate phase correction file will compensate for slight imperfections
+//			  (curvature) in the SLM, thus making the SLM appear nearly flat.
+//
+//   Modifications:
+//
+//////////////////////////////////////////////////
+void SLMControlDialog::OnCompensatePhaseCheckbox() {
+	UpdateData(true);
+
+	//Re-load the sequence if apropriate checkbox pressed
+	slmCtrl->LoadSequence();
+	//Load the currently selected image to the SLM
+	OnSelchangeImageListbox();
 }

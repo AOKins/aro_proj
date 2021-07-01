@@ -41,7 +41,7 @@ bool SLMController::setupSLM(bool repopulateBoardList, int boardIdx) {
 
 	//Create all board references
 	if (repopulateBoardList) {
-		for (int i = 1; i <= numBoards; i++) {
+		for (unsigned int i = 1; i <= numBoards; i++) {
 			SLM_Board *curBoard = new SLM_Board(true, blink_sdk->Get_image_width(i), blink_sdk->Get_image_height(i));
 			int boardArea = blink_sdk->Get_image_width(i) * blink_sdk->Get_image_height(i);
 
@@ -76,7 +76,7 @@ bool SLMController::setupSLM(bool repopulateBoardList, int boardIdx) {
 		CString path("");
 		dlg->m_cameraControlDlg.m_FramesPerSecond.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
-		fps = _tstof(path);
+		fps = float(_tstof(path));
 
 		//IMPORTANT NOTE: if framerate is not thesame framerate that was used in OnInitDialog AND the LC type is FLC 
 		//				  then it is VERY IMPORTANT that true frames be recalculated prior to calling SetTimer such
@@ -156,7 +156,7 @@ void SLMController::LoadSequence() {
 		//own custom phase correction file. This step is either reading in that correction file, or
 		//setting the data in the array to 0 for users that don't want to correct, or for users with
 		//amplitude devies
-		if (dlg->m_CompensatePhase) {
+		if (dlg->m_slmControlDlg.m_CompensatePhase) {
 			ReadAndScaleBitmap(boards[h], boards[h]->PhaseCompensationData, boards[h]->PhaseCompensationFileName); //save to PhaseCompensationData
 			ReadAndScaleBitmap(boards[h], boards[h]->SystemPhaseCompensationData, boards[h]->SystemPhaseCompensationFileName); //save to SystemPhaseCompensationData
 		}
@@ -560,10 +560,10 @@ void SLMController::ImageListBoxUpdate(int index) {
 		// LARGE TODO: instead of storing frames in the board struct store this 
 		// info on the main dlg as a n object and pass into this function
 		if (index == 0) {
-			blink_sdk->Write_image(i + 1, boards[i]->FrameOne, boards[i]->imageHeight, false, false, 0.0);
+			blink_sdk->Write_image(i + 1, boards[i]->FrameOne, boards[i]->imageHeight, false, false, 0);
 		}
 		if (index == 1) {
-			blink_sdk->Write_image(i + 1, boards[i]->FrameTwo, boards[i]->imageHeight, false, false, 0.0);
+			blink_sdk->Write_image(i + 1, boards[i]->FrameTwo, boards[i]->imageHeight, false, false, 0);
 		}
 	}
 }

@@ -3,8 +3,6 @@
 #ifndef TIME_STAMP
 #define TIME_STAMP
 
-#include <iomanip>
-#include <sstream>
 #include <string>
 
 class TimeStamp {

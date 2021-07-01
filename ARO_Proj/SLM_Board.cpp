@@ -4,23 +4,26 @@
 #include "stdafx.h"
 #include "SLM_Board.h"
 
+// Constructor
 SLM_Board::SLM_Board(bool isNematic, int width, int height) {
-	is_LC_Nematic = isNematic;
-	imageWidth = width;
-	imageHeight = height;
-	LUTFileName = "";
-	PhaseCompensationFileName = "";
-	SystemPhaseCompensationFileName = "";
+	this->is_LC_Nematic = isNematic;
+	this->imageWidth = width;
+	this->imageHeight = height;
+	this->LUTFileName = "";
+	this->PhaseCompensationFileName = "";
+	this->SystemPhaseCompensationFileName = "";
 }
 
+// Destructor
 SLM_Board::~SLM_Board() {
-	delete[] FrameOne;
-	delete[] FrameTwo;
-	delete[] PhaseCompensationData;
-	delete[] SystemPhaseCompensationData;
-	delete[] LUT;
+	delete[] this->FrameOne;
+	delete[] this->FrameTwo;
+	delete[] this->PhaseCompensationData;
+	delete[] this->SystemPhaseCompensationData;
+	delete[] this->LUT;
 }
 
+// Return area of board image (width*height)
 int SLM_Board::GetArea() {
-	return imageWidth * imageHeight;
+	return this->imageWidth * this->imageHeight;
 }

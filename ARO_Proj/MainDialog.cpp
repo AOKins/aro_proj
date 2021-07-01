@@ -39,7 +39,7 @@ using namespace cv;
 
 // [CONSTRUCTOR/COMPONENT EVENTS]
 // Constructor for dialog
-MainDialog::MainDialog(CWnd* pParent) : CDialog(IDD_BLINKPCIESDK_DIALOG, pParent), m_CompensatePhase(FALSE), m_ReadyRunning(_T(""))
+MainDialog::MainDialog(CWnd* pParent) : CDialog(IDD_BLINKPCIESDK_DIALOG, pParent), m_ReadyRunning(_T(""))
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -48,9 +48,6 @@ MainDialog::MainDialog(CWnd* pParent) : CDialog(IDD_BLINKPCIESDK_DIALOG, pParent
 void MainDialog::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
-	DDX_Check(pDX, IDC_COMPENSATE_PHASE_CHECKBOX, m_CompensatePhase);
-	DDX_Control(pDX, IDC_COMPENSATE_PHASE_CHECKBOX, m_CompensatePhaseCheckbox);
-	DDX_Control(pDX, IDC_IMAGE_LISTBOX, m_ImageListBox);
 	DDX_Control(pDX, IDC_UGA_BUTTON, m_uGAButton);
 	DDX_Control(pDX, IDC_SGA_BUTTON, m_SGAButton);
 	DDX_Control(pDX, IDC_OPT_BUTTON, m_OptButton);
@@ -63,10 +60,8 @@ BEGIN_MESSAGE_MAP(MainDialog, CDialog)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
-	ON_LBN_SELCHANGE(IDC_IMAGE_LISTBOX, OnSelchangeImageListbox)
 	ON_WM_TIMER()
 	ON_WM_CLOSE()
-	ON_BN_CLICKED(IDC_COMPENSATE_PHASE_CHECKBOX, OnCompensatePhaseCheckbox)
 	ON_BN_CLICKED(IDC_UGA_BUTTON, &MainDialog::OnBnClickedUgaButton)
 	ON_BN_CLICKED(IDC_SGA_BUTTON, &MainDialog::OnBnClickedSgaButton)
 	ON_BN_CLICKED(IDC_OPT_BUTTON, &MainDialog::OnBnClickedOptButton)
@@ -158,7 +153,7 @@ BOOL MainDialog::OnInitDialog() {
 
 	// Send the currently selected image from the PCIe card memory board
 	// to the SLM. User will immediately see first image in sequence. 
-	OnSelchangeImageListbox();
+	this->m_slmControlDlg.OnSelchangeImageListbox();
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -167,10 +162,10 @@ BOOL MainDialog::OnInitDialog() {
 void MainDialog::setDefaultUI() {
 	// - image names to the listbox and select the first image
 	// TODO: check if this is the correct image list box setup 
-	this->m_ImageListBox.ResetContent();
-	this->m_ImageListBox.AddString(_T("ImageOne.bmp"));
-	this->m_ImageListBox.AddString(_T("ImageTwo.zrn"));
-	this->m_ImageListBox.SetCurSel(0);
+	this->m_slmControlDlg.m_ImageListBox.ResetContent();
+	this->m_slmControlDlg.m_ImageListBox.AddString(_T("ImageOne.bmp"));
+	this->m_slmControlDlg.m_ImageListBox.AddString(_T("ImageTwo.zrn"));
+	this->m_slmControlDlg.m_ImageListBox.SetCurSel(0);
 
 	this->m_cameraControlDlg.m_FramesPerSecond.SetWindowTextW(_T("200"));
 	this->m_cameraControlDlg.m_initialExposureTimeInput.SetWindowTextW(_T("2000"));
@@ -195,9 +190,9 @@ void MainDialog::setDefaultUI() {
 	//compensate for phase imperfections by applying a phase compensation image
 	if (this->slmCtrl != nullptr)	{
 		if (!this->slmCtrl->IsAnyNematic())
-			m_CompensatePhaseCheckbox.ShowWindow(false);
+			this->m_slmControlDlg.m_CompensatePhaseCheckbox.ShowWindow(false);
 		else
-			m_CompensatePhaseCheckbox.ShowWindow(true);
+			this->m_slmControlDlg.m_CompensatePhaseCheckbox.ShowWindow(true);
 	}
 	else {
 		Utility::printLine("WARNING: SLM Control NULL");
@@ -280,27 +275,6 @@ HCURSOR MainDialog::OnQueryDragIcon() {
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
-//////////////////////////////////////////////
-//
-//   OnSelchangeImageListbox()
-//
-//   Inputs: none
-//
-//   Returns: none
-//
-//   Purpose: This function allows the user to select an image from the image list, then see the image on the SLM
-//
-//   Modifications:
-//
-//////////////////////////////////////////////
-void MainDialog::OnSelchangeImageListbox() {
-	//Figure out which image in the list was just selected
-	int sel = this->m_ImageListBox.GetCurSel();
-	if (sel == LB_ERR) { //nothing selected
-		return;
-	}
-	slmCtrl->ImageListBoxUpdate(sel);
-}
 
 /////////////////////////////////////////////////
 //
@@ -345,32 +319,6 @@ void MainDialog::OnClose() {
 /* OnOK: perfomrs enter key functions - used to prevent accidental exit of program and equipment damag e*/
 void MainDialog::OnOK() {}
 
-/////////////////////////////////////////////////////
-//
-//   OnCompensatePhaseCheckbox()
-//
-//   Inputs: none
-//
-//   Returns: none
-//
-//   Purpose: This function is called if the ser clicks on the checkbox labeled "apply phase compensation."
-//			  This will superimpose a phase correction image with the desired image
-//			  being downloaded to the SLM. This option should ony be used if the user
-//			  is driving a nematic SLM using a phase setup (interferometer). Using the
-//			  appropriate phase correction file will compensate for slight imperfections
-//			  (curvature) in the SLM, thus making the SLM appear nearly flat.
-//
-//   Modifications:
-//
-//////////////////////////////////////////////////
-void MainDialog::OnCompensatePhaseCheckbox() {
-	UpdateData(true);
-
-	//Re-load the sequence if apropriate checkbox pressed
-	slmCtrl->LoadSequence();
-	//Load the currently selected image to the SLM
-	OnSelchangeImageListbox();
-}
 
 //OnBnClickedUgaButton: Select the uGA Algorithm Button
 void MainDialog::OnBnClickedUgaButton() {
@@ -445,7 +393,7 @@ void MainDialog::disableMainUI(bool isMainEnabled) {
 	// - enabled: when nothing is running
 	// - disabled when the algorithm is running
 
-	this->m_ImageListBox.EnableWindow(isMainEnabled);
+	this->m_slmControlDlg.m_ImageListBox.EnableWindow(isMainEnabled);
 	this->m_uGAButton.EnableWindow(isMainEnabled);
 	this->m_SGAButton.EnableWindow(isMainEnabled);
 	this->m_OptButton.EnableWindow(isMainEnabled);
@@ -690,10 +638,10 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 
 	if (name == "phaseCompensation") {
 		if (value == "true") {
-			this->m_CompensatePhaseCheckbox.SetCheck(BST_CHECKED);
+			this->m_slmControlDlg.m_CompensatePhaseCheckbox.SetCheck(BST_CHECKED);
 		}
 		else {
-			this->m_CompensatePhaseCheckbox.SetCheck(BST_UNCHECKED);
+			this->m_slmControlDlg.m_CompensatePhaseCheckbox.SetCheck(BST_UNCHECKED);
 		}
 	}
 
@@ -812,7 +760,7 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	}
 
 	outFile << "phaseCompensation=";
-	if (this->m_CompensatePhaseCheckbox.GetCheck() == BST_CHECKED) {
+	if (this->m_slmControlDlg.m_CompensatePhaseCheckbox.GetCheck() == BST_CHECKED) {
 		outFile << "true\n";
 	}
 	else {

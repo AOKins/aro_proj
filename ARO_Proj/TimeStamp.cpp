@@ -4,6 +4,9 @@
 #include "stdafx.h"
 #include "TimeStamp.h"
 
+#include <iomanip>
+#include <sstream>
+
 //Constructor
 TimeStamp::TimeStamp(double duration, std::string label) {
 	this->duration = duration;
