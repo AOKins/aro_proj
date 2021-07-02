@@ -124,7 +124,7 @@ bool uGA_Optimization::runIndividual(int indID) {
 		// Scale the individual genome to fit SLMs
 		this->scalers[i]->TranslateImage(this->population[i]->getGenome(indID), this->slmScaledImages[i]); // Translate the vector genome into char array image
 		// Write to SLM
-		this->sc->blink_sdk->Write_image(i+1, this->slmScaledImages[i], this->sc->getBoardHeight(i), false, false, 0);
+		this->sc->writeImageToBoard(i, this->slmScaledImages[i]);
 	}
 
 	// Acquire images // - take image

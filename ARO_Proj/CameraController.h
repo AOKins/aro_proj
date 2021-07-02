@@ -42,12 +42,11 @@ private:
 	//Camera access
 	SystemPtr system;
 	CameraList camList;
+	CameraPtr cam;
 
 	//Logic control
 	bool isCamCreated = false;
-
 public:
-	CameraPtr cam;
 
 	CameraController(MainDialog& dlg_);
 	~CameraController();
@@ -66,7 +65,7 @@ public:
 	bool ConfigureExposureTime();
 
 	// [UTILITY]
-	int PrintDeviceInfo(INodeMap & nodeMap);
+	int PrintDeviceInfo();
 	bool hasCameras(); // Return true if at least one camera in camera list
 
 	bool SetExposure(double exposureTimeToSet);

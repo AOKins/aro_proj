@@ -393,8 +393,8 @@ bool CameraController::ConfigureCustomImageSettings() {
 			Utility::printLine("ERROR: OffsetY not available");
 		}
 		INodeMap & nodeMap = cam->GetNodeMap();
-		INodeMap & nodeMapTLDevice = cam->GetTLDeviceNodeMap();
-		if (PrintDeviceInfo(nodeMapTLDevice) == -1) {
+		
+		if (PrintDeviceInfo() == -1) {
 			Utility::printLine("WARNING: Couldn't display camera information!");
 		}
 		//Enable Manual Frame Rate Setting
@@ -479,10 +479,11 @@ bool CameraController::ConfigureCustomImageSettings() {
 // This function prints the device information of the camera from the transport
 // layer; please see NodeMapInfo example for more in-depth comments on printing
 // device information from the nodemap.
-int CameraController::PrintDeviceInfo(INodeMap & nodeMap) {
+int CameraController::PrintDeviceInfo() {
 	Utility::printLine();
 	Utility::printLine("*** CAMERA INFORMATION ***");
 	try	{
+		INodeMap & nodeMapTLDevice = cam->GetTLDeviceNodeMap();
 		FeatureList_t features;
 		CCategoryPtr category = nodeMap.GetNode("DeviceInformation");
 		if (IsAvailable(category) && IsReadable(category)) {

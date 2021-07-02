@@ -19,8 +19,7 @@
 using namespace cv;
 
 ////
-// TODOs:	Debug multithreading as needed
-//			Properly Address how to handle if image acquisition failed (currently just moves on to next individual without assigning a default fitness value)
+// TODOs:	Properly Address how to handle if image acquisition failed (currently just moves on to next individual without assigning a default fitness value)
 //			send final scaled image to the SLM //ASK needed?
 //			Remove undesired file i/o once debugging is complete
 
@@ -115,13 +114,13 @@ bool SGA_Optimization::runIndividual(int indID) {
 	this->usingHardware = true;
 
 	// Write translated image to SLM boards, assumes there are at least as many boards as populations
-	// Multi SLM engaged -> should write to every board (popCount = # of boards)
-	// Single SLM -> should only write to board 0 (popCount = 1)
+		// Multi SLM engaged -> should write to every board (popCount = # of boards)
+		// Single SLM -> should only write to board 0 (popCount = 1)
 	for (int i = 0; i < this->popCount; i++) {
 		// Scale the individual genome to fit SLM
 		this->scalers[i]->TranslateImage(this->population[i]->getGenome(indID), this->slmScaledImages[i]); // Translate the vector genome into char array image
 		// Write to SLM
-		this->sc->blink_sdk->Write_image(i+1, this->slmScaledImages[i], sc->getBoardHeight(i), false, false, 0);
+		this->sc->writeImageToBoard(i, this->slmScaledImages[i]);
 	}
 
 	// Acquire images // - take image

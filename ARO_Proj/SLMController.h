@@ -86,6 +86,14 @@ public:
 	void setBoardPower(bool isOn);
 
 	void SetMainDlg(MainDialog* dlg_) { dlg = dlg_; }
+
+	// Write an image to a board
+	// Input:
+	//		slmNum - index for which board (0 based index)
+	//		image - pointer to array of image to assign to board
+	// Output: Write image to board at slmNum, using that board's height for the image size
+	bool writeImageToBoard(int slmNum, unsigned char * image);
+
 private:
 	// [UTILITY]
 	/* AssignLUTFile:

@@ -113,12 +113,13 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 
 					this->usingHardware = true;
 
-					this->sc->blink_sdk->Write_image(boardID + 1, this->slmScaledImages[boardID], this->sc->getBoardHeight(boardID), false, false, 0);
+					this->sc->writeImageToBoard(boardID, this->slmScaledImages[boardID]);
 
 					//Acquire camera image
 					this->cc->AcquireImages(curImage, convImage);
 
 					unsigned char* camImg = static_cast<unsigned char*>(convImage->GetData());
+					this->usingHardware = false;
 					if (camImg == NULL)	{
 						Utility::printLine("ERROR: Image Acquisition has failed!");
 						continue;
@@ -127,7 +128,6 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 					if (this->displayCamImage) {
 						this->camDisplay->UpdateDisplay(camImg);
 					}
-					this->usingHardware = false;
 					// Determine fitness
 
 					double exposureTimesRatio = this->cc->GetExposureRatio();
