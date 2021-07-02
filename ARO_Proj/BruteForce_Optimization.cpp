@@ -8,8 +8,6 @@
 #include <string>
 #include <chrono>
 #include <string>
-using std::ofstream;
-using namespace cv;
 
 // TODO: Debug refactored/multi-SLM setup
 
@@ -26,10 +24,10 @@ bool BruteForce_Optimization::runOptimization() {
 		return false;
 	}
 	// Creating displays if desired
-	if (displayCamImage) {
+	if (this->displayCamImage) {
 		this->camDisplay->OpenDisplay();
 	}
-	if (displaySLMImage) {
+	if (this->displaySLMImage) {
 		this->slmDisplay->OpenDisplay();
 	}
 
@@ -107,7 +105,7 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 					//Acquire camera image
 					this->cc->AcquireImages(curImage);
 
-					unsigned char* camImg = static_cast<unsigned char*>(curImage->getRawData());
+					unsigned char* camImg = curImage->getRawData<unsigned char>();
 					this->usingHardware = false;
 					if (camImg == NULL)	{
 						Utility::printLine("ERROR: Image Acquisition has failed!");
@@ -232,8 +230,8 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 	tfile2.close();
 
 	// Save how final optimization looks through camera
-	unsigned char* camImg = static_cast<unsigned char*>(this->bestImage->getRawData());
-	Mat Opt_ary = Mat(int(this->bestImage->getHeight()), int(this->bestImage->getWidth()), CV_8UC1, camImg);
+	unsigned char* camImg = this->bestImage->getRawData<unsigned char>();
+	cv::Mat Opt_ary = cv::Mat(this->bestImage->getHeight(), this->bestImage->getWidth(), CV_8UC1, camImg);
 	cv::imwrite("logs/" + curTime + "_OPT5_Optimized.bmp", Opt_ary);
 
 	this->lmaxfile.close();
@@ -264,7 +262,7 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 	//Record the final (most fit) slm images followed by deleting them
 	for (int i = int(this->finalImages_.size())-1; i >= 0; i--) {
 		// Save image
-		Mat m_ary = Mat(512, 512, CV_8UC1, this->finalImages_[i]);
+		cv::Mat m_ary = cv::Mat(512, 512, CV_8UC1, this->finalImages_[i]);
 		cv::imwrite("logs/" + curTime + "_OPT5_phaseopt.bmp", m_ary);
 
 		delete[] this->finalImages_[i]; // deallocate then

@@ -11,6 +11,7 @@
 #include "stdafx.h"				// Required in source
 #include "resource.h"
 #include "MainDialog.h"			// Header file for dialog functions
+#include <iostream>				// for cout.clear()
 
 // - Aglogrithm Related
 #include "uGA_Optimization.h"
@@ -19,11 +20,8 @@
 
 //	- Helper
 #include "Utility.h"			// Collection of static helper functions
-#include "CamDisplay.h"			//
 #include "SLMController.h"		// Wrapper for SLM control
 #include "CameraController.h"	// Spinnaker Camera interface wrapper
-#include "Blink_SDK.h"			// SLM SDK functions
-#include "SLM_Board.h"
 
 //[NAMESPACES]
 using namespace cv;

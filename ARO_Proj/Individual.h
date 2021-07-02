@@ -7,7 +7,7 @@
 
 #ifndef INDIVIDUAL_H_
 #define INDIVIDUAL_H_
-#include "BetterRandom.h"
+
 #include <vector>
 
 template <class T>

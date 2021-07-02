@@ -5,10 +5,9 @@
 #include "SpinGenApi\SpinnakerGenApi.h"
 using namespace Spinnaker;
 using namespace Spinnaker::GenApi;
-using namespace Spinnaker::GenICam;
 
-// Class to encaspsulate interactions with Image data and current SDK
-//		(this is so that optimization classes aren't relying on SDK specific behaviors)
+// Class to encaspsulate interactions required to accessing image data and current SDK
+//		(this is so that optimization classes aren't relying on an SDK's specific behaviors)
 class ImageController {
 private:
 	ImagePtr image_; // Pointer to Image in Spinnaker SDK
@@ -19,14 +18,15 @@ public:
 		this->image_ = Image::Create();
 		this->image_->DeepCopy(setImage);
 	}
-
+	// Desturctor - release the image information from buffer
 	~ImageController() {
 		this->image_->Release();
 	}
 
-	// Returns data associated with the image
-	void * getRawData() {
-		return this->~ImageController->GetData();
+	// Returns pointer to data associated with the image
+	template <typename T>
+	T * getRawData() {
+		return static_cast<T>(this->~ImageController->GetData());
 	}
 
 	// Return width of the Image

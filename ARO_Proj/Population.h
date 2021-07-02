@@ -4,6 +4,7 @@
 ////////////////////
 #ifndef POPULATION_H_
 #define POPULATION_H_
+
 #include "Individual.h"
 #include "BetterRandom.h"	// Randomizer in generateRandomImage() & Crossover()
 #include "Utility.h"		// For printLine() & rejoinClear()

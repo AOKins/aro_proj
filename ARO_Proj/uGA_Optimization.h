@@ -6,11 +6,7 @@
 #define UGA_OPTIMIZATION_H_
 
 #include "Optimization.h"
-
 #include "uGA_Population.h"
-#include "MainDialog.h"
-#include "CameraController.h"
-#include "SLMController.h"
 
 class uGA_Optimization : public Optimization {
 	// Method to setup specific properties runOptimziation() instance

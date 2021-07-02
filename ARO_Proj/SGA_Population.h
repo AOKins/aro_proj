@@ -6,7 +6,6 @@
 #define SGAPOPULATION_H_
 
 #include "Population.h"
-#include "BetterRandom.h"
 
 template <class T>
 class SGAPopulation : public Population<T> {

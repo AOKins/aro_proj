@@ -119,7 +119,7 @@ bool SGA_Optimization::runIndividual(int indID) {
 	// Getting the image dimensions and data from resulting image
 	int imgWidth = curImage->getWidth();
 	int imgHeight = curImage->getHeight();
-	unsigned char * camImg = static_cast<unsigned char*>(curImage->getRawData());
+	unsigned char * camImg = curImage->getRawData<unsigned char>();
 
 	// Giving error and ends early if there is no data
 	if (camImg == NULL) { // TODO: I think this is dangerous as Individual does not have default fitness if left unevaluated
@@ -262,7 +262,7 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	// Only save images if not aborting (successful results)
 	if (dlg.stopFlag == false) {
 		// Get elite info
-		unsigned char* eliteImage = static_cast<unsigned char*>(this->bestImage->getRawData());
+		unsigned char* eliteImage = this->bestImage->getRawData<unsigned char>();
 		int imgHeight = this->bestImage->getHeight();
 		int imgWidth = this->bestImage->getWidth();
 

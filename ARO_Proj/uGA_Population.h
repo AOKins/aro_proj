@@ -4,8 +4,7 @@
 ////////////////////
 #ifndef UGAPOPULATION_H_
 #define UGAPOPULATION_H_
-#include "Population.h" // Using std::thread
-#include "BetterRandom.h"
+#include "Population.h"
 
 template <class T>
 class uGAPopulation : public Population<T> {

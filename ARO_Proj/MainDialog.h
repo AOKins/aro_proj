@@ -16,8 +16,6 @@
 #include "AOIControlDialog.h"
 #include "afxcmn.h"
 
-#include <string>
-
 class MainDialog : public CDialog {
 public:
 	// [GLOBAL PARAMETERS]
