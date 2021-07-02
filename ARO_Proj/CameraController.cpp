@@ -2,8 +2,6 @@
 #include "CameraController.h"	// Header file
 #include "Utility.h"
 
-using std::ostringstream;
-
 // [CONSTRUCTOR(S)]
 CameraController::CameraController(MainDialog& dlg_) : dlg(dlg_) {
 	//Camera access
@@ -126,23 +124,20 @@ bool CameraController::shutdownCamera() {
 // Input: curImage - image pointer to save
 //		  path - string to where and name of the image is to be saved
 // Output: curImage is saved at path
-bool CameraController::saveImage(ImagePtr& curImage, std::string path) {
-	if (!curImage.IsValid()) {
+bool CameraController::saveImage(ImageController * curImage, std::string path) {
+	if (!curImage == NULL) {
 		Utility::printLine("ERROR: save image given is invalid!");
 		return false;
 	}
-	ostringstream filename;
-	filename << path;//"logs/UGA_Gen_" << curGen << "_Elite.jpg";
-	curImage->Save(filename.str().c_str());
 	return true;
 }
 
 //AcquireImages: get one image from the camera
-void CameraController::AcquireImages(ImagePtr& curImage, ImagePtr& convertedImage) {
+void CameraController::AcquireImages(ImageController * outImage) {
 	// convertedImage = Image::Create();
 	try {
 		// Retrieve next received image
-		curImage = cam->GetNextImage();
+		ImagePtr curImage = cam->GetNextImage();
 
 		// Ensure image completion
 		if (curImage->IsIncomplete()) {
@@ -150,11 +145,14 @@ void CameraController::AcquireImages(ImagePtr& curImage, ImagePtr& convertedImag
 			Utility::printLine("ERROR: Image incomplete: " + std::string(Image::GetImageStatusDescription(curImage->GetImageStatus())));
 		}
 		//Print The dimensions of the image (should be XX by YY)
-		//Utility::printLine("Current Image Dimensions : " + std::to_string(pResultImage->GetWidth()) + " by " + std::to_string(pResultImage->GetHeight()));
-
+		
 		//copy image to pImage pointer
-		convertedImage = curImage->Convert(PixelFormat_Mono8); // TODO try see if there is any performance gain if use -> , HQ_LINEAR);
+		ImagePtr convertedImage = curImage->Convert(PixelFormat_Mono8); // TODO try see if there is any performance gain if use -> , HQ_LINEAR);
 
+		// Assign the output image to outImage
+		outImage = new ImageController(convertedImage);
+		// Release from the buffer
+		curImage->Release();
 	}
 	catch (Spinnaker::Exception &e) {
 		Utility::printLine("ERROR: " + std::string(e.what()));

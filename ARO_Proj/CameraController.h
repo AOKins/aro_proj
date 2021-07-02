@@ -9,6 +9,7 @@ using namespace Spinnaker;
 using namespace Spinnaker::GenApi;
 using namespace Spinnaker::GenICam;
 
+#include "ImageController.h"	// For wrapping the input/output of image data
 #include "MainDialog.h"
 
 class CameraController {
@@ -53,8 +54,8 @@ public:
 
 	bool setupCamera();
 	bool startCamera();
-	bool saveImage(ImagePtr& curImage, std::string curGen);
-	void AcquireImages(ImagePtr& curImage, ImagePtr& convertedImage);
+	bool saveImage(ImageController * curImage, std::string curGen);
+	void AcquireImages(ImageController * outImage);
 	bool stopCamera();
 	bool shutdownCamera();
 

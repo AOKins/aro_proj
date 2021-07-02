@@ -7,8 +7,8 @@ using namespace Spinnaker;
 using namespace Spinnaker::GenApi;
 using namespace Spinnaker::GenICam;
 
-// Class to encaspsulate interactions with Image data and SDK
-//		This is so that Optimization classes don't aren't relying on SDK specific behaviors 
+// Class to encaspsulate interactions with Image data and current SDK
+//		(this is so that optimization classes aren't relying on SDK specific behaviors)
 class ImageController {
 private:
 	ImagePtr image_; // Pointer to Image in Spinnaker SDK
@@ -37,6 +37,10 @@ public:
 	// Return height of the image
 	int getHeight() {
 		return int(this->image_->GetHeight());
+	}
+
+	void saveImage(std::string path) {
+		this->image_->saveImage(path.c_str());
 	}
 };
 

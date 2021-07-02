@@ -8,18 +8,13 @@
 #include <thread> // For ind_threads used in runOptimization
 #include <mutex>  // Mutexes to protect identified critical sections
 
-#include "Spinnaker.h"
-#include "SpinGenApi\SpinnakerGenApi.h"
-using namespace Spinnaker;
-using namespace Spinnaker::GenApi;
-using namespace Spinnaker::GenICam;
-
 #include "MainDialog.h"			// used for UI reference
 #include "CameraController.h"	// pointer to access custom interface with camera
 #include "SLMController.h"		// pointer to access custom interface with slm
 #include "Utility.h"			// used for debug statements
 #include "Timing.h"				// contains time keeping functions
 #include "ImageScaler.h"		// changes size of image to fit slm
+#include "CamDisplay.h"
 
 class Optimization {
 protected:
@@ -57,7 +52,7 @@ protected:
 	int curr_gen;				// Current generation being evaluated (start at 0)
 	TimeStampGenerator * timestamp; // Timer to track and store elapsed time as the algorithm executes
 
-	ImagePtr bestImage; // Current camera image found to have best resulting fitness from elite individuals
+	ImageController * bestImage; // Current camera image found to have best resulting fitness from elite individuals
 	std::vector<ImageScaler*> scalers; // Image scalers for each SLM (each SLM may have different dimensions so can't have just one)
 	std::vector<unsigned char*> slmScaledImages; // To easily store the scaled images from individual to what will be written
 	// Output debug streams // TODO at finished state may seek to change/remove these to improve performance while running

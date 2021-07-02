@@ -5,17 +5,6 @@
 #include "stdafx.h"						// Required in source
 #include "BruteForce_Optimization.h"	// Header file
 
-#include "Utility.h"
-#include "Timing.h"
-#include "CamDisplay.h"
-
-#include "MainDialog.h"
-#include "SLMController.h"
-#include "ImageScaler.h"
-#include "CameraController.h"
-#include "Blink_SDK.h"
-#include "SLM_Board.h"
-
 #include <string>
 #include <chrono>
 #include <string>
@@ -103,7 +92,7 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 
 				// Find max phase for this bin
 				for (int curBinVal = 0; curBinVal< 256; curBinVal += dphi) {
-					ImagePtr curImage, convImage;
+					ImageController * curImage;
 
 					// Assign at current bin the new value to test
 					slmImg[binIndex] = curBinVal;
@@ -116,9 +105,9 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 					this->sc->writeImageToBoard(boardID, this->slmScaledImages[boardID]);
 
 					//Acquire camera image
-					this->cc->AcquireImages(curImage, convImage);
+					this->cc->AcquireImages(curImage);
 
-					unsigned char* camImg = static_cast<unsigned char*>(convImage->GetData());
+					unsigned char* camImg = static_cast<unsigned char*>(curImage->getRawData());
 					this->usingHardware = false;
 					if (camImg == NULL)	{
 						Utility::printLine("ERROR: Image Acquisition has failed!");
@@ -131,7 +120,7 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 					// Determine fitness
 
 					double exposureTimesRatio = this->cc->GetExposureRatio();
-					double fitness = Utility::FindAverageValue(camImg, convImage->GetWidth(), curImage->GetHeight(), this->cc->targetRadius);
+					double fitness = Utility::FindAverageValue(camImg, curImage->getWidth(), curImage->getHeight(), this->cc->targetRadius);
 
 					//Record current performance to file //Ask what kind of calcualtion is this?
 					double ms = boardID*dphi + curBinVal / dphi;
@@ -142,18 +131,9 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 					if (fitness * exposureTimesRatio > fitValMax) {
 						binValMax = curBinVal;
 						fitValMax = fitness * exposureTimesRatio;
-						this->bestImage->DeepCopy(convImage);
 					}
 					if (fitValMax > this->allTimeBestFitness) {
-						this->bestImage->DeepCopy(convImage);
-
-					}
-					try {
-						curImage->Release(); //important to not fill camera buffer
-					}
-					catch (Spinnaker::Exception &e) {
-						Utility::printLine("WARNING: Error in image release");
-						Utility::printLine(e.what());
+						this->bestImage = curImage;
 
 					}
 					// Halve the exposure time if over max fitness allowed
@@ -162,6 +142,9 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 					}
 
 					endOpt = dlg.stopFlag;
+					if (curImage != this->bestImage) {
+						delete curImage;
+					}
 
 				}  // ... curBinVal loop
 
@@ -181,7 +164,7 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 		this->finalImages_.push_back(slmImg);
 		slmImg = NULL;
 	}
-	catch (Spinnaker::Exception &e) {
+	catch (std::exception &e) {
 		Utility::printLine("ERROR: OPT5 ran into issue with board #" + std::to_string(boardID));
 		Utility::printLine(std::string(e.what()));
 		return false;
@@ -200,7 +183,6 @@ bool BruteForce_Optimization::setupInstanceVariables() {
 		this->dualEnable_ = true;
 	}
 
-
 	this->cc->startCamera(); // setup camera
 
 	this->tfile.open("logs/Opt_functionEvals_vs_fitness.txt", std::ios::app);
@@ -209,8 +191,6 @@ bool BruteForce_Optimization::setupInstanceVariables() {
 	// Setup displays
 	this->camDisplay = new CameraDisplay(this->cc->cameraImageHeight, this->cc->cameraImageWidth, "Camera Display");
 	this->slmDisplay = new CameraDisplay(this->sc->getBoardHeight(0), this->sc->getBoardWidth(0), "SLM Display");
-	// Setup container for best image
-	this->bestImage = Image::Create();
 
 	// Scaler Setup (using base class)
 	this->slmScaledImages.clear();
@@ -252,8 +232,8 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 	tfile2.close();
 
 	// Save how final optimization looks through camera
-	unsigned char* camImg = static_cast<unsigned char*>(this->bestImage->GetData());
-	Mat Opt_ary = Mat(int(this->bestImage->GetHeight()), int(this->bestImage->GetWidth()), CV_8UC1, camImg);
+	unsigned char* camImg = static_cast<unsigned char*>(this->bestImage->getRawData());
+	Mat Opt_ary = Mat(int(this->bestImage->getHeight()), int(this->bestImage->getWidth()), CV_8UC1, camImg);
 	cv::imwrite("logs/" + curTime + "_OPT5_Optimized.bmp", Opt_ary);
 
 	this->lmaxfile.close();
@@ -291,11 +271,11 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 		this->finalImages_.pop_back();  // remove from vector
 	}
 	this->finalImages_.clear();
-	
+	delete this->bestImage;
+
 	//Reset UI State
 	this->isWorking = false;
 	this->dlg.disableMainUI(!isWorking);
-
 	return true;
 }
 

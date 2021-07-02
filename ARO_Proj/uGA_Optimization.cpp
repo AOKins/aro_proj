@@ -10,12 +10,7 @@
 #include "Timing.h"
 #include "CamDisplay.h"
 
-#include "MainDialog.h"
-#include "SLMController.h"
-#include "CameraController.h"
-#include "ImageScaler.h"
 #include "Blink_SDK.h"
-#include "SLM_Board.h"
 
 #include <cstdlib>
 #include <chrono>
@@ -75,7 +70,7 @@ bool uGA_Optimization::runOptimization() {
 			Utility::printLine("WARNING: Failure to properly end optimization instance!");
 		}
 	}
-	catch (Spinnaker::Exception &e) {
+	catch (std::exception &e) {
 		Utility::printLine("ERROR: " + string(e.what()));
 		return false;
 	}
@@ -93,12 +88,7 @@ bool uGA_Optimization::runOptimization() {
 //     shortenExposureFlag is set to true if fitness value is high enough
 //     stopConditionsMetFlag is set to true if conditions met
 bool uGA_Optimization::runIndividual(int indID) {
-	// Local scoped ImagePtr's as we are only concerned with this individual
-	// Image pointers to the image from the Camera's buffer
-	ImagePtr convImage, curImage;
-	// Image pointer to copy from the camera buffer and seperate before release lock from hardware
-	ImagePtr thisImage = Image::Create();
-	ImagePtr thisImageConvert = Image::Create();
+	ImageController * curImage;
 
 	std::unique_lock<std::mutex>  consoleLock(consoleMutex, std::defer_lock);
 	std::unique_lock<std::mutex> hardwareLock(hardwareMutex, std::defer_lock);
@@ -128,27 +118,15 @@ bool uGA_Optimization::runIndividual(int indID) {
 	}
 
 	// Acquire images // - take image
-	this->cc->AcquireImages(curImage, convImage);
-	// DeepCopy before removing from camera buffer
-	thisImage->DeepCopy(curImage);
-	thisImageConvert->DeepCopy(convImage);
+	this->cc->AcquireImages(curImage);
 
-	try {
-		curImage->Release(); //important to not fill camera buffer
-	}
-	catch (Spinnaker::Exception &e) {
-		consoleLock.lock();
-		Utility::printLine("WARNING: current image release failed. no need to release image at this point\n");
-		Utility::printLine(e.what());
-		consoleLock.unlock();
-	}
 	this->usingHardware = false;
 	hardwareLock.unlock(); // Now done with the hardware
 
 	// Getting the image dimensions and data from resulting image
-	size_t imgWidth = thisImageConvert->GetWidth();
-	size_t imgHeight = thisImageConvert->GetHeight();
-	unsigned char * camImg = static_cast<unsigned char*>(thisImageConvert->GetData());
+	int imgWidth = curImage->getWidth();
+	int imgHeight = curImage->getHeight();
+	unsigned char * camImg = static_cast<unsigned char*>(curImage->getRawData());
 
 	// Giving error and ends early if there is no data
 	if (camImg == NULL) { // TODO: I think this is dangerous as Individual does not have default fitness if left unevaluated
@@ -185,12 +163,12 @@ bool uGA_Optimization::runIndividual(int indID) {
 		tFileLock.unlock();
 		if (saveImages) {
 			std::string imgFilePath = "logs/UGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite.jpg";
-			cc->saveImage(thisImageConvert, imgFilePath);
+			cc->saveImage(curImage, imgFilePath);
 		}
 		// Also save the image as current best
 		std::unique_lock<std::mutex> imageLock(imageMutex, std::defer_lock);
 		imageLock.lock();
-		this->bestImage->DeepCopy(thisImageConvert);
+		this->bestImage = curImage;
 		imageLock.unlock();
 	}
 
@@ -210,6 +188,11 @@ bool uGA_Optimization::runIndividual(int indID) {
 		this->shortenExposureFlag = true;
 		expsureFlagLock.unlock();
 	}
+	// If the pointer to current image does not also point to the best image we are safe to delete
+	if (curImage != bestImage) {
+		delete curImage;
+	}
+
 	return true;
 }
 
@@ -231,8 +214,6 @@ bool uGA_Optimization::setupInstanceVariables() {
 	else {
 		this->popCount = 1;
 	}
-	// Setting up bestImage
-	this->bestImage = Image::Create();
 
 	// Setting population vector
 	this->population.clear();
@@ -288,9 +269,9 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 	// Only save images if not aborting (successful results
 	if (dlg.stopFlag == false) {
 		// Get elite info
-		unsigned char* eliteImage = static_cast<unsigned char*>(this->bestImage->GetData());
-		size_t imgHeight = this->bestImage->GetHeight();
-		size_t imgWidth = this->bestImage->GetWidth();
+		unsigned char* eliteImage = static_cast<unsigned char*>(this->bestImage->getRawData());
+		int imgHeight = this->bestImage->getHeight();
+		int imgWidth = this->bestImage->getWidth();
 
 		// Save how final optimization looks through camera
 		Mat Opt_ary = Mat(int(imgHeight), int(imgWidth), CV_8UC1, eliteImage);
