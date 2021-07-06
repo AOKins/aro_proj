@@ -36,7 +36,7 @@ namespace Utility {
 	* @param width -> the width of the image in pixels
 	* @param height -> the height of the image in pixels
 	* @return -> the average intensity within weight from target */
-	double FindAverageValue(unsigned char *Image, int* target, int width, int height);
+	double FindAverageValue(void *Image, int* target, int width, int height);
 
 	//////////////////////////////////////////////////
 	//
@@ -55,7 +55,7 @@ namespace Utility {
 	//   Modifications:
 	//
 	//////////////////////////////////////////////////
-	double FindAverageValue(unsigned char *Image, int width, int height, int r);
+	double FindAverageValue(void  *Image, int width, int height, int r);
 
 	/* GenerateTargetMatrix_SinglePoint: create an image of a single centered dot
 	* @param target - where it's saved

@@ -116,6 +116,9 @@ BOOL MainDialog::OnInitDialog() {
 	m_aoiControlDlg.Create(IDD_AOI_CONTROL, &m_TabControl);
 	m_aoiControlDlg.SetWindowPos(NULL, rect.top + 5, rect.left + 30, rect.Width() - 10, rect.Height() - 35, SWP_HIDEWINDOW | SWP_NOZORDER);
 
+	m_outputControlDlg.Create(IDD_OUTPUT_CONTROL, &m_TabControl);
+	m_outputControlDlg.SetWindowPos(NULL, rect.top + 5, rect.left + 30, rect.Width() - 10, rect.Height() - 35, SWP_HIDEWINDOW | SWP_NOZORDER);
+
 
 	//[SET UI DEFAULTS]
 	// - get reference to slm controller
@@ -192,6 +195,13 @@ void MainDialog::setDefaultUI() {
 
 	this->m_slmControlDlg.populateSLMlist(); // Simple method to setup the list of selections
 
+	// Output controls
+		// Default to saving images
+	this->m_outputControlDlg.m_SaveImagesCheck.SetCheck(BST_CHECKED);
+		// Default to displaying camera
+	this->m_outputControlDlg.m_displayCameraCheck.SetCheck(BST_CHECKED);
+		// Default to not displaying SLM
+	this->m_outputControlDlg.m_displaySLM.SetCheck(BST_UNCHECKED);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -452,14 +462,14 @@ UINT __cdecl optThreadMethod(LPVOID instance) {
 		Utility::printLine("ERROR: Optimization failed!");
 		MessageBox(NULL, (LPCWSTR)L"Error!", (LPCWSTR)L"An error has occurred while running the optimization.", MB_ICONERROR | MB_OK);
 	}
-	// Setting that we are no longer running an optimization
-	dlg->running_optimization_ = false;
 	// Change label of this button to START now that the optimization is over
 	dlg->m_StartStopButton.SetWindowTextW(L"Start Optimization");
-
 	// Update UI
 	dlg->disableMainUI(true);
+
 	Utility::printLine("INFO: End of worker optimization thread!");
+	// Setting that we are no longer running an optimization
+	dlg->running_optimization_ = false;
 	return 0;
 }
 
@@ -594,7 +604,7 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 		}
 	}
 	// TODO: More error handling and inform if there are issues or discrepencies (such as not setting all the SLMs or trying to write to one that is not connected)
-	//		Also may need to add more robust form of getting boardID (rn assumes that there are at most 9 boards, anymore will lead to issues)
+	//		Also may need to add more robust form of getting boardID (rn assumes that there are at most 9 boards, anymore will lead to issues!)
 	else if (name.substr(0, 14) == "slmLutFilePath") {
 		// We are dealing with LUT file setting
 		int boardID = std::stoi(name.substr(14, 1)) - 1;
@@ -628,7 +638,7 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 		}
 	}
 
-	if (name == "phaseCompensation") {
+	else if (name == "phaseCompensation") {
 		if (value == "true") {
 			this->m_slmControlDlg.m_CompensatePhaseCheckbox.SetCheck(BST_CHECKED);
 			this->m_slmControlDlg.m_CompensatePhase = true;
@@ -636,6 +646,40 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 		else {
 			this->m_slmControlDlg.m_CompensatePhaseCheckbox.SetCheck(BST_UNCHECKED);
 			this->m_slmControlDlg.m_CompensatePhase = false;
+		}
+	}
+
+	// Output Controls Dialog variables
+	else if (name == "saveImage") {
+		if (value == "true") {
+			this->m_outputControlDlg.m_SaveImagesCheck.SetCheck(BST_CHECKED);
+		}
+		else {
+			this->m_outputControlDlg.m_SaveImagesCheck.SetCheck(BST_UNCHECKED);
+		}
+	}
+	else if (name == "displayCamera") {
+		if (value == "true") {
+			this->m_outputControlDlg.m_displayCameraCheck.SetCheck(BST_CHECKED);
+		}
+		else {
+			this->m_outputControlDlg.m_displayCameraCheck.SetCheck(BST_UNCHECKED);
+		}
+	}
+	else if (name == "displaySLM") {
+		if (value == "true") {
+			this->m_outputControlDlg.m_displaySLM.SetCheck(BST_CHECKED);
+		}
+		else {
+			this->m_outputControlDlg.m_displaySLM.SetCheck(BST_UNCHECKED);
+		}
+	}
+	else if (name == "logFilesEnable") {
+		if (value == "true") {
+			this->m_outputControlDlg.m_logFilesCheck.SetCheck(BST_CHECKED);
+		}
+		else {
+			this->m_outputControlDlg.m_logFilesCheck.SetCheck(BST_UNCHECKED);
 		}
 	}
 
@@ -755,6 +799,37 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	}
 	outFile << "phaseCompensation=";
 	if (this->m_slmControlDlg.m_CompensatePhase) {
+		outFile << "true\n";
+	}
+	else {
+		outFile << "false\n";
+	}
+
+	// Output Dialog
+	outFile << "saveImage=";
+	if (this->m_outputControlDlg.m_SaveImagesCheck.GetCheck() == BST_CHECKED) {
+		outFile << "true\n";
+	}
+	else {
+		outFile << "false\n";
+	}
+
+	outFile << "displayCamera=";
+	if (this->m_outputControlDlg.m_displayCameraCheck.GetCheck() == BST_CHECKED) {
+		outFile << "true\n";
+	}
+	else {
+		outFile << "false\n";
+	}
+	outFile << "displaySLM=";
+	if (this->m_outputControlDlg.m_displaySLM.GetCheck() == BST_CHECKED) {
+		outFile << "true\n";
+	}
+	else {
+		outFile << "false\n";
+	}
+	outFile << "logFilesEnable=";
+	if (this->m_outputControlDlg.m_logFilesCheck.GetCheck() == BST_CHECKED) {
 		outFile << "true\n";
 	}
 	else {

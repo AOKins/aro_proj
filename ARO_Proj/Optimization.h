@@ -36,6 +36,7 @@ protected:
 	bool saveImages = false;		// TRUE -> save images of the fittest individual of each gen
 	bool displayCamImage = true;    // TRUE -> opens a window showing the camera image
 	bool displaySLMImage = false;   // TODO: only first SLM right now - add functionality to display any or all boards
+	bool loggingFilesEnable = true; // TRUE -> output various logging files to record performance
 
 	//Instance variables (used during optimization process)
 	// Values assigned within setupInstanceVariables(), then if needed cleared in shutdownOptimizationInstance()
@@ -54,7 +55,8 @@ protected:
 	ImageController * bestImage; // Current camera image found to have best resulting fitness from elite individuals
 	std::vector<ImageScaler*> scalers; // Image scalers for each SLM (each SLM may have different dimensions so can't have just one)
 	std::vector<unsigned char*> slmScaledImages; // To easily store the scaled images from individual to what will be written
-	// Output debug streams // TODO at finished state may seek to change/remove these to improve performance while running
+	
+	// Logging file streams // TODO at finished state may seek to change/remove these to improve performance while running
 	std::ofstream tfile;				// Record elite individual progress over generations
 	std::ofstream timeVsFitnessFile;	// Recoding general fitness progress
 	std::ofstream efile;				// Expsoure file to record when exposure is shortened
@@ -64,6 +66,9 @@ protected:
 	bool prepareStopConditions();
 	// Setup camera and slm controllers
 	bool prepareSoftwareHardware();
+
+	// Pull GUI settings for output settings such as save images
+	bool prepareOutputSettings();
 
 	// Creates a scaler with given SLMController
 	// Input: slmImg - array that will be storing scalled image to be initialized with 0's
@@ -85,7 +90,7 @@ protected:
 	//		time - the current time as a string label
 	//		optType - a string for identifying the kind of optimization that has been performed
 	void saveParameters(std::string time, std::string optType);
-
+	
 	// Methods relying on implementation from child classes
 	virtual bool setupInstanceVariables() = 0;		 // Setting up properties used in runOptimization()
 	virtual bool shutdownOptimizationInstance() = 0; // Cleaning up properties as well as final saving for runOptimization()

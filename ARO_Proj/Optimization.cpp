@@ -11,6 +11,8 @@ Optimization::Optimization(MainDialog& dlg_, CameraController* cc, SLMController
 	this->cc = cc;
 	this->sc = sc;
 	this->ind_threads.clear();
+	
+	prepareOutputSettings();
 }
 
 // [SETUP]
@@ -84,6 +86,38 @@ bool Optimization::prepareStopConditions() {
 		result = false;
 	}
 	return result;
+}
+
+
+bool Optimization::prepareOutputSettings() {
+	if (this->dlg.m_outputControlDlg.m_displayCameraCheck.GetCheck() == BST_CHECKED) {
+		this->displayCamImage = true;
+	}
+	else {
+		this->displayCamImage = false;
+	}
+
+	if (this->dlg.m_outputControlDlg.m_displaySLM.GetCheck() == BST_CHECKED) {
+		this->displaySLMImage = true;
+	}
+	else {
+		this->displayCamImage = false;
+	}
+
+	if (this->dlg.m_outputControlDlg.m_SaveImagesCheck.GetCheck() == BST_CHECKED) {
+		this->saveImages = true;
+	}
+	else {
+		this->saveImages = false;
+	}
+
+	if (this->dlg.m_outputControlDlg.m_logFilesCheck.GetCheck() == BST_CHECKED) {
+		this->loggingFilesEnable = true;
+	}
+	else {
+		this->loggingFilesEnable = false;
+	}
+	return true;
 }
 
 //[SETUP]

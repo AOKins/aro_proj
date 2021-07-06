@@ -84,7 +84,7 @@ std::string Utility::getCurTime() {
 * @param width -> the width of the camera image in pixels
 * @param height -> the height of the camera image in pixels
 * @return -> the average intensity within the calculated area */
-double Utility::FindAverageValue(unsigned char *Image, int* target, int width, int height) {
+double Utility::FindAverageValue(void *Image, int* target, int width, int height) {
 	cv::Mat m_ary(width, height, CV_8UC1, Image);
 	double sum = 0;
 	double area = 0;
@@ -124,7 +124,7 @@ double Utility::FindAverageValue(unsigned char *Image, int* target, int width, i
 //   Modifications: Changed from "peakvalue()," most of the stuff was cut out
 //
 //////////////////////////////////////////////////
-double Utility::FindAverageValue(unsigned char *Image, int width, int height, int r) {
+double Utility::FindAverageValue(void *Image, int width, int height, int r) {
 	int value, ll, kk, cx, cy, ymin, ymax;
 	double rdbl, sdbl, rloop, sloop, xmin, xmax, area;
 	cv::Mat m_ary = cv::Mat(height, width, CV_8UC1, Image);

@@ -15,6 +15,7 @@
 #include "SLMControlDialog.h"
 #include "CameraControlDialog.h"
 #include "AOIControlDialog.h"
+#include "OutputControlDialog.h"
 
 class SLMController;
 class CameraController;
@@ -91,6 +92,7 @@ public:
 	SLMControlDialog m_slmControlDlg;
 	CameraControlDialog m_cameraControlDlg;
 	AOIControlDialog m_aoiControlDlg;
+	OutputControlDialog m_outputControlDlg;
 
 	CWnd* m_pwndShow;
 	CTabCtrl m_TabControl;
