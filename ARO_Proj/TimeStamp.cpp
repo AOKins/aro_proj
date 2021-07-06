@@ -4,8 +4,8 @@
 #include "stdafx.h"
 #include "TimeStamp.h"
 
-#include <iomanip>
-#include <sstream>
+#include <iomanip> // setprecision
+#include <sstream> // std::ostringstream in GetLabel()
 
 //Constructor
 TimeStamp::TimeStamp(double duration, std::string label) {

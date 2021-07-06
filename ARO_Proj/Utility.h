@@ -1,6 +1,6 @@
 ////////////////////
 // Define various methods for accessible & repeatable use in a Utility namespace
-// Last edited: 06/23/2021 by Andrew O'Kins
+// Last edited: 07/06/2021 by Andrew O'Kins
 ////////////////////
 #ifndef UTILITY_H_
 #define UTILITY_H_
@@ -36,7 +36,7 @@ namespace Utility {
 	* @param width -> the width of the image in pixels
 	* @param height -> the height of the image in pixels
 	* @return -> the average intensity within weight from target */
-	double FindAverageValue(unsigned char *Image, int* target, size_t width, size_t height);
+	double FindAverageValue(unsigned char *Image, int* target, int width, int height);
 
 	//////////////////////////////////////////////////
 	//
@@ -55,7 +55,7 @@ namespace Utility {
 	//   Modifications:
 	//
 	//////////////////////////////////////////////////
-	double FindAverageValue(unsigned char *Image, size_t width, size_t height, int r);
+	double FindAverageValue(unsigned char *Image, int width, int height, int r);
 
 	/* GenerateTargetMatrix_SinglePoint: create an image of a single centered dot
 	* @param target - where it's saved

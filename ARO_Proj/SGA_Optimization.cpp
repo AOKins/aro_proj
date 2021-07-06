@@ -5,15 +5,9 @@
 #include "stdafx.h"				// Required in source
 #include "SGA_Optimization.h"	// Header file
 
-#include <cstdlib>
-#include <chrono>
-
-using namespace cv;
-
 ////
 // TODOs:	Properly Address how to handle if image acquisition failed (currently just moves on to next individual without assigning a default fitness value)
 //			send final scaled image to the SLM //ASK needed?
-//			Remove undesired file i/o once debugging is complete
 
 // Method for executing the optimization
 // Output: returns true if successful ran without error, false if error occurs
@@ -64,7 +58,7 @@ bool SGA_Optimization::runOptimization() {
 		}
 	}
 	catch (std::exception &e) {
-		Utility::printLine("ERROR: " + string(e.what()));
+		Utility::printLine("ERROR: " + std::string(e.what()));
 		return false;
 	}
 	//Reset UI State
@@ -81,7 +75,7 @@ bool SGA_Optimization::runOptimization() {
 //     shortenExposureFlag is set to true if fitness value is high enough
 //     stopConditionsMetFlag is set to true if conditions met
 bool SGA_Optimization::runIndividual(int indID) {
-	ImageController * curImage;
+	ImageController * curImage = NULL;
 
 	std::unique_lock<std::mutex>  consoleLock(consoleMutex, std::defer_lock);
 	std::unique_lock<std::mutex> hardwareLock(hardwareMutex, std::defer_lock);
@@ -110,8 +104,8 @@ bool SGA_Optimization::runIndividual(int indID) {
 		this->sc->writeImageToBoard(i, this->slmScaledImages[i]);
 	}
 
-	// Acquire images // - take image
-	this->cc->AcquireImages(curImage);
+	// Acquire image // - take image
+	curImage = this->cc->AcquireImage();
 	
 	this->usingHardware = false;
 	hardwareLock.unlock(); // Now done with the hardware
@@ -267,13 +261,13 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 		int imgWidth = this->bestImage->getWidth();
 
 		// Save how final optimization looks through camera
-		Mat Opt_ary = Mat(imgHeight, imgWidth, CV_8UC1, eliteImage);
+		cv::Mat Opt_ary = cv::Mat(imgHeight, imgWidth, CV_8UC1, eliteImage);
 		cv::imwrite("logs/" + curTime + "_SGA_Optimized.bmp", Opt_ary);
 
 		// Save final (most fit SLM images)
 		for (int popID = 0; popID < this->population.size(); popID++) {
 			scalers[popID]->TranslateImage(this->population[popID]->getGenome(this->population[popID]->getSize() - 1), this->slmScaledImages[popID]);
-			Mat m_ary = Mat(512, 512, CV_8UC1, this->slmScaledImages[popID]);
+			cv::Mat m_ary = cv::Mat(512, 512, CV_8UC1, this->slmScaledImages[popID]);
 			imwrite("logs/" + curTime + "_SGA_phaseopt_SLM" + std::to_string(popID) + ".bmp", m_ary);
 		}
 	}
@@ -291,6 +285,7 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	this->cc->stopCamera();
 	this->cc->shutdownCamera();
 	// - pointers
+	delete this->bestImage;
 	for (int i = 0; i < this->population.size(); i++) {
 		delete this->population[i];
 	}

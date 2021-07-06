@@ -3,10 +3,6 @@
 
 #include "Optimization.h"
 
-#include "MainDialog.h"
-#include "CameraController.h"
-#include "SLMController.h"
-
 class BruteForce_Optimization : public Optimization {
 	std::ofstream lmaxfile;
 	std::ofstream rtime;

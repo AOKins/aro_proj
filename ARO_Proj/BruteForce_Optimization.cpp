@@ -242,6 +242,7 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 	this->cc->shutdownCamera();
 
 	// - memory deallocation
+	delete this->bestImage;
 	this->camDisplay->CloseDisplay();
 	this->slmDisplay->CloseDisplay();
 	delete this->camDisplay;

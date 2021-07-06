@@ -3,7 +3,7 @@
 #include "resource.h"
 #include "afxwin.h"
 
-#include "SLMController.h"
+class SLMController;
 
 #include <string>
 // SLMControlDialog dialog

@@ -1,21 +1,19 @@
 // [INCUDE FILES]
 // - Required
 #include "stdafx.h"				// Required in source
-#include <string>
-#include <fstream>	// used to export information to file 
-#include "ImageScaler.h"
-#include "CameraController.h"
-#include "SLMController.h"		// Header file
-#include "SLM_Board.h"
 
 //	- External libraries
-#include "Blink_SDK.h"			// Camera functions
 #include "cdib.h"				// Used by blink to read in bitmaps
 //	- Custom classes
 #include "MainDialog.h"
+#include "ImageScaler.h"
+#include "CameraController.h"
+#include "SLMController.h"		// Header file
 
 #include "Utility.h"
 // - System libraries
+#include <string>
+#include <fstream>	// used to export information to file 
 
 SLMController::SLMController() {
 	unsigned int bits_per_pixel = 8U;			 //8 -> small SLM, 16 -> large SLM

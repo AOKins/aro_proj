@@ -5,12 +5,12 @@
 
 #include "Spinnaker.h"
 #include "SpinGenApi\SpinnakerGenApi.h"
-using namespace Spinnaker;
 using namespace Spinnaker::GenApi;
 using namespace Spinnaker::GenICam;
 
 #include "ImageController.h"	// For wrapping the input/output of image data
-#include "MainDialog.h"
+
+class MainDialog;
 
 class CameraController {
 public:
@@ -40,10 +40,10 @@ public:
 private:
 	//UI/Equipment reference
 	MainDialog& dlg;
-	//Camera access
-	SystemPtr system;
-	CameraList camList;
-	CameraPtr cam;
+	//Camera access using Spinnaker
+	Spinnaker::SystemPtr system;
+	Spinnaker::CameraList camList;
+	Spinnaker::CameraPtr cam;
 
 	//Logic control
 	bool isCamCreated = false;
@@ -55,7 +55,7 @@ public:
 	bool setupCamera();
 	bool startCamera();
 	bool saveImage(ImageController * curImage, std::string curGen);
-	void AcquireImages(ImageController * outImage);
+	ImageController* AcquireImage();
 	bool stopCamera();
 	bool shutdownCamera();
 

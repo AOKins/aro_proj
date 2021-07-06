@@ -2,7 +2,6 @@
 
 #include "resource.h"
 #include "afxwin.h"
-
 // CameraControlDialog dialog
 
 class CameraControlDialog : public CDialogEx

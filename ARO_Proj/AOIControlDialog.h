@@ -3,6 +3,8 @@
 #include "resource.h"
 #include "afxwin.h"
 
+class CameraController;
+
 // AOIControlDialog dialog
 
 class AOIControlDialog : public CDialogEx
@@ -30,7 +32,6 @@ public:
 	afx_msg void OnBnClickedCenterAoiButton();
 	CButton m_maxImageSizeBtn;
 	CButton m_centerAOIBtn;
-//	afx_msg void OnBnDoubleclickedMaxImageSizeButton();
 
 	void SetCameraController(CameraController* cc);
 
