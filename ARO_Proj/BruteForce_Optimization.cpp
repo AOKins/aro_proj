@@ -1,6 +1,6 @@
 ////////////////////
 // Optimization handler methods implementation for brute force algorithm
-// Last edited: 06/28/2021 by Andrew O'Kins
+// Last edited: 07/02/2021 by Andrew O'Kins
 ////////////////////
 #include "stdafx.h"						// Required in source
 #include "BruteForce_Optimization.h"	// Header file

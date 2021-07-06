@@ -99,6 +99,9 @@
     <ClInclude Include="ImageController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="OutputControlDialog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AOIControlDialog.cpp">
