@@ -7,6 +7,7 @@
 // [INCUDE FILES]
 #include "afxwin.h"
 #include "afxdialogex.h"
+#include "afxcmn.h"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -14,7 +15,9 @@
 #include "SLMControlDialog.h"
 #include "CameraControlDialog.h"
 #include "AOIControlDialog.h"
-#include "afxcmn.h"
+
+class SLMController;
+class CameraController;
 
 class MainDialog : public CDialog {
 public:

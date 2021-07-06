@@ -56,7 +56,7 @@ public:
 				j++;
 				temp_sum += this->individuals_[j].fitness();
 			}
-			vector<T> * parent1 = this->individuals_[j].genome();
+			std::vector<T> * parent1 = this->individuals_[j].genome();
 
 			// Select second parent with fitness proportionate selection and store associated genome into temp_image2
 			selected = parent_selector() / divisor;
@@ -66,7 +66,7 @@ public:
 				j++;
 				temp_sum += this->individuals_[j].fitness();
 			}
-			vector<T> * parent2 = this->individuals_[j].genome();
+			std::vector<T> * parent2 = this->individuals_[j].genome();
 
 			// perform crossover with mutation
 			temp[i].set_genome(Crossover(parent1, parent2, same_check[i], true));
@@ -118,7 +118,7 @@ public:
 		// Assign new population to individuals_
 		delete[] this->individuals_;
 		this->individuals_ = temp;
-
+		delete[] sorted_temp;
 		return true; // No issues!
 	}	// ... Function nextGeneration
 }; // ... class SGAPopulation

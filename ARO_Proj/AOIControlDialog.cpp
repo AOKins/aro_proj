@@ -2,10 +2,10 @@
 //
 
 #include "stdafx.h"
-#include "Utility.h"
+#include "afxdialogex.h"
 #include "CameraController.h"
 #include "AOIControlDialog.h"
-#include "afxdialogex.h"
+#include "Utility.h"
 
 #include <string>
 
@@ -52,7 +52,7 @@ void AOIControlDialog::OnBnClickedCenterAoiButton()
 	int centerX;
 	int centerY;
 
-	if (cc != nullptr)
+	if (this->cc != nullptr)
 	{
 		if (!cc->GetCenter(centerX, centerY))
 			Utility::printLine("ERROR: Cannot retrieve the center information for camera controller!");

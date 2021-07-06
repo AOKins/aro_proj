@@ -4,14 +4,13 @@
 #include <string> // used in saveParameters()
 #include <fstream>// used to export information to file for debugging
 #include <vector> // For managing ind_threads
-
+#include <chrono> // Will be used for tracking time elapsed during optimizations
 #include <thread> // For ind_threads used in runOptimization
 #include <mutex>  // Mutexes to protect identified critical sections
 
 #include "MainDialog.h"			// used for UI reference
 #include "CameraController.h"	// pointer to access custom interface with camera
 #include "SLMController.h"		// pointer to access custom interface with slm
-#include "Utility.h"			// used for debug statements
 #include "Timing.h"				// contains time keeping functions
 #include "ImageScaler.h"		// changes size of image to fit slm
 #include "CamDisplay.h"

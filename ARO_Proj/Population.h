@@ -10,6 +10,7 @@
 #include "Utility.h"		// For printLine() & rejoinClear()
 
 #include <thread>			// For ind_threads and multithreaded behavior
+#include <vector>
 
 template <class T>
 class Population {

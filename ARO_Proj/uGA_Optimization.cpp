@@ -1,21 +1,9 @@
 ////////////////////
 // Optimization handler methods implementation for micro-genetic algorithm
-// Last edited: 06/24/2021 by Andrew O'Kins
+// Last edited: 07/06/2021 by Andrew O'Kins
 ////////////////////
 #include "stdafx.h"				// Required in source
 #include "uGA_Optimization.h"	// Header file
-#include "uGA_Population.h"
-
-#include "Utility.h"
-#include "Timing.h"
-#include "CamDisplay.h"
-
-#include "Blink_SDK.h"
-
-#include <cstdlib>
-#include <chrono>
-
-using namespace cv;
 
 ////
 // TODOs:	Properly Address how to handle if image acquisition failed (currently just moves on to next individual without assigning a default fitness value)
@@ -51,7 +39,8 @@ bool uGA_Optimization::runOptimization() {
 			Utility::rejoinClear(this->ind_threads);
 			// Perform GA crossover/breeding to produce next generation
 			for (int popID = 0; popID < population.size(); popID++) {
-				this->ind_threads.push_back(std::thread([this](int popID) {population[popID]->nextGeneration(); }, popID));
+				this->ind_threads.push_back(std::thread([this](int popID) {this->population[popID]->nextGeneration(); }, popID));
+				//this->population[popID]->nextGeneration();
 			}
 			Utility::rejoinClear(this->ind_threads);
 
@@ -71,7 +60,7 @@ bool uGA_Optimization::runOptimization() {
 		}
 	}
 	catch (std::exception &e) {
-		Utility::printLine("ERROR: " + string(e.what()));
+		Utility::printLine("ERROR: " + std::string(e.what()));
 		return false;
 	}
 	//Reset UI State
@@ -88,7 +77,7 @@ bool uGA_Optimization::runOptimization() {
 //     shortenExposureFlag is set to true if fitness value is high enough
 //     stopConditionsMetFlag is set to true if conditions met
 bool uGA_Optimization::runIndividual(int indID) {
-	ImageController * curImage;
+	ImageController * curImage = NULL;
 
 	std::unique_lock<std::mutex>  consoleLock(consoleMutex, std::defer_lock);
 	std::unique_lock<std::mutex> hardwareLock(hardwareMutex, std::defer_lock);
@@ -117,25 +106,25 @@ bool uGA_Optimization::runIndividual(int indID) {
 		this->sc->writeImageToBoard(i, this->slmScaledImages[i]);
 	}
 
-	// Acquire images // - take image
-	this->cc->AcquireImages(curImage);
+	// Acquire image // - take image
+	curImage = this->cc->AcquireImage();
 
 	this->usingHardware = false;
 	hardwareLock.unlock(); // Now done with the hardware
 
-	// Getting the image dimensions and data from resulting image
-	int imgWidth = curImage->getWidth();
-	int imgHeight = curImage->getHeight();
-	unsigned char * camImg = curImage->getRawData<unsigned char>();
-
 	// Giving error and ends early if there is no data
-	if (camImg == NULL) { // TODO: I think this is dangerous as Individual does not have default fitness if left unevaluated
+	if (curImage == NULL) { // TODO: I think this is dangerous as Individual does not have default fitness if left unevaluated
 		consoleLock.lock();
 		Utility::printLine("ERROR: Image Acquisition has failed!");
 		consoleLock.unlock();
 		return false;
 	}
 
+	// Getting the image dimensions and data from resulting image
+	int imgWidth = curImage->getWidth();
+	int imgHeight = curImage->getHeight();
+	unsigned char * camImg = curImage->getRawData<unsigned char>();
+	
 	// Get current exposure setting of camera (relative to initial)
 	double exposureTimesRatio = this->cc->GetExposureRatio();	// needed for proper fitness value across changing exposure time	// Determine the fitness by intensity of the image within circle of target radius
 	// Determine the fitness by intensity of the image within circle of target radius
@@ -168,7 +157,7 @@ bool uGA_Optimization::runIndividual(int indID) {
 		// Also save the image as current best
 		std::unique_lock<std::mutex> imageLock(imageMutex, std::defer_lock);
 		imageLock.lock();
-		this->bestImage = curImage;
+		*this->bestImage = *curImage; // Copy image over to best
 		imageLock.unlock();
 	}
 
@@ -188,11 +177,8 @@ bool uGA_Optimization::runIndividual(int indID) {
 		this->shortenExposureFlag = true;
 		expsureFlagLock.unlock();
 	}
-	// If the pointer to current image does not also point to the best image we are safe to delete
-	if (curImage != bestImage) {
-		delete curImage;
-	}
-
+	
+	delete curImage;
 	return true;
 }
 
@@ -223,6 +209,9 @@ bool uGA_Optimization::setupInstanceVariables() {
 
 	this->shortenExposureFlag   = false; // Set to true by individual if fitness is too high, initially false
 	this->stopConditionsMetFlag = false; // Set to true if a stop condition was reached by one of the individuals, initially assumed false
+
+
+	this->bestImage = new ImageController();
 
 	// Setup image displays for camera and SLM
 	this->camDisplay = new CameraDisplay(this->cc->cameraImageHeight, this->cc->cameraImageWidth, "Camera Display");
@@ -274,13 +263,13 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 		int imgWidth = this->bestImage->getWidth();
 
 		// Save how final optimization looks through camera
-		Mat Opt_ary = Mat(int(imgHeight), int(imgWidth), CV_8UC1, eliteImage);
+		cv::Mat Opt_ary = cv::Mat(int(imgHeight), int(imgWidth), CV_8UC1, eliteImage);
 		cv::imwrite("logs/" + curTime + "_uGA_Optimized.bmp", Opt_ary);
 
 		// Save final (most fit SLM images)
 		for (int popID = 0; popID < this->population.size(); popID++) {
 			scalers[popID]->TranslateImage(this->population[popID]->getGenome(this->population[popID]->getSize() - 1), this->slmScaledImages[popID]);
-			Mat m_ary = Mat(512, 512, CV_8UC1, this->slmScaledImages[popID]);
+			cv::Mat m_ary = cv::Mat(512, 512, CV_8UC1, this->slmScaledImages[popID]);
 			imwrite("logs/" + curTime + "_uGA_phaseopt_SLM" + std::to_string(popID) + ".bmp", m_ary);
 		}
 	}	
@@ -298,6 +287,7 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 	this->cc->stopCamera();
 	this->cc->shutdownCamera();
 	// - pointers
+	delete this->bestImage;
 	for (int i = 0; i < this->population.size(); i++) {
 		delete this->population[i];
 	}

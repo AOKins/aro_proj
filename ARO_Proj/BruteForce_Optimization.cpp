@@ -1,15 +1,9 @@
 ////////////////////
 // Optimization handler methods implementation for brute force algorithm
-// Last edited: 06/28/2021 by Andrew O'Kins
+// Last edited: 07/06/2021 by Andrew O'Kins
 ////////////////////
 #include "stdafx.h"						// Required in source
 #include "BruteForce_Optimization.h"	// Header file
-
-#include <string>
-#include <chrono>
-#include <string>
-
-// TODO: Debug refactored/multi-SLM setup
 
 bool BruteForce_Optimization::runOptimization() {
 	Utility::printLine("INFO: Starting OPT5 Optimization!");
@@ -90,7 +84,7 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 
 				// Find max phase for this bin
 				for (int curBinVal = 0; curBinVal< 256; curBinVal += dphi) {
-					ImageController * curImage;
+					ImageController * curImage = NULL;
 
 					// Assign at current bin the new value to test
 					slmImg[binIndex] = curBinVal;
@@ -102,8 +96,8 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 
 					this->sc->writeImageToBoard(boardID, this->slmScaledImages[boardID]);
 
-					//Acquire camera image
-					this->cc->AcquireImages(curImage);
+					// Acquire image // - take image
+					curImage = this->cc->AcquireImage();
 
 					unsigned char* camImg = curImage->getRawData<unsigned char>();
 					this->usingHardware = false;
@@ -242,6 +236,7 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 	this->cc->shutdownCamera();
 
 	// - memory deallocation
+	delete this->bestImage;
 	this->camDisplay->CloseDisplay();
 	this->slmDisplay->CloseDisplay();
 	delete this->camDisplay;

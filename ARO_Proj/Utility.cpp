@@ -3,23 +3,24 @@
 #include <fstream>	// used to export information to file in generating target matrix
 #include <conio.h>	// console operations
 #include <ctime>
-//#include <iostream>
-#include "Utility.h"
+#include <iostream>
 
-#include <opencv2\highgui\highgui.hpp>	//image processing
+#include <opencv2\highgui\highgui.hpp>	//image processing used in FindAverageValue methods
 #include <opencv2\imgproc\imgproc.hpp>
+
+#include "Utility.h"
 
 // [CONSOLE FEATURES]
 void Utility::printLine(std::string msg, bool isDebug) {
-	// Comment out only when need to see debug type line pinting
+	// Comment out only when need to see debug type line printing
 	if (isDebug) {
 		return;
 	}
-	//std::cout << "\n" << msg;
-
+	std::cout << "\n" << msg;
+	/*
 	std::string curMsg = "\n" + msg;
 	const char * dimMsgC = curMsg.c_str();
-	_cprintf(dimMsgC);
+	_cprintf(dimMsgC);*/
 }
 
 void Utility::print(std::string msg) {
@@ -83,7 +84,7 @@ std::string Utility::getCurTime() {
 * @param width -> the width of the camera image in pixels
 * @param height -> the height of the camera image in pixels
 * @return -> the average intensity within the calculated area */
-double Utility::FindAverageValue(unsigned char *Image, int* target, size_t width, size_t height) {
+double Utility::FindAverageValue(unsigned char *Image, int* target, int width, int height) {
 	cv::Mat m_ary(width, height, CV_8UC1, Image);
 	double sum = 0;
 	double area = 0;
@@ -123,7 +124,7 @@ double Utility::FindAverageValue(unsigned char *Image, int* target, size_t width
 //   Modifications: Changed from "peakvalue()," most of the stuff was cut out
 //
 //////////////////////////////////////////////////
-double Utility::FindAverageValue(unsigned char *Image, size_t width, size_t height, int r) {
+double Utility::FindAverageValue(unsigned char *Image, int width, int height, int r) {
 	int value, ll, kk, cx, cy, ymin, ymax;
 	double rdbl, sdbl, rloop, sloop, xmin, xmax, area;
 	cv::Mat m_ary = cv::Mat(height, width, CV_8UC1, Image);
@@ -141,7 +142,7 @@ double Utility::FindAverageValue(unsigned char *Image, size_t width, size_t heig
 		xmin = cx - sqrt(pow(r, 2) - pow(ll - cy, 2));
 		xmax = cx + sqrt(pow(r, 2) - pow(ll - cy, 2));
 
-		for (kk = xmin; kk < xmax; kk++){
+		for (kk = int(xmin); kk < int(xmax); kk++){
 			value = m_ary.at<unsigned char>(ll, kk);
 			rloop += value;
 		}
@@ -151,7 +152,7 @@ double Utility::FindAverageValue(unsigned char *Image, size_t width, size_t heig
 
 	//calculate std. dev.
 	for (ll = ymin; ll < ymax; ll++) {
-		for (kk = xmin; kk < xmax; kk++) {
+		for (kk = int(xmin); kk < int(xmax); kk++) {
 			value = m_ary.at<unsigned char>(ll, kk);
 			sloop += pow((value - rdbl), 2);
 		}
@@ -181,7 +182,7 @@ void Utility::GenerateTargetMatrix_SinglePoint(int* targetMatrix, int cameraImag
 		// calculate rough dimensions of a circle
 		xmin = centerX - sqrt(pow(targetRadius, 2) - pow(i - centerY, 2));
 		xmax = centerX + sqrt(pow(targetRadius, 2) - pow(i - centerY, 2));
-		for (int j = xmin; j < xmax; j++) {
+		for (int j = int(xmin); j < int(xmax); j++) {
 			targetMatrix[i*cameraImageWidth + j] = 500;
 		}
 	}
@@ -213,7 +214,7 @@ void Utility::GenerateTargetMatrix_LoadFromFile(int *target, int width, int heig
 		std::string line;
 		std::getline(targfile, line);
 		if (line.length() > targetwidth) { //find widest point
-			targetwidth = line.length();
+			targetwidth = int(line.length());
 		}
 
 		std::vector<int> targline;
@@ -228,7 +229,7 @@ void Utility::GenerateTargetMatrix_LoadFromFile(int *target, int width, int heig
 		targvec.push_back(targline);
 	}
 	//calculate size and middle
-	int targetheight = targvec.size();
+	int targetheight = int(targvec.size());
 	int xStart = (width / 2) - (targetwidth / 2);
 	int yStart = (height / 2) - (targetheight / 2);
 

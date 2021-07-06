@@ -2,10 +2,11 @@
 #define SLM_CONTROLLER_H_
 
 #include "SLM_Board.h"
-#include "MainDialog.h"
 #include "Blink_SDK.h"
 
 #include <vector>
+
+class MainDialog;
 
 // Class to encapsulate interactions with SLM boards
 class SLMController {

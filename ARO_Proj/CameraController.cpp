@@ -1,5 +1,6 @@
 #include "stdafx.h"				// Required in source
 #include "CameraController.h"	// Header file
+#include "MainDialog.h"
 #include "Utility.h"
 
 // [CONSTRUCTOR(S)]
@@ -87,7 +88,7 @@ bool CameraController::startCamera() {
 			return false;
 		}
 		else {
-			ptrSBufferHandler->SetIntValue(StreamBufferHandlingMode_NewestOnly);
+			ptrSBufferHandler->SetIntValue(Spinnaker::StreamBufferHandlingMode_NewestOnly);
 		}
 		//Begin Aquisition
 		cam->BeginAcquisition();
@@ -133,29 +134,31 @@ bool CameraController::saveImage(ImageController * curImage, std::string path) {
 }
 
 //AcquireImages: get one image from the camera
-void CameraController::AcquireImages(ImageController * outImage) {
-	// convertedImage = Image::Create();
+ImageController * CameraController::AcquireImage() {
 	try {
 		// Retrieve next received image
-		ImagePtr curImage = cam->GetNextImage();
+		Spinnaker::ImagePtr curImage = cam->GetNextImage();
 
 		// Ensure image completion
 		if (curImage->IsIncomplete()) {
 			//TODO: implement proper handling of inclomplete images (retake of image)
-			Utility::printLine("ERROR: Image incomplete: " + std::string(Image::GetImageStatusDescription(curImage->GetImageStatus())));
+			Utility::printLine("ERROR: Image incomplete: " + std::string(Spinnaker::Image::GetImageStatusDescription(curImage->GetImageStatus())));
 		}
 		//Print The dimensions of the image (should be XX by YY)
 		
 		//copy image to pImage pointer
-		ImagePtr convertedImage = curImage->Convert(PixelFormat_Mono8); // TODO try see if there is any performance gain if use -> , HQ_LINEAR);
 
-		// Assign the output image to outImage
-		outImage = new ImageController(convertedImage);
+		// Assign the output image to outImage, since this is a converted image we don't need to release it
+			// Resource reference says so in example conversion to mono 8 -> http://softwareservices.flir.com/Spinnaker/latest/_acquisition_8cpp-example.html
+		ImageController* outImage = new ImageController(curImage->Convert(Spinnaker::PixelFormat_Mono8), false);
 		// Release from the buffer
 		curImage->Release();
+
+		return outImage;
 	}
 	catch (Spinnaker::Exception &e) {
 		Utility::printLine("ERROR: " + std::string(e.what()));
+		return NULL;
 	}
 	Utility::printLine("#####################################################", true);
 }
@@ -168,7 +171,7 @@ bool CameraController::UpdateImageParameters() {
 		CString path("");
 		dlg.m_cameraControlDlg.m_FramesPerSecond.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
-		fps = _tstof(path);
+		fps = _tstoi(path);
 		frameRateMS = 1000 / fps;
 	}
 	catch (...)	{
@@ -229,7 +232,7 @@ bool CameraController::UpdateImageParameters() {
 		CString path("");
 		dlg.m_optimizationControlDlg.m_numberBins.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
-		numberOfBinsX = _tstof(path);
+		numberOfBinsX = _tstoi(path);
 		numberOfBinsY = numberOfBinsX; // Number of bins in Y direction is equal to in X direction (square)
 	}
 	catch (...)	{
@@ -241,7 +244,7 @@ bool CameraController::UpdateImageParameters() {
 		CString path("");
 		dlg.m_optimizationControlDlg.m_binSize.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
-		binSizeX = _tstof(path);
+		binSizeX = _tstoi(path);
 		binSizeY = binSizeX; // Square shape in size
 	}
 	catch (...)	{
@@ -253,7 +256,7 @@ bool CameraController::UpdateImageParameters() {
 		CString path("");
 		dlg.m_optimizationControlDlg.m_targetRadius.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
-		targetRadius = _tstof(path);
+		targetRadius = _tstoi(path);
 	}
 	catch (...)	{
 		Utility::printLine("ERROR: Was unable to parse integration radius input feild!");
@@ -271,7 +274,7 @@ bool CameraController::UpdateImageParameters() {
 bool CameraController::UpdateConnectedCameraInfo() {
 	try	{
 		//Spinaker system object w/ camera list
-		system = System::GetInstance();
+		system = Spinnaker::System::GetInstance();
 		camList = system->GetCameras();
 
 		if (system == NULL)	{
@@ -344,7 +347,7 @@ bool CameraController::ConfigureCustomImageSettings() {
 	try	{
 		//Apply mono 8 pixel format
 		if (cam->PixelFormat != NULL && cam->PixelFormat.GetAccessMode() == RW)
-			cam->PixelFormat.SetValue(PixelFormat_Mono8);
+			cam->PixelFormat.SetValue(Spinnaker::PixelFormat_Mono8);
 		else
 			Utility::printLine("ERROR: Pixel format not available...");
 
@@ -481,6 +484,7 @@ int CameraController::PrintDeviceInfo() {
 	Utility::printLine();
 	Utility::printLine("*** CAMERA INFORMATION ***");
 	try	{
+		INodeMap &nodeMap = cam->GetNodeMap();
 		INodeMap & nodeMapTLDevice = cam->GetTLDeviceNodeMap();
 		FeatureList_t features;
 		CCategoryPtr category = nodeMap.GetNode("DeviceInformation");
@@ -616,10 +620,10 @@ bool CameraController::GetFullImage(int &x, int &y) {
 
 	if (cam->IsValid() && cam->IsInitialized()) {
 		CIntegerPtr ptrWidth = cam->GetNodeMap().GetNode("WidthMax");
-		x = ptrWidth->GetValue();
+		x = int(ptrWidth->GetValue());
 
 		CIntegerPtr ptrHeight = cam->GetNodeMap().GetNode("HeightMax");
-		y = ptrHeight->GetValue();
+		y = int(ptrHeight->GetValue());
 	}
 	else {
 		Utility::printLine("ERROR: camera that was retrived for gathering info is not valid!");
