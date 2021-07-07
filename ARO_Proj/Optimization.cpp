@@ -13,6 +13,13 @@ Optimization::Optimization(MainDialog& dlg_, CameraController* cc, SLMController
 	this->ind_threads.clear();
 	
 	prepareOutputSettings();
+
+	if (dlg.m_MultiThreadEnable.GetCheck() == BST_CHECKED) {
+		this->multithreadEnable = true;
+	}
+	else {
+		this->multithreadEnable = false;
+	}
 }
 
 // [SETUP]

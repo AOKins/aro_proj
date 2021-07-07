@@ -30,15 +30,26 @@ bool SGA_Optimization::runOptimization() {
 		for (this->curr_gen = 0; this->curr_gen < this->maxGenenerations && !this->stopConditionsMetFlag; this->curr_gen++) {
 			// Run each individual, giving them all fitness values as a result of their genome
 			for (int indID = 0; indID < population[0]->getSize(); indID++) {
-				// Lambda function to access this instance of Optimization to perform runIndividual
-				// Input: indID - index location to run individual from in population
-				// Captures: this - pointer to current SGA_Optimization instance
-				this->ind_threads.push_back(std::thread([this](int indID) {	this->runIndividual(indID); }, indID)); // Parallel
+				if (this->multithreadEnable == true) {
+					// Lambda function to access this instance of Optimization to perform runIndividual
+					// Input: indID - index location to run individual from in population
+					// Captures: this - pointer to current SGA_Optimization instance
+					this->ind_threads.push_back(std::thread([this](int indID) {	this->runIndividual(indID); }, indID)); // Parallel
+				}
+				else {
+					this->runIndividual(indID); // Serial
+				}
+			
 			}
 			Utility::rejoinClear(this->ind_threads);
 			// Perform GA crossover/breeding to produce next generation
 			for (int popID = 0; popID < population.size(); popID++) {
-				this->ind_threads.push_back(std::thread([this](int popID) {population[popID]->nextGeneration(); }, popID));
+				if (this->multithreadEnable == true) {
+					this->ind_threads.push_back(std::thread([this](int popID) { this->population[popID]->nextGeneration(); }, popID)); // Parallel
+				}
+				else {
+					this->population[popID]->nextGeneration(); // Serial
+				}
 			}
 			Utility::rejoinClear(this->ind_threads);
 

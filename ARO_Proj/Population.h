@@ -25,29 +25,32 @@ protected:
 	double accepted_similarity_;
 	// genome length for individual images
 	int genome_length_;
+	// bool to track if multithreading is enabled or not
+	bool multiThread_;
 	// vector for managing the multithreads for individuals used in genetic algorithm
 	std::vector<std::thread> ind_threads;
 public:
 	// Constructor
 	// Input:
-	//	genome_length:	the image size (genome) for an individual
-	//	population_size: the number of individuals for the population
-	//	elite_size:		 the number of individuals for the population that are kept as elite
+	//	genome_length:		 the image size (genome) for an individual
+	//	population_size:	 the number of individuals for the population
+	//	elite_size:			 the number of individuals for the population that are kept as elite
 	//	accepted_similarity: precentage of similarity to be counted as same between individuals (default 90%)
-	Population(int genome_length, int population_size, int elite_size, double accepted_similarity = .9){
+	//  multiThread:		 enable usage of multithreading (default true)
+	Population(int genome_length, int population_size, int elite_size, double accepted_similarity = .9, bool multiThread = true){
 		this->genome_length_ = genome_length;
 		this->accepted_similarity_ = accepted_similarity;
 		this->pop_size_ = population_size;
 		this->elite_size_ = elite_size;
+		this->multiThread_ = multiThread;
 		// Clearing just in case there's something there beforehand
 		this->ind_threads.clear();
-
 		// Check to see if elite size exceeds the population size, currently just gives warning
 		if (this->elite_size_ > this->pop_size_) {
 			Utility::printLine("WARNING: Elite size (" + std::to_string(this->elite_size_) + ") of population exceeding population size (" + std::to_string(this->pop_size_) + ")!");
 		}
 
-		this->individuals_ = new Individual<T>[pop_size_];
+		this->individuals_ = new Individual<T>[this->pop_size_];
 
 		// initialize images for each individual
 		// Lambda function to ensure that generating random image is done in parallel to speed up process
@@ -60,7 +63,10 @@ public:
 
 		// Using multithreads for initializing each individual
 		for (int i = 0; i < this->pop_size_; i++){
-			this->ind_threads.push_back(std::thread(randInd, i));
+			if (this->multiThread_)
+				this->ind_threads.push_back(std::thread(randInd, i));
+			else
+				randInd(i);
 		}
 		Utility::rejoinClear(this->ind_threads);
 		Utility::printLine("INFO: Population created!");
@@ -207,7 +213,7 @@ public:
 			(*temp_genome1)[i] = (*temp_genome2)[i];
 		}
 		to.set_genome(temp_genome1);
-			}
+	}
 
 	// Perform the genetic algorithm to create new individuals for next gneeration
 	// virtual method to have child classes define this behavior

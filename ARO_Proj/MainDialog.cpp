@@ -44,6 +44,7 @@ void MainDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_SGA_BUTTON, m_SGAButton);
 	DDX_Control(pDX, IDC_OPT_BUTTON, m_OptButton);
 	DDX_Control(pDX, IDC_START_STOP_BUTTON, m_StartStopButton);
+	DDX_Control(pDX, IDC_MULTITHREAD_ENABLE, m_MultiThreadEnable);
 	DDX_Control(pDX, IDC_TAB1, m_TabControl);
 }
 
@@ -61,6 +62,7 @@ BEGIN_MESSAGE_MAP(MainDialog, CDialog)
 	ON_BN_CLICKED(IDC_START_STOP_BUTTON, &MainDialog::OnBnClickedStartStopButton)
 	ON_BN_CLICKED(IDC_LOAD_SETTINGS, &MainDialog::OnBnClickedLoadSettings)
 	ON_BN_CLICKED(IDC_SAVE_SETTINGS, &MainDialog::OnBnClickedSaveSettings)
+	ON_BN_CLICKED(IDC_MULTITHREAD_ENABLE, &MainDialog::OnBnClickedMultiThreadEnable)
 END_MESSAGE_MAP()
 
 //////////////////////////////////////////////////////////////
@@ -155,6 +157,8 @@ BOOL MainDialog::OnInitDialog() {
 
 // Set the UI to default values
 void MainDialog::setDefaultUI() {
+	// Multithreading enabled by default
+	this->m_MultiThreadEnable.SetCheck(BST_CHECKED);
 	// - image names to the listbox and select the first image
 	// TODO: check if this is the correct image list box setup 
 	this->m_slmControlDlg.m_ImageListBox.ResetContent();
@@ -682,6 +686,14 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 			this->m_outputControlDlg.m_logFilesCheck.SetCheck(BST_UNCHECKED);
 		}
 	}
+	else if (name == "multiThreading") {
+		if (value == "true") {
+			this->m_MultiThreadEnable.SetCheck(BST_CHECKED);
+		}
+		else {
+			this->m_MultiThreadEnable.SetCheck(BST_UNCHECKED);
+		}
+	}
 
 	else {	// Unidentfied variable name, return false
 		return false;
@@ -747,6 +759,14 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	outFile.open(filePath);
 	
 	outFile << "# ARO PROJECT CONFIGURATION FILE" << std::endl;
+	outFile << "# Multithreading" << std::endl;
+	outFile << "multiThreading=";
+	if (this->m_MultiThreadEnable.GetCheck() == BST_CHECKED) {
+		outFile << "true" << std::endl;
+	}
+	else {
+		outFile << "false" << std::endl;
+	}
 	// Camera Dialog
 	outFile << "# Camera Settings" << std::endl;
 	this->m_cameraControlDlg.m_FramesPerSecond.GetWindowTextW(tempBuff);
@@ -837,4 +857,14 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	}
 
 	return true;
+}
+
+
+void MainDialog::OnBnClickedMultiThreadEnable(){
+	if (m_MultiThreadEnable.GetCheck() == BST_CHECKED) {
+		Utility::printLine("INFO: Multithreading enabled!");
+	}
+	else {
+		Utility::printLine("INFO: Multithreading disabled!");
+	}
 }

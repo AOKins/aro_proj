@@ -10,6 +10,7 @@
 
 #include "MainDialog.h"			// used for UI reference
 #include "CameraController.h"	// pointer to access custom interface with camera
+#include "ImageController.h"
 #include "SLMController.h"		// pointer to access custom interface with slm
 #include "Timing.h"				// contains time keeping functions
 #include "ImageScaler.h"		// changes size of image to fit slm
@@ -37,7 +38,7 @@ protected:
 	bool displayCamImage = true;    // TRUE -> opens a window showing the camera image
 	bool displaySLMImage = false;   // TODO: only first SLM right now - add functionality to display any or all boards
 	bool loggingFilesEnable = true; // TRUE -> output various logging files to record performance
-
+	bool multithreadEnable = true; // TRUE -> use multithreading
 	//Instance variables (used during optimization process)
 	// Values assigned within setupInstanceVariables(), then if needed cleared in shutdownOptimizationInstance()
 	bool isWorking = false;		// true if currently actively running the optimization algorithm

@@ -10,13 +10,14 @@
 template <class T>
 class SGAPopulation : public Population<T> {
 public:
-	// Constructor that inherits from Population class
+	// Constructor
 	// Input:
-	//	genome_length:	the image size (genome) for an individual
-	//	population_size: the number of individuals for the population
-	//	elite_size:		 the number of individuals for the population that are kept as elite
+	//	genome_length:		 the image size (genome) for an individual
+	//	population_size:	 the number of individuals for the population
+	//	elite_size:			 the number of individuals for the population that are kept as elite
 	//	accepted_similarity: precentage of similarity to be counted as same between individuals (default 90%)
-	SGAPopulation(int genome_length, int population_size, int elite_size, double accepted_similarity = .9) : Population<T>(genome_length, population_size, elite_size, accepted_similarity) {};
+	//  multiThread:		 enable usage of multithreading (default true)
+	SGAPopulation(int genome_length, int population_size, int elite_size, double accepted_similarity = .9, bool multiThread = true) : Population<T>(genome_length, population_size, elite_size, accepted_similarity, multiThread) {};
 
 	// Starts next generation using fitness of individuals.  Following the simple genetic algorithm approach.
 	bool nextGeneration() {
@@ -74,19 +75,27 @@ public:
 
 		// for each new individual a thread with call to genInd()
 		for (int i = 0; i < (this->pop_size_ - this->elite_size_); i++) {
-			this->ind_threads.push_back(std::thread(genInd, i));
+			if (this->multiThread_) // Parallel
+				this->ind_threads.push_back(std::thread(genInd, i));
+			else
+				genInd(i); // Serial
 		}
 		Utility::rejoinClear(this->ind_threads);		// Rejoin
 
 		// for the elites, copy directly into new generation
 		// Performing deep copy for individuals in parallel
 		for (int id = (this->pop_size_ - this->elite_size_); id < this->pop_size_; id++) {
-			// Lambda function for using DeepCopyIndividual in parallel
-			// Input: id - index for individual to be copied from individuals_ and to temp
-			// Captures: temp - pointer to array of individuals to store in
-			//  		 this - current Population instance for using appropriate methods
-			this->ind_threads.push_back(std::thread(
-				[this, temp](int id){this->DeepCopyIndividual(temp[id], this->individuals_[id]);}, id));
+			if (this->multiThread_) {
+				// Lambda function for using DeepCopyIndividual in parallel
+				// Input: id - index for individual to be copied from individuals_ and to temp
+				// Captures: temp - pointer to array of individuals to store in
+				//  		 this - current Population instance for using appropriate methods
+				this->ind_threads.push_back(std::thread(
+					[this, temp](int id){this->DeepCopyIndividual(temp[id], this->individuals_[id]);}, id));
+			}
+			else {
+				this->DeepCopyIndividual(temp[id], this->individuals_[id]);
+			}
 		}
 		Utility::rejoinClear(this->ind_threads);		// Rejoin
 		
@@ -103,13 +112,17 @@ public:
 		if (same_check_result) {
 			// Calling generate random image for half of pop individuals
 			for (int i = 0; i < this->pop_size_ / 2; i++) {
-				// Lambda function to ensure that generating random image is done in parallel
-				// Input: id - index for individual to be set
-				// Captures: temp - pointer to array of individuals to store new random genomes in
-				//  		 this - current Population instance for using appropriate methods
-				this->ind_threads.push_back(std::thread(
-					[temp, this](int id) {temp[id].set_genome(this->GenerateRandomImage());}, i)
-				);
+				if (this->multiThread_) { // Parallel
+					// Lambda function to ensure that generating random image is done in parallel
+					// Input: id - index for individual to be set
+					// Captures: temp - pointer to array of individuals to store new random genomes in
+					//  		 this - current Population instance for using appropriate methods
+					this->ind_threads.push_back(std::thread(
+						[temp, this](int id) {temp[id].set_genome(this->GenerateRandomImage()); }, i));
+				}
+				else { // Serial
+					temp[i].set_genome(this->GenerateRandomImage());
+				}
 			}
 			Utility::rejoinClear(this->ind_threads);			// Rejoin
 		}

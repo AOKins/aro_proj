@@ -40,9 +40,13 @@ public:
 	bool setUIfromFile(std::string filePath);
 	// Set a value in the UI according to a given name and value as string (used by setUIfromFile)
 	bool setValueByName(std::string varName, std::string varValue);
-
 	// Write current UI values to given file location
 	bool saveUItoFile(std::string filePath);
+
+	// Handle process of loading settings, requesting file to select and attempt load
+	afx_msg void OnBnClickedLoadSettings();
+	// Handle process of saving settings, requesting file path/name to save to
+	afx_msg void OnBnClickedSaveSettings();
 
 // DIALOG DATA
 #ifdef AFX_DESIGN_TIME
@@ -51,8 +55,6 @@ public:
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
-
-protected:
 	HICON m_hIcon;
 
 	// Generated message map functions
@@ -66,24 +68,20 @@ public:
 	CButton m_SGAButton; // Select SGA button
 	CButton m_OptButton; // Select OPT5 (BruteForce) button
 	CButton m_StartStopButton; // Start selected optimization button (or if opt is running will stop)
-	CEdit m_BSEdit;
-	CEdit m_NBEdit;
-	CEdit m_IREdit;
-	CEdit m_MFEdit;
-	CEdit m_MSEEdit;
-	CEdit m_MFEEdit;
+	CButton m_MultiThreadEnable; // If checked, perform the optimizations with multithreading where possible
+
 	// Thread property to run the optimization algorithm through once committed to running
 	CWinThread* runOptThread;
 
+	afx_msg void OnBnClickedUgaButton();
+	afx_msg void OnBnClickedSgaButton();
+	afx_msg void OnBnClickedOptButton();
+	afx_msg void OnBnClickedMultiThreadEnable();
 protected:
 	afx_msg void OnSlmPwrButton();
 	virtual void OnOK();
 	//afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnClose();
-public:
-	afx_msg void OnBnClickedUgaButton();
-	afx_msg void OnBnClickedSgaButton();
-	afx_msg void OnBnClickedOptButton();
 private:
 	CString m_ReadyRunning;
 public:
@@ -109,10 +107,6 @@ public:
 		uGA
 	};
 	OptType opt_selection_; // Current selected optimization algorithm
-	// Handle process of loading settings, requesting file to select and attempt load
-	afx_msg void OnBnClickedLoadSettings();
-	// Handle process of saving settings, requesting file path/name to save to
-	afx_msg void OnBnClickedSaveSettings();
 };
 
 // Worker thread process for running optimization while MainDialog continues listening for other input

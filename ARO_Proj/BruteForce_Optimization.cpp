@@ -205,8 +205,8 @@ bool BruteForce_Optimization::setupInstanceVariables() {
 	this->allTimeBestFitness = 0;
 
 	// Open files for logging algorithm progress 
-	this->lmaxfile.open("logs/lmax.txt", std::ios::app);
-	this->rtime.open("logs/Opt_rtime.txt", std::ios::app);
+	this->lmaxfile.open("logs/lmax.txt");
+	this->rtime.open("logs/Opt_rtime.txt");
 
 	return true;
 }
