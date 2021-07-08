@@ -50,7 +50,9 @@ void OutputControlDialog::OnBnClickedOutputLocationButton()
 		tryAgain = false;
 		LPWSTR p = folderInput.GetBuffer(FILE_LIST_BUFFER_SIZE);
 		// https://www.codeproject.com/Tips/993640/Using-MFC-CFolderPickerDialog
-		CFolderPickerDialog dlgFolder(LPCTSTR(".\\logs\\"));
+		CString current;
+		this->m_OutputLocationField.GetWindowTextW(current);
+		CFolderPickerDialog dlgFolder(current);
 		if (dlgFolder.DoModal() == IDOK) {
 			folderInput = dlgFolder.GetPathName();
 
