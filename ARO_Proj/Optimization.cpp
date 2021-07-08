@@ -12,6 +12,7 @@ Optimization::Optimization(MainDialog& dlg_, CameraController* cc, SLMController
 	this->sc = sc;
 	this->ind_threads.clear();
 	
+	// Read from the output dialog for output parameters
 	prepareOutputSettings();
 
 	if (dlg.m_MultiThreadEnable.GetCheck() == BST_CHECKED) {
@@ -117,7 +118,6 @@ bool Optimization::prepareOutputSettings() {
 	else {
 		this->saveImages = false;
 	}
-
 	if (this->dlg.m_outputControlDlg.m_logFilesCheck.GetCheck() == BST_CHECKED) {
 		this->loggingFilesEnable = true;
 	}
