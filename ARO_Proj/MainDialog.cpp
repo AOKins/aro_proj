@@ -12,6 +12,7 @@
 #include "resource.h"
 #include "MainDialog.h"			// Header file for dialog functions
 #include <iostream>				// for cout.clear()
+#include "SettingsOutput.cpp"
 
 // - Aglogrithm Related
 #include "uGA_Optimization.h"
@@ -132,7 +133,7 @@ BOOL MainDialog::OnInitDialog() {
 	this->m_slmControlDlg.m_SlmPwrButton.SetWindowTextW(_T("Turn power ON")); // - power button (TODO: determine if SLM is actually off at start)
 
 	// Give a warning message if no boards have been detected
-	if (m_slmControlDlg.slmCtrl->boards.size() < 1) {
+	if (this->slmCtrl != nullptr && this->slmCtrl->boards.size() < 1) {
 		MessageBox((LPCWSTR)L"No SLM detected!",
 				   (LPCWSTR)L"No SLM has been detected to be connected!",
 					MB_ICONWARNING | MB_OK);
@@ -146,6 +147,13 @@ BOOL MainDialog::OnInitDialog() {
 	}
 	else {
 		Utility::printLine("WARNING: Camera Control NULL");
+	}
+
+	if (this->camCtrl != nullptr && !this->camCtrl->hasCameras()) {
+		MessageBox(
+			(LPCWSTR)L"No cameras have been detected to be connected!",
+			(LPCWSTR)L"No cameras detected!",
+			MB_ICONWARNING | MB_OK);
 	}
 
 	// Send the currently selected image from the PCIe card memory board
@@ -177,7 +185,7 @@ void MainDialog::setDefaultUI() {
 	this->m_optimizationControlDlg.m_minSeconds.SetWindowTextW(_T("60"));
 	this->m_optimizationControlDlg.m_maxSeconds.SetWindowTextW(_T("0")); // 0 or less indicates indefinite
 	this->m_optimizationControlDlg.m_minGenerations.SetWindowTextW(_T("0"));
-	this->m_optimizationControlDlg.m_maxGenerations.SetWindowTextW(_T("3000"));
+	this->m_optimizationControlDlg.m_maxGenerations.SetWindowTextW(_T("3000")); // 0 or less indicates indefinite
 
 	this->m_aoiControlDlg.m_leftInput.SetWindowTextW(_T("896"));
 	this->m_aoiControlDlg.m_rightInput.SetWindowTextW(_T("568"));
@@ -281,7 +289,6 @@ HCURSOR MainDialog::OnQueryDragIcon() {
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
-
 /////////////////////////////////////////////////
 //
 //   OnClose()
@@ -324,7 +331,6 @@ void MainDialog::OnClose() {
 
 /* OnOK: perfomrs enter key functions - used to prevent accidental exit of program and equipment damag e*/
 void MainDialog::OnOK() {}
-
 
 //OnBnClickedUgaButton: Select the uGA Algorithm Button
 void MainDialog::OnBnClickedUgaButton() {
@@ -371,28 +377,28 @@ void MainDialog::OnTcnSelchangeTab1(NMHDR *pNMHDR, LRESULT *pResult) {
 	}
 	int tabIndex = m_TabControl.GetCurSel();
 	switch (tabIndex) {
-	case 0:
-		m_optimizationControlDlg.ShowWindow(SW_SHOW);
-		m_pwndShow = &m_optimizationControlDlg;
-		break;
-	case 1:
-		m_slmControlDlg.ShowWindow(SW_SHOW);
-		m_pwndShow = &m_slmControlDlg;
-		break;
-	case 2:
-		m_cameraControlDlg.ShowWindow(SW_SHOW);
-		m_pwndShow = &m_cameraControlDlg;
-		break;
-	case 3:
-		m_aoiControlDlg.ShowWindow(SW_SHOW);
-		m_pwndShow = &m_aoiControlDlg;
-		break;
-	case 4:
-		m_outputControlDlg.ShowWindow(SW_SHOW);
-		m_pwndShow = &m_outputControlDlg;
-		break;
-	default:
-		Utility::printLine("WARNING: Requested to show a tab that shouldn't exist!");
+		case 0:
+			m_optimizationControlDlg.ShowWindow(SW_SHOW);
+			m_pwndShow = &m_optimizationControlDlg;
+			break;
+		case 1:
+			m_slmControlDlg.ShowWindow(SW_SHOW);
+			m_pwndShow = &m_slmControlDlg;
+			break;
+		case 2:
+			m_cameraControlDlg.ShowWindow(SW_SHOW);
+			m_pwndShow = &m_cameraControlDlg;
+			break;
+		case 3:
+			m_aoiControlDlg.ShowWindow(SW_SHOW);
+			m_pwndShow = &m_aoiControlDlg;
+			break;
+		case 4:
+			m_outputControlDlg.ShowWindow(SW_SHOW);
+			m_pwndShow = &m_outputControlDlg;
+			break;
+		default:
+			Utility::printLine("WARNING: Requested to show a tab that shouldn't exist!");
 	}
 	*pResult = 0;
 }
@@ -421,18 +427,20 @@ void MainDialog::OnBnClickedStartStopButton() {
 
 		// Give an error message if no boards were detected to optimize
 		if (this->slmCtrl->boards.size() < 1) {
-			MessageBox((LPCWSTR)L"No SLM detected!",
-				(LPCWSTR)L"No SLM has been detected to be optimize! Cancelling action.",
+			MessageBox(
+				(LPCWSTR)L"No SLM has been detected to be optimize! Cancelling start of optimization.",
+				(LPCWSTR)L"No SLM detected!",
 				MB_ICONERROR| MB_OK);
 			return;
 		}
 		// Give an error message if no camera
-		/*if (this->camCtrl->hasCameras()) {
-			MessageBox((LPCWSTR)L"No camera detected!",
-				(LPCWSTR)L"No camera has been detected to possibly use! Cancelling action.",
+		if (!this->camCtrl->hasCameras()) {
+			MessageBox(
+				(LPCWSTR)L"No camera has been detected to possibly use! Cancelling action.", 
+				(LPCWSTR)L"No camera detected!",
 				MB_ICONERROR | MB_OK);
 			return;
-		}*/
+		}
 		this->runOptThread = AfxBeginThread(optThreadMethod, LPVOID(this));
 		this->runOptThread->m_bAutoDelete = true; // Explicit setting for auto delete
 	}
@@ -468,7 +476,7 @@ UINT __cdecl optThreadMethod(LPVOID instance) {
 	// Output if error/failure in Optimization
 	if (!dlg->opt_success) {
 		Utility::printLine("ERROR: Optimization failed!");
-		MessageBox(NULL, (LPCWSTR)L"Error!", (LPCWSTR)L"An error has occurred while running the optimization.", MB_ICONERROR | MB_OK);
+		MessageBox(NULL, (LPCWSTR)L"An error had occurred while running the optimization.", (LPCWSTR)L"Error!", MB_ICONERROR | MB_OK);
 	}
 	// Change label of this button to START now that the optimization is over
 	dlg->m_StartStopButton.SetWindowTextW(L"Start Optimization");
@@ -479,388 +487,6 @@ UINT __cdecl optThreadMethod(LPVOID instance) {
 	// Setting that we are no longer running an optimization
 	dlg->running_optimization_ = false;
 	return 0;
-}
-
-void MainDialog::OnBnClickedLoadSettings() {
-	// TODO: Add your control notification handler code here
-	bool tryAgain;
-	CString fileName;
-	LPWSTR p = fileName.GetBuffer(FILE_LIST_BUFFER_SIZE);
-	std::string filePath;
-	do {
-		tryAgain = false;
-		
-		// Default to .cfg file extension (this program uses that in it's generation of saving settings)
-		static TCHAR BASED_CODE filterFiles[] = _T("Config Files (*.cfg)|*.cfg|ALL Files (*.*)|*.*||");
-
-		CFileDialog dlgFile(TRUE, NULL, L"./", OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, filterFiles);
-
-		OPENFILENAME& ofn = dlgFile.GetOFN();
-		ofn.lpstrFile = p;
-		ofn.nMaxFile = FILE_LIST_BUFFER_SIZE;
-
-		if (dlgFile.DoModal() == IDOK) {
-			fileName = dlgFile.GetPathName();
-			fileName.ReleaseBuffer();
-
-			filePath = CT2A(fileName);
-
-			if (!setUIfromFile(filePath)) {
-				int err_response = MessageBox(
-					(LPCWSTR)L"An error occurred while trying load the file\nTry Again?",
-					(LPCWSTR)L"ERROR in file load!",
-					MB_ICONERROR | MB_RETRYCANCEL);
-				// Respond to decision
-				switch (err_response) {
-				case IDRETRY:
-					tryAgain = true;
-					break;
-				default: // Cancel or other unknown response will not have try again to make sure not stuck in undesired loop
-					tryAgain = false;
-				}
-			}
-		}
-		else {
-			tryAgain = false;
-		}
-
-	} while (tryAgain);
-}
-
-bool MainDialog::setUIfromFile(std::string filePath) {
-	std::ifstream inputFile(filePath);
-	std::string lineBuffer;
-	try {
-		while (std::getline(inputFile, lineBuffer)) {
-			if (lineBuffer != "" && (lineBuffer.find("#") != 0)) {
-				// Locate the "=" and use as pivot where prior is the variable name and after is variable value
-				int equals_pivot = int(lineBuffer.find("="));
-				// Assumption made that there are no spaces from variable name to variable value, rather only occurring after a variable is assigned a value and afterwards may be an in-line comment
-				int end_point = int(lineBuffer.find_first_of(" "));
-
-				if (equals_pivot != end_point) {
-					// With the two positions acquired, capture the varable's name and the value it is being assigned
-					std::string variableName = lineBuffer.substr(0, equals_pivot);
-					std::string variableValue = lineBuffer.substr(equals_pivot + 1, end_point - equals_pivot - 1);
-
-					if (!setValueByName(variableName, variableValue)) {
-						Utility::printLine("WARNING: Failure to interpret variable '" + variableName + "' with value '" + variableValue + "'!");
-					}
-				}
-			}
-		}
-	}
-	catch (std::exception &e) {
-		Utility::printLine("ERROR: " + std::string(e.what()));
-		return false;
-	}
-	return true;
-}
-
-bool MainDialog::setValueByName(std::string name, std::string value) {
-	CString valueStr(value.c_str());
-	// Do a pre-emptive check if either name or value are empty
-	if (name == "" || value == "") {
-		return false;
-	}
-	// Camera Dialog
-	else if (name == "framesPerSecond")
-		this->m_cameraControlDlg.m_FramesPerSecond.SetWindowTextW(valueStr);
-	else if (name == "initialExposureTime")
-		this->m_cameraControlDlg.m_initialExposureTimeInput.SetWindowTextW(valueStr);
-	else if (name == "gamma")
-		this->m_cameraControlDlg.m_gammaValue.SetWindowTextW(valueStr);
-	// AOI Dialog
-	else if (name == "leftAOI")
-		this->m_aoiControlDlg.m_leftInput.SetWindowTextW(valueStr);
-	else if (name == "rightAOI")
-		this->m_aoiControlDlg.m_rightInput.SetWindowTextW(valueStr);
-	else if (name == "widthAOI")
-		this->m_aoiControlDlg.m_widthInput.SetWindowTextW(valueStr);
-	else if (name == "heightAOI")
-		this->m_aoiControlDlg.m_heightInput.SetWindowTextW(valueStr);
-	// Optimization Dialog
-	else if (name == "binSize")
-		this->m_optimizationControlDlg.m_binSize.SetWindowTextW(valueStr);
-	else if (name == "binNumber")
-		this->m_optimizationControlDlg.m_numberBins.SetWindowTextW(valueStr);
-	else if (name == "targetRadius")
-		this->m_optimizationControlDlg.m_targetRadius.SetWindowTextW(valueStr);
-	else if (name == "minFitness")
-		this->m_optimizationControlDlg.m_minFitness.SetWindowTextW(valueStr);
-	else if (name == "minSeconds")
-		this->m_optimizationControlDlg.m_minSeconds.SetWindowTextW(valueStr);
-	else if (name == "maxSeconds")
-		this->m_optimizationControlDlg.m_maxSeconds.SetWindowTextW(valueStr);
-	else if (name == "minGenerations")
-		this->m_optimizationControlDlg.m_minGenerations.SetWindowTextW(valueStr);
-	else if (name == "maxGenerations")
-		this->m_optimizationControlDlg.m_maxGenerations.SetWindowTextW(valueStr);
-	// SLM Dialog
-	else if (name == "slmConfigMode") {
-		if (valueStr == "multi") {
-			this->m_slmControlDlg.multiEnable.SetCheck(BST_CHECKED);
-			this->m_slmControlDlg.dualEnable.SetCheck(BST_UNCHECKED);
-		}
-		else if (valueStr == "dual") {
-			this->m_slmControlDlg.multiEnable.SetCheck(BST_UNCHECKED);
-			this->m_slmControlDlg.dualEnable.SetCheck(BST_CHECKED);
-		}
-		else {
-			this->m_slmControlDlg.multiEnable.SetCheck(BST_UNCHECKED);
-			this->m_slmControlDlg.dualEnable.SetCheck(BST_UNCHECKED);
-		}
-	}
-	// TODO: More error handling and inform if there are issues or discrepencies (such as not setting all the SLMs or trying to write to one that is not connected)
-	//		Also may need to add more robust form of getting boardID (rn assumes that there are at most 9 boards, anymore will lead to issues!)
-	else if (name.substr(0, 14) == "slmLutFilePath") {
-		// We are dealing with LUT file setting
-		int boardID = std::stoi(name.substr(14, 1)) - 1;
-		Utility::printLine("DEBUG: LUT boardID->" + std::to_string(boardID));
-		if (this->slmCtrl != NULL) {
-			if (boardID < this->slmCtrl->boards.size() && boardID >= 0) {
-				CT2CA converString(valueStr); // Resource for conversion https://stackoverflow.com/questions/258050/how-do-you-convert-cstring-and-stdstring-stdwstring-to-each-other
-				this->m_slmControlDlg.attemptLUTload(boardID, std::string(converString));
-			}
-			else {
-				Utility::printLine("WARNING: Load setting attempted to assign LUT file out of bounds!");
-				return false;
-			}
-		}
-		else {
-			return false;
-		}
-	}
-	else if (name.substr(0, 14) == "slmWfcFilePath") {
-		// We are dealing with WFC file setting
-		int boardID = std::stoi(name.substr(14, 1))-1;
-		Utility::printLine("DEBUG: WFC boardID->" + std::to_string(boardID));
-		if (this->slmCtrl != NULL) {
-			if (boardID < this->slmCtrl->boards.size() && boardID >= 0) {
-				CT2CA converString(valueStr); // Resource for conversion https://stackoverflow.com/questions/258050/how-do-you-convert-cstring-and-stdstring-stdwstring-to-each-other
-				this->m_slmControlDlg.attemptWFCload(boardID, std::string(converString));
-			}
-			else {
-				Utility::printLine("WARNING: Load setting attempted to assign WFC file out of bounds!");
-			}
-		}
-	}
-
-	else if (name == "phaseCompensation") {
-		if (value == "true") {
-			this->m_slmControlDlg.m_CompensatePhaseCheckbox.SetCheck(BST_CHECKED);
-			this->m_slmControlDlg.m_CompensatePhase = true;
-		}
-		else {
-			this->m_slmControlDlg.m_CompensatePhaseCheckbox.SetCheck(BST_UNCHECKED);
-			this->m_slmControlDlg.m_CompensatePhase = false;
-		}
-	}
-
-	// Output Controls Dialog variables
-	else if (name == "saveImage") {
-		if (value == "true") {
-			this->m_outputControlDlg.m_SaveImagesCheck.SetCheck(BST_CHECKED);
-		}
-		else {
-			this->m_outputControlDlg.m_SaveImagesCheck.SetCheck(BST_UNCHECKED);
-		}
-	}
-	else if (name == "displayCamera") {
-		if (value == "true") {
-			this->m_outputControlDlg.m_displayCameraCheck.SetCheck(BST_CHECKED);
-		}
-		else {
-			this->m_outputControlDlg.m_displayCameraCheck.SetCheck(BST_UNCHECKED);
-		}
-	}
-	else if (name == "displaySLM") {
-		if (value == "true") {
-			this->m_outputControlDlg.m_displaySLM.SetCheck(BST_CHECKED);
-		}
-		else {
-			this->m_outputControlDlg.m_displaySLM.SetCheck(BST_UNCHECKED);
-		}
-	}
-	else if (name == "logFilesEnable") {
-		if (value == "true") {
-			this->m_outputControlDlg.m_logFilesCheck.SetCheck(BST_CHECKED);
-		}
-		else {
-			this->m_outputControlDlg.m_logFilesCheck.SetCheck(BST_UNCHECKED);
-		}
-	}
-	else if (name == "multiThreading") {
-		if (value == "true") {
-			this->m_MultiThreadEnable.SetCheck(BST_CHECKED);
-		}
-		else {
-			this->m_MultiThreadEnable.SetCheck(BST_UNCHECKED);
-		}
-	}
-
-	else {	// Unidentfied variable name, return false
-		return false;
-	}
-	return true;
-}
-
-// When the Save Settings button is pressed, prompt the user to give where to save the file to for storing all parameters & preferences
-void MainDialog::OnBnClickedSaveSettings() {
-	bool tryAgain;
-	CString fileName;
-	LPWSTR p = fileName.GetBuffer(FILE_LIST_BUFFER_SIZE);
-	std::string filePath;
-	do {
-		tryAgain = false;
-
-		// Default Save As dialog box with extension as .cfg
-		CFileDialog dlgFile(FALSE, L"cfg");
-
-		OPENFILENAME& ofn = dlgFile.GetOFN();
-		ofn.lpstrFile = p;
-		ofn.nMaxFile = FILE_LIST_BUFFER_SIZE;
-
-		// If action is OK
-		if (dlgFile.DoModal() == IDOK) {
-			fileName = dlgFile.GetPathName();
-			fileName.ReleaseBuffer();
-
-			filePath = CT2A(fileName);
-
-			if (!saveUItoFile(filePath)) {
-				int err_response = MessageBox(
-					(LPCWSTR)L"An error occurred while trying save settings\nTry Again?",
-					(LPCWSTR)L"ERROR in saving!",
-					MB_ICONERROR | MB_RETRYCANCEL);
-				// Respond to decision
-				switch (err_response) {
-				case IDRETRY:
-					tryAgain = true;
-					break;
-				default: // Cancel or other unknown response will not have try again to make sure not stuck in undesired loop
-					tryAgain = false;
-				}
-			}
-			else {// Give success message when no issues
-				MessageBox((LPCWSTR)L"Successfully saved settings.",
-					(LPCWSTR)L"Success!",
-					MB_ICONINFORMATION | MB_OK);
-				tryAgain = false;
-			}
-		}
-		// If action is cancel
-		else {
-			tryAgain = false;
-		}
-		
-	} while (tryAgain);
-}
-
-bool MainDialog::saveUItoFile(std::string filePath) {
-	std::ofstream outFile; // output stream
-	CString tempBuff; // Temporary hold of what's in dialog window
-	outFile.open(filePath);
-	
-	outFile << "# ARO PROJECT CONFIGURATION FILE" << std::endl;
-	outFile << "# Multithreading" << std::endl;
-	outFile << "multiThreading=";
-	if (this->m_MultiThreadEnable.GetCheck() == BST_CHECKED) {
-		outFile << "true" << std::endl;
-	}
-	else {
-		outFile << "false" << std::endl;
-	}
-	// Camera Dialog
-	outFile << "# Camera Settings" << std::endl;
-	this->m_cameraControlDlg.m_FramesPerSecond.GetWindowTextW(tempBuff);
-	outFile << "framesPerSecond=" << _tstof(tempBuff) << std::endl;
-	this->m_cameraControlDlg.m_initialExposureTimeInput.GetWindowTextW(tempBuff);
-	outFile << "initialExposureTime=" << _tstof(tempBuff) << std::endl;
-	this->m_cameraControlDlg.m_gammaValue.GetWindowTextW(tempBuff);
-	outFile << "gamma=" << _tstof(tempBuff) << std::endl;
-	// AOI Dialog
-	outFile << "# AOI Settings" << std::endl;
-	this->m_aoiControlDlg.m_leftInput.GetWindowTextW(tempBuff);
-	outFile << "leftAOI=" << _tstof(tempBuff) << std::endl;
-	this->m_aoiControlDlg.m_rightInput.GetWindowTextW(tempBuff);
-	outFile << "rightAOI=" << _tstof(tempBuff) << std::endl;
-	this->m_aoiControlDlg.m_widthInput.GetWindowTextW(tempBuff);
-	outFile << "widthAOI=" << _tstof(tempBuff) << std::endl;
-	this->m_aoiControlDlg.m_heightInput.GetWindowTextW(tempBuff);
-	outFile << "heightAOI=" << _tstof(tempBuff) << std::endl;
-	// Optimization Dialog
-	outFile << "# Optimization Settings" << std::endl;
-	this->m_optimizationControlDlg.m_binSize.GetWindowTextW(tempBuff);
-	outFile << "binSize=" << _tstof(tempBuff) << std::endl;
-	this->m_optimizationControlDlg.m_numberBins.GetWindowTextW(tempBuff);
-	outFile << "binNumber=" << _tstof(tempBuff) << std::endl;
-	this->m_optimizationControlDlg.m_targetRadius.GetWindowTextW(tempBuff);
-	outFile << "targetRadius=" << _tstof(tempBuff) << std::endl;
-	this->m_optimizationControlDlg.m_minFitness.GetWindowTextW(tempBuff);
-	outFile << "minFitness=" << _tstof(tempBuff) << std::endl;
-	this->m_optimizationControlDlg.m_minSeconds.GetWindowTextW(tempBuff);
-	outFile << "minSeconds=" << _tstof(tempBuff) << std::endl;
-	this->m_optimizationControlDlg.m_maxSeconds.GetWindowTextW(tempBuff);
-	outFile << "maxSeconds=" << _tstof(tempBuff) << std::endl;
-	this->m_optimizationControlDlg.m_minGenerations.GetWindowTextW(tempBuff);
-	outFile << "minGenerations=" << _tstof(tempBuff) << std::endl;
-	this->m_optimizationControlDlg.m_maxGenerations.GetWindowTextW(tempBuff);
-	outFile << "maxGenerations=" << _tstof(tempBuff) << std::endl;
-	// SLM Dialog Settings
-	outFile << "# SLM Configuratoin Settings" << std::endl;
-	outFile << "slmConfigMode=";
-	if (this->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED) { outFile << "dual\n"; }
-	else if (this->m_slmControlDlg.multiEnable.GetCheck() == BST_CHECKED) {	outFile << "multi\n"; }
-	else { outFile << "single\n"; }
-	// Quick Check for SLMs
-	if (this->slmCtrl != NULL) {
-		// Output the LUT file being used for every board and PhaseCompensationFile
-		for (int i = 0; i < this->slmCtrl->boards.size(); i++) {
-			outFile << "slmLutFilePath" << std::to_string(i + 1) << "=" << this->slmCtrl->boards[i]->LUTFileName << "\n";
-			outFile << "slmWfcFilePath" << std::to_string(i + 1) << "=" << this->slmCtrl->boards[i]->PhaseCompensationFileName << "\n";
-		}
-	}
-	outFile << "phaseCompensation=";
-	if (this->m_slmControlDlg.m_CompensatePhase) {
-		outFile << "true\n";
-	}
-	else {
-		outFile << "false\n";
-	}
-
-	// Output Dialog
-	outFile << "saveImage=";
-	if (this->m_outputControlDlg.m_SaveImagesCheck.GetCheck() == BST_CHECKED) {
-		outFile << "true\n";
-	}
-	else {
-		outFile << "false\n";
-	}
-
-	outFile << "displayCamera=";
-	if (this->m_outputControlDlg.m_displayCameraCheck.GetCheck() == BST_CHECKED) {
-		outFile << "true\n";
-	}
-	else {
-		outFile << "false\n";
-	}
-	outFile << "displaySLM=";
-	if (this->m_outputControlDlg.m_displaySLM.GetCheck() == BST_CHECKED) {
-		outFile << "true\n";
-	}
-	else {
-		outFile << "false\n";
-	}
-	outFile << "logFilesEnable=";
-	if (this->m_outputControlDlg.m_logFilesCheck.GetCheck() == BST_CHECKED) {
-		outFile << "true\n";
-	}
-	else {
-		outFile << "false\n";
-	}
-
-	return true;
 }
 
 void MainDialog::OnBnClickedMultiThreadEnable(){

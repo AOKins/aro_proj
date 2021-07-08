@@ -1,6 +1,6 @@
 ////////////////////
 // Optimization handler methods implementation for brute force algorithm
-// Last edited: 07/02/2021 by Andrew O'Kins
+// Last edited: 07/08/2021 by Andrew O'Kins
 ////////////////////
 #include "stdafx.h"						// Required in source
 #include "BruteForce_Optimization.h"	// Header file
@@ -127,9 +127,10 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 
 					//Record current performance to file //Ask what kind of calcualtion is this?
 					double ms = boardID*dphi + curBinVal / dphi;
-					this->timeVsFitnessFile << this->timestamp->MS_SinceStart() << " " << fitness * this->cc->GetExposureRatio() << " " << this->cc->GetExposureRatio() << std::endl;
-					this->tfile << ms << " " << fitness * this->cc->GetExposureRatio() << " " << this->cc->GetExposureRatio() << std::endl;
-
+					if (this->loggingFilesEnable) {
+						this->timeVsFitnessFile << this->timestamp->MS_SinceStart() << " " << fitness * this->cc->GetExposureRatio() << " " << this->cc->GetExposureRatio() << std::endl;
+						this->tfile << ms << " " << fitness * this->cc->GetExposureRatio() << " " << this->cc->GetExposureRatio() << std::endl;
+					}
 					// Keep record of the best fitness value and image
 					if (fitness * exposureTimesRatio > fitValMax) {
 						binValMax = curBinVal;
@@ -159,8 +160,10 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 				slmImg[binIndex] = binValMax;
 
 				// Save progress data
-				lmaxfile << binValMax << " " << fitValMax << std::endl;
-				rtime << this->timestamp->MS_SinceStart() << " ms  " << fitValMax << "   " << this->cc->finalExposureTime << std::endl;
+				if (this->loggingFilesEnable) {
+					lmaxfile << binValMax << " " << fitValMax << std::endl;
+					rtime << this->timestamp->MS_SinceStart() << " ms  " << fitValMax << "   " << this->cc->finalExposureTime << std::endl;
+				}
 			} // ... binRow loop
 		} // ... binCol loop
 
@@ -187,13 +190,17 @@ bool BruteForce_Optimization::setupInstanceVariables() {
 	}
 
 	this->cc->startCamera(); // setup camera
-
-	this->tfile.open("logs/Opt_functionEvals_vs_fitness.txt", std::ios::app);
-	this->timeVsFitnessFile.open("logs/Opt_time_vs_fitness.txt", std::ios::app);
-
+	if (this->loggingFilesEnable) {
+		this->tfile.open(this->outputFolder + "Opt_functionEvals_vs_fitness.txt", std::ios::app);
+		this->timeVsFitnessFile.open(this->outputFolder + "Opt_time_vs_fitness.txt", std::ios::app);
+	}
 	// Setup displays
-	this->camDisplay = new CameraDisplay(this->cc->cameraImageHeight, this->cc->cameraImageWidth, "Camera Display");
-	this->slmDisplay = new CameraDisplay(this->sc->getBoardHeight(0), this->sc->getBoardWidth(0), "SLM Display");
+	if (this->displayCamImage) {
+		this->camDisplay = new CameraDisplay(this->cc->cameraImageHeight, this->cc->cameraImageWidth, "Camera Display");
+	}
+	if (this->displaySLMImage) {
+		this->slmDisplay = new CameraDisplay(this->sc->getBoardHeight(0), this->sc->getBoardWidth(0), "SLM Display");
+	}
 
 	// Scaler Setup (using base class)
 	this->slmScaledImages.clear();
@@ -210,38 +217,41 @@ bool BruteForce_Optimization::setupInstanceVariables() {
 	this->allTimeBestFitness = 0;
 
 	// Open files for logging algorithm progress 
-	this->lmaxfile.open("logs/lmax.txt");
-	this->rtime.open("logs/Opt_rtime.txt");
-
+	if (this->loggingFilesEnable) {
+		this->lmaxfile.open(this->outputFolder + "lmax.txt");
+		this->rtime.open(this->outputFolder + "Opt_rtime.txt");
+	}
 	return true;
 }
 
 bool BruteForce_Optimization::shutdownOptimizationInstance() {
 	// - log files close
-	this->timeVsFitnessFile.close();
-	this->tfile.close();
-	// Generic file renaming to include time stamps
+	if (this->loggingFilesEnable) {
+		this->timeVsFitnessFile.close();
+		this->tfile.close();
+		this->lmaxfile.close();
+		this->rtime.close();
+	}
 	std::string curTime = Utility::getCurTime();
-	std::rename("logs/Opt_functionEvals_vs_fitness.txt", ("logs/" + curTime + "_OPT5_functionEvals_vs_fitness.txt").c_str());
-	std::rename("logs/Opt_time_vs_fitness.txt", ("logs/" + curTime + "_OPT5_time_vs_fitness.txt").c_str());
-	std::rename("logs/lmax.txt", ("logs/" + curTime + "_OPT5_lmax.txt").c_str());
-	std::rename("logs/Opt_rtime.txt", ("logs/" + curTime + "_OPT5_rtime.txt").c_str());
-	saveParameters(curTime, "OPT5");
+	// Generic file renaming to include time stamps
+	if (this->loggingFilesEnable){
+		std::rename((this->outputFolder + "Opt_functionEvals_vs_fitness.txt").c_str(), (this->outputFolder + curTime + "_OPT5_functionEvals_vs_fitness.txt").c_str());
+		std::rename((this->outputFolder + "Opt_time_vs_fitness.txt").c_str(), (this->outputFolder + curTime + "_OPT5_time_vs_fitness.txt").c_str());
+		std::rename((this->outputFolder + "lmax.txt").c_str(), (this->outputFolder + curTime + "_OPT5_lmax.txt").c_str());
+		std::rename((this->outputFolder + "Opt_rtime.txt").c_str(), (this->outputFolder + curTime + "_OPT5_rtime.txt").c_str());
+		saveParameters(curTime, "OPT5");
 
-	//Record total time taken for optimization
-	curTime = Utility::getCurTime();
-	std::ofstream tfile2("logs/" + curTime + "_OPT5_time.txt", std::ios::app);
-	tfile2 << this->timestamp->MS_SinceStart() << std::endl;
-	tfile2.close();
-
+		//Record total time taken for optimization
+		std::ofstream tfile2(this->outputFolder + curTime + "_OPT5_time.txt", std::ios::app);
+		tfile2 << this->timestamp->MS_SinceStart() << std::endl;
+		tfile2.close();
+	}
 	// Save how final optimization looks through camera
-	if (this->bestImage != NULL) {
+	if (this->bestImage != NULL && this->saveImages) {
 		unsigned char* camImg = this->bestImage->getRawData<unsigned char>();
 		cv::Mat Opt_ary = cv::Mat(this->bestImage->getHeight(), this->bestImage->getWidth(), CV_8UC1, camImg);
-		cv::imwrite("logs/" + curTime + "_OPT5_Optimized.bmp", Opt_ary);
+		cv::imwrite(this->outputFolder + curTime + "_OPT5_Optimized.bmp", Opt_ary);
 	}
-	this->lmaxfile.close();
-	this->rtime.close();
 
 	// - camera shutdown
 	this->cc->stopCamera();
@@ -269,9 +279,10 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 	//Record the final (most fit) slm images followed by deleting them
 	for (int i = int(this->finalImages_.size())-1; i >= 0; i--) {
 		// Save image
-		cv::Mat m_ary = cv::Mat(512, 512, CV_8UC1, this->finalImages_[i]);
-		cv::imwrite("logs/" + curTime + "_OPT5_phaseopt.bmp", m_ary);
-
+		if (this->saveImages) {
+			cv::Mat m_ary = cv::Mat(512, 512, CV_8UC1, this->finalImages_[i]);
+			cv::imwrite(this->outputFolder + curTime + "_OPT5_phaseopt.bmp", m_ary);
+		}
 		delete[] this->finalImages_[i]; // deallocate then
 		this->finalImages_.pop_back();  // remove from vector
 	}

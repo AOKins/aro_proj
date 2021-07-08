@@ -108,7 +108,7 @@ bool Optimization::prepareOutputSettings() {
 		this->displaySLMImage = true;
 	}
 	else {
-		this->displayCamImage = false;
+		this->displaySLMImage = false;
 	}
 
 	if (this->dlg.m_outputControlDlg.m_SaveImagesCheck.GetCheck() == BST_CHECKED) {
@@ -124,6 +124,11 @@ bool Optimization::prepareOutputSettings() {
 	else {
 		this->loggingFilesEnable = false;
 	}
+	// Get where to store the outputs
+	CString buff;
+	this->dlg.m_outputControlDlg.m_OutputLocationField.GetWindowTextW(buff);
+	this->outputFolder = CT2A(buff);
+
 	return true;
 }
 
@@ -186,7 +191,7 @@ ImageScaler* Optimization::setupScaler(unsigned char *slmImg, int slmNum = 0) {
 // [SAVE/LOAD FEATURES]
 // Output information of the parameters used in the optimization in to logs
 void Optimization::saveParameters(std::string time, std::string optType) {
-	std::ofstream paramFile("logs/" + time + "_" + optType + "_Optimization_Parameters.txt");
+	std::ofstream paramFile(this->outputFolder + time + "_" + optType + "_Optimization_Parameters.txt");
 	paramFile << "----------------------------------------------------------------" << std::endl;
 	paramFile << "OPTIMIZATION SETTINGS:" << std::endl;
 	paramFile << "Type - " << optType << std::endl;

@@ -99,7 +99,9 @@ bool uGA_Optimization::runIndividual(int indID) {
 		}
 		// If the boolean is already true, then that means another thread is using this hardware and we have an issue
 		if (this->usingHardware) {
+			consoleLock.lock();
 			Utility::printLine("ERROR: HARDWARE BEING USED BY OTHER THREAD(S)! Exiting out of this individual");
+			consoleLock.unlock();
 			hardwareLock.unlock();
 			return false;
 		}
@@ -147,7 +149,7 @@ bool uGA_Optimization::runIndividual(int indID) {
 			camLock.unlock();
 		}
 		// Record values for the top six individuals in each generation
-		if (indID > 23) {
+		if (indID > 23 && this->loggingFilesEnable) {
 			std::unique_lock<std::mutex> tVfLock(timeVsFitMutex, std::defer_lock);
 			tVfLock.lock();
 			this->timeVsFitnessFile << this->timestamp->MS_SinceStart() << "," << fitness*exposureTimesRatio << "," << this->cc->finalExposureTime << "," << exposureTimesRatio << std::endl;
@@ -155,14 +157,16 @@ bool uGA_Optimization::runIndividual(int indID) {
 		}
 		//Save elite info of last generation
 		if (indID == (population[0]->getSize() - 1)) {
-			std::unique_lock<std::mutex> tFileLock(tfileMutex, std::defer_lock);
-			tFileLock.lock();
-			this->tfile << "uGA GENERATION," << this->curr_gen << "," << fitness*exposureTimesRatio << std::endl;
-			tFileLock.unlock();
+			if (this->loggingFilesEnable) {
+				std::unique_lock<std::mutex> tFileLock(tfileMutex, std::defer_lock);
+				tFileLock.lock();
+				this->tfile << "uGA GENERATION," << this->curr_gen << "," << fitness*exposureTimesRatio << std::endl;
+				tFileLock.unlock();
+			}
 			std::unique_lock<std::mutex> imageLock(imageMutex, std::defer_lock);
 			imageLock.lock();
-			if (saveImages) {
-				cc->saveImage(curImage, std::string("logs/UGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite" + ".jpg"));
+			if (this->saveImages) {
+				cc->saveImage(curImage, std::string(this->outputFolder + "UGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite" + ".jpg"));
 			}
 			// Also save the image as current best
 			this->bestImage = curImage; // Deep copy image over to best
@@ -171,7 +175,10 @@ bool uGA_Optimization::runIndividual(int indID) {
 
 		// Check stop conditions, only assign true if we reached the condition (race condition if done directly)
 		if (stopConditionsReached((fitness*exposureTimesRatio), this->timestamp->S_SinceStart(), this->curr_gen + 1) == true) {
+			std::unique_lock<std::mutex> stopLock(this->stopFlagMutex, std::defer_lock);
+			stopLock.lock(); 
 			this->stopConditionsMetFlag = true;
+			stopLock.unlock();
 		}
 
 		// Update fitness for the individuals
@@ -251,9 +258,9 @@ bool uGA_Optimization::setupInstanceVariables() {
 	this->cc->startCamera();
 
 	//Open up files to which progress will be logged
-	this->tfile.open("logs/uGA_functionEvals_vs_fitness.txt");
-	this->timeVsFitnessFile.open("logs/uGA_time_vs_fitness.txt");
-	this->efile.open("logs/exposure.txt");
+	this->tfile.open(this->outputFolder + "uGA_functionEvals_vs_fitness.txt");
+	this->timeVsFitnessFile.open(this->outputFolder + "uGA_time_vs_fitness.txt");
+	this->efile.open(this->outputFolder + "exposure.txt");
 
 	return true; // Returning true if no issues met
 }
@@ -277,20 +284,20 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 
 		// Save how final optimization looks through camera
 		cv::Mat Opt_ary = cv::Mat(int(imgHeight), int(imgWidth), CV_8UC1, eliteImage);
-		cv::imwrite("logs/" + curTime + "_uGA_Optimized.bmp", Opt_ary);
+		cv::imwrite(this->outputFolder + curTime + "_uGA_Optimized.bmp", Opt_ary);
 
 		// Save final (most fit SLM images)
 		for (int popID = 0; popID < this->population.size(); popID++) {
 			scalers[popID]->TranslateImage(this->population[popID]->getGenome(this->population[popID]->getSize() - 1), this->slmScaledImages[popID]);
 			cv::Mat m_ary = cv::Mat(512, 512, CV_8UC1, this->slmScaledImages[popID]);
-			imwrite("logs/" + curTime + "_uGA_phaseopt_SLM" + std::to_string(popID) + ".bmp", m_ary);
+			imwrite(this->outputFolder + curTime + "_uGA_phaseopt_SLM" + std::to_string(popID) + ".bmp", m_ary);
 		}
 	}	
 	Utility::printLine("INFO: Final Fitness: " + std::to_string(this->population[0]->getFitness(this->population[0]->getSize() - 1)));
 	// Generic file renaming to have time stamps of run
-	std::rename("logs/uGA_functionEvals_vs_fitness.txt", ("logs/" + curTime + "_uGA_functionEvals_vs_fitness.txt").c_str());
-	std::rename("logs/uGA_time_vs_fitness.txt", ("logs/" + curTime + "_uGA_time_vs_fitness.txt").c_str());
-	std::rename("logs/exposure.txt", ("logs/" + curTime + "_uGA_exposure.txt").c_str());
+	std::rename((this->outputFolder + "uGA_functionEvals_vs_fitness.txt").c_str(), (this->outputFolder + curTime + "_uGA_functionEvals_vs_fitness.txt").c_str());
+	std::rename((this->outputFolder + "uGA_time_vs_fitness.txt").c_str(), (this->outputFolder + curTime + "_uGA_time_vs_fitness.txt").c_str());
+	std::rename((this->outputFolder + "exposure.txt").c_str(), (this->outputFolder + curTime + "_uGA_exposure.txt").c_str());
 	saveParameters(curTime, "uGA");
 	
 	// - image displays

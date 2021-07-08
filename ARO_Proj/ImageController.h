@@ -74,8 +74,6 @@ public:
 
 	// Use the SDK's method of saving the image
 	void saveImage(std::string path) {
-		std::ostringstream filePath;
-		filePath << "logs/test.jpg";
 		this->image_->Save(path.c_str(), Spinnaker::ImageFileFormat::FROM_FILE_EXT);
 	}
 };

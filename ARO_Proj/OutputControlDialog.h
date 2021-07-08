@@ -28,4 +28,7 @@ public:
 	CButton m_displaySLM;
 	// If checked, output various logging files to record performance of the optimization
 	CButton m_logFilesCheck;
+	// Gives where the user wants to store the output contents, expected to be a path to a folder (not a file)
+	CEdit m_OutputLocationField;
+	afx_msg void OnBnClickedOutputLocationButton();
 };

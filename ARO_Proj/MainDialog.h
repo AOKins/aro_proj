@@ -38,9 +38,13 @@ public:
 	void setDefaultUI();
 	// Set the UI according to given file path
 	bool setUIfromFile(std::string filePath);
+
 	// Set a value in the UI according to a given name and value as string (used by setUIfromFile)
+	// Input: varName - string that should be identified to be a for a UI setting
+	//		  varValue - string containing the value that the associated variable should be assigned (exact type depends on variable identified)
+	// Output: variable associated with name is assigned varValue, returns false if error or inputs are empty
 	bool setValueByName(std::string varName, std::string varValue);
-	// Write current UI values to given file location
+	// Write current UI values with given file location
 	bool saveUItoFile(std::string filePath);
 
 	// Handle process of loading settings, requesting file to select and attempt load

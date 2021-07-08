@@ -321,6 +321,7 @@
     <ClCompile Include="Optimization.cpp" />
     <ClCompile Include="OptimizationControlDialog.cpp" />
     <ClCompile Include="OutputControlDialog.cpp" />
+    <ClCompile Include="SettingsOutput.cpp" />
     <ClCompile Include="SGA_Optimization.cpp" />
     <ClCompile Include="SLMControlDialog.cpp" />
     <ClCompile Include="SLMController.cpp" />

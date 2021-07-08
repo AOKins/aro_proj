@@ -61,7 +61,7 @@ protected:
 	std::ofstream tfile;				// Record elite individual progress over generations
 	std::ofstream timeVsFitnessFile;	// Recoding general fitness progress
 	std::ofstream efile;				// Expsoure file to record when exposure is shortened
-
+	std::string outputFolder;
 	// Methods for use in runOptimization()
 	// Pull GUI settings to set parameters
 	bool prepareStopConditions();
@@ -86,7 +86,7 @@ protected:
 	bool stopConditionsReached(double curFitness, double curSecPassed, double curGenerations);
 
 	// Save the various setting parameters used in this optimization
-	// Stores the values with formatting in "/logs/[time]_[optType]_Optimization_Parameters.txt"
+	// Stores the values with formatting in "this->outputFolder/[time]_[optType]_Optimization_Parameters.txt"
 	// Input:
 	//		time - the current time as a string label
 	//		optType - a string for identifying the kind of optimization that has been performed

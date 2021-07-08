@@ -149,14 +149,11 @@ ImageController * CameraController::AcquireImage() {
 
 		// Ensure image completion
 		if (curImage->IsIncomplete()) {
-			//TODO: implement proper handling of inclomplete images (retake of image)
+			//TODO: implement proper handling of incomplete images (retake of image)
 			Utility::printLine("ERROR: Image incomplete: " + std::string(Spinnaker::Image::GetImageStatusDescription(curImage->GetImageStatus())));
 		}
-		//Print The dimensions of the image (should be XX by YY)
 		
-		//copy image to pImage pointer
-
-		// Assign the output image to outImage, since this is a converted image we don't need to release it
+		// Assign the converted output image to outImage, since this is a converted image we don't need to release it
 			// Resource reference says so in example conversion to mono 8 -> http://softwareservices.flir.com/Spinnaker/latest/_acquisition_8cpp-example.html
 		ImageController* outImage = new ImageController(curImage->Convert(Spinnaker::PixelFormat_Mono8), false);
 		// Release from the buffer
@@ -168,7 +165,6 @@ ImageController * CameraController::AcquireImage() {
 		Utility::printLine("ERROR: " + std::string(e.what()));
 		return NULL;
 	}
-	Utility::printLine("#####################################################", true);
 }
 
 // [CAMERA SETUP]
@@ -283,14 +279,14 @@ bool CameraController::UpdateConnectedCameraInfo() {
 	try	{
 		//Spinaker system object w/ camera list
 		system = Spinnaker::System::GetInstance();
-		camList = system->GetCameras();
+		this->camList = system->GetCameras();
 
 		if (system == NULL)	{
 			Utility::printLine("ERROR: Camera system not avaliable!");
 			return false;
 		}
 
-		int camAmount = camList.GetSize();
+		int camAmount = this->camList.GetSize();
 		if (camAmount <= 0)	{
 			Utility::printLine("ERROR: No cameras avaliable!");
 			return false;
@@ -536,7 +532,7 @@ bool CameraController::ConfigureExposureTime() {
 }
 
 bool CameraController::hasCameras() {
-	if (camList.GetSize() > 0) {
+	if (this->camList.GetSize() > 0) {
 		return true;
 	}
 	else {

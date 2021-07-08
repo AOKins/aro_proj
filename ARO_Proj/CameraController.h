@@ -68,7 +68,8 @@ public:
 
 	// [UTILITY]
 	int PrintDeviceInfo();
-	bool hasCameras(); // Return true if at least one camera in camera list
+	// Return true if this controller has access to at least one camera
+	bool hasCameras(); 
 
 	bool SetExposure(double exposureTimeToSet);
 	double GetExposureRatio();
