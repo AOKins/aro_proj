@@ -2,6 +2,7 @@
 #define CAMERA_CONTROLLER_H_
 
 #include <string>
+#include <ostream>
 
 #include "Spinnaker.h"
 #include "SpinGenApi\SpinnakerGenApi.h"
@@ -54,7 +55,7 @@ public:
 
 	bool setupCamera();
 	bool startCamera();
-	bool saveImage(ImageController * curImage, std::string curGen);
+	bool saveImage(ImageController * curImage, std::string path);
 	ImageController* AcquireImage();
 	bool stopCamera();
 	bool shutdownCamera();

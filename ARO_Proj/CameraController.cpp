@@ -126,9 +126,17 @@ bool CameraController::shutdownCamera() {
 //		  path - string to where and name of the image is to be saved
 // Output: curImage is saved at path
 bool CameraController::saveImage(ImageController * curImage, std::string path) {
-	if (!curImage == NULL) {
+	if (curImage == NULL) {
 		Utility::printLine("ERROR: save image given is invalid!");
 		return false;
+	}
+	else {
+		try {
+			curImage->saveImage(path);
+		}
+		catch (Spinnaker::Exception &e) {
+			Utility::printLine("ERROR: "+ std::string(e.what()));
+		}
 	}
 	return true;
 }

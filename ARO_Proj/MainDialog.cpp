@@ -387,6 +387,10 @@ void MainDialog::OnTcnSelchangeTab1(NMHDR *pNMHDR, LRESULT *pResult) {
 		m_aoiControlDlg.ShowWindow(SW_SHOW);
 		m_pwndShow = &m_aoiControlDlg;
 		break;
+	case 4:
+		m_outputControlDlg.ShowWindow(SW_SHOW);
+		m_pwndShow = &m_outputControlDlg;
+		break;
 	default:
 		Utility::printLine("WARNING: Requested to show a tab that shouldn't exist!");
 	}
@@ -858,7 +862,6 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 
 	return true;
 }
-
 
 void MainDialog::OnBnClickedMultiThreadEnable(){
 	if (m_MultiThreadEnable.GetCheck() == BST_CHECKED) {

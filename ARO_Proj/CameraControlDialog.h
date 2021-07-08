@@ -1,9 +1,8 @@
 #pragma once
-
-#include "resource.h"
 #include "afxwin.h"
-// CameraControlDialog dialog
+#include "resource.h"
 
+// CameraControlDialog dialog
 class CameraControlDialog : public CDialogEx
 {
 	DECLARE_DYNAMIC(CameraControlDialog)

@@ -43,9 +43,9 @@ protected:
 	// Values assigned within setupInstanceVariables(), then if needed cleared in shutdownOptimizationInstance()
 	bool isWorking = false;		// true if currently actively running the optimization algorithm
 	bool usingHardware = false; // debug flag of using hardware currently in a run of an individual (to know if accidentally having two threads use hardware at once!)
-	int populationSize; // Size of the populations being used (number of individuals in a population class)
-	int popCount;		// Number of populations working with (equal to sc->boards.size() if multi-SLM mode)
-	int eliteSize;		// Number of elite individuals within the population (should be less than populationSize)
+	int populationSize;			// Size of the populations being used (number of individuals in a population class)
+	int popCount;				// Number of populations working with (equal to sc->boards.size() if multi-SLM mode)
+	int eliteSize;				// Number of elite individuals within the population (should be less than populationSize)
 	bool shortenExposureFlag;   // Set to true by individual if fitness is too high
 	bool stopConditionsMetFlag; // Set to true if a stop condition was reached by one of the individuals
 	CameraDisplay * camDisplay; // Display for camera

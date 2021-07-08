@@ -131,7 +131,6 @@ public:
 		// Assign new population to individuals_
 		delete[] this->individuals_;
 		this->individuals_ = temp;
-		delete[] sorted_temp;
 		return true; // No issues!
 	}	// ... Function nextGeneration
 }; // ... class SGAPopulation

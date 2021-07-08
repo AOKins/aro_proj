@@ -7,6 +7,8 @@
 #include "SpinGenApi\SpinnakerGenApi.h"
 using namespace Spinnaker::GenApi;
 
+#include <ostream> // Debug, should be removed when done
+
 // Class to encaspsulate interactions required to accessing image data and current SDK
 //		(this is so that optimization classes aren't relying on an SDK's specific behaviors)
 class ImageController {
@@ -72,7 +74,9 @@ public:
 
 	// Use the SDK's method of saving the image
 	void saveImage(std::string path) {
-		this->image_->Save(path.c_str());
+		std::ostringstream filePath;
+		filePath << "logs/test.jpg";
+		this->image_->Save(path.c_str(), Spinnaker::ImageFileFormat::FROM_FILE_EXT);
 	}
 };
 

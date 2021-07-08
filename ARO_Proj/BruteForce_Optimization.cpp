@@ -90,6 +90,11 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 
 				// Find max phase for this bin
 				for (int curBinVal = 0; curBinVal< 256; curBinVal += dphi) {
+					// Abort if stop button was pressed
+					if (dlg.stopFlag == true) {
+						return true;
+					}
+
 					ImageController * curImage;
 
 					// Assign at current bin the new value to test
@@ -103,14 +108,14 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 					this->sc->writeImageToBoard(boardID, this->slmScaledImages[boardID]);
 
 					//Acquire camera image
-					this->cc->AcquireImages(curImage);
-
-					unsigned char* camImg = curImage->getRawData<unsigned char>();
+					curImage = this->cc->AcquireImage();
 					this->usingHardware = false;
-					if (camImg == NULL)	{
+
+					if (curImage == NULL)	{
 						Utility::printLine("ERROR: Image Acquisition has failed!");
 						continue;
 					}
+					unsigned char* camImg = curImage->getRawData<unsigned char>();
 					// Display cam image
 					if (this->displayCamImage) {
 						this->camDisplay->UpdateDisplay(camImg);
@@ -230,10 +235,11 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 	tfile2.close();
 
 	// Save how final optimization looks through camera
-	unsigned char* camImg = this->bestImage->getRawData<unsigned char>();
-	cv::Mat Opt_ary = cv::Mat(this->bestImage->getHeight(), this->bestImage->getWidth(), CV_8UC1, camImg);
-	cv::imwrite("logs/" + curTime + "_OPT5_Optimized.bmp", Opt_ary);
-
+	if (this->bestImage != NULL) {
+		unsigned char* camImg = this->bestImage->getRawData<unsigned char>();
+		cv::Mat Opt_ary = cv::Mat(this->bestImage->getHeight(), this->bestImage->getWidth(), CV_8UC1, camImg);
+		cv::imwrite("logs/" + curTime + "_OPT5_Optimized.bmp", Opt_ary);
+	}
 	this->lmaxfile.close();
 	this->rtime.close();
 
@@ -270,7 +276,6 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 		this->finalImages_.pop_back();  // remove from vector
 	}
 	this->finalImages_.clear();
-	delete this->bestImage;
 
 	//Reset UI State
 	this->isWorking = false;

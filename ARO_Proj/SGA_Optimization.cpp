@@ -86,111 +86,115 @@ bool SGA_Optimization::runOptimization() {
 //     shortenExposureFlag is set to true if fitness value is high enough
 //     stopConditionsMetFlag is set to true if conditions met
 bool SGA_Optimization::runIndividual(int indID) {
-	ImageController * curImage = NULL;
+	try {
+		ImageController * curImage = NULL;
 
-	std::unique_lock<std::mutex>  consoleLock(consoleMutex, std::defer_lock);
-	std::unique_lock<std::mutex> hardwareLock(hardwareMutex, std::defer_lock);
+		std::unique_lock<std::mutex>  consoleLock(consoleMutex, std::defer_lock);
+		std::unique_lock<std::mutex> hardwareLock(hardwareMutex, std::defer_lock);
 
-	hardwareLock.lock();
-	// Pre end the result for the individual if the stop flag has been raised while waiting
-	if (this->dlg.stopFlag == true) {
-		hardwareLock.unlock();
-		return true;
-	}
-	// If the hardware boolean is already true, then that means another thread is using this hardware and we have an issue
-	if (this->usingHardware) {
-		Utility::printLine("ERROR: HARDWARE BEING USED BY OTHER THREAD(S)! Exiting out of this individual");
-		hardwareLock.unlock();
-		return false;
-	}
-	this->usingHardware = true;
+		// Pre end the result for the individual if the stop flag has been raised while waiting
+		if (this->dlg.stopFlag == true) {
+			return true;
+		}
 
-	// Write translated image to SLM boards, assumes there are at least as many boards as populations
+		hardwareLock.lock();
+		// If the hardware boolean is already true, then that means another thread is using this hardware and we have an issue
+		if (this->usingHardware) {
+			Utility::printLine("ERROR: HARDWARE BEING USED BY OTHER THREAD(S)! Exiting out of this individual");
+			hardwareLock.unlock();
+			return false;
+		}
+		this->usingHardware = true;
+
+		// Write translated image to SLM boards, assumes there are at least as many boards as populations
 		// Multi SLM engaged -> should write to every board (popCount = # of boards)
 		// Single SLM -> should only write to board 0 (popCount = 1)
-	for (int i = 0; i < this->popCount; i++) {
-		// Scale the individual genome to fit SLM
-		this->scalers[i]->TranslateImage(this->population[i]->getGenome(indID), this->slmScaledImages[i]); // Translate the vector genome into char array image
-		// Write to SLM
-		this->sc->writeImageToBoard(i, this->slmScaledImages[i]);
-	}
-
-	// Acquire image // - take image
-	curImage = this->cc->AcquireImage();
-	
-	this->usingHardware = false;
-	hardwareLock.unlock(); // Now done with the hardware
-
-	// Getting the image dimensions and data from resulting image
-	int imgWidth = curImage->getWidth();
-	int imgHeight = curImage->getHeight();
-	unsigned char * camImg = curImage->getRawData<unsigned char>();
-
-	// Giving error and ends early if there is no data
-	if (camImg == NULL) { // TODO: I think this is dangerous as Individual does not have default fitness if left unevaluated
-		consoleLock.lock();
-		Utility::printLine("ERROR: Image Acquisition has failed!");
-		consoleLock.unlock();
-		return false;
-	}
-
-	// Get current exposure setting of camera (relative to initial)
-	double exposureTimesRatio = this->cc->GetExposureRatio();	// needed for proper fitness value across changing exposure time
-	// Determine the fitness by intensity of the image within circle of target radius
-	double fitness = Utility::FindAverageValue(camImg, imgWidth, imgHeight, this->cc->targetRadius);
-
-	// Display first individual
-	if (indID == 0 && this->displayCamImage) {
-		std::unique_lock<std::mutex> camLock(camDisplayMutex, std::defer_lock);
-		camLock.lock();
-		this->camDisplay->UpdateDisplay(camImg);
-		camLock.unlock();
-	}
-	// Record values for the top six individuals in each generation
-	if (indID > 23) {
-		std::unique_lock<std::mutex> tVfLock(timeVsFitMutex, std::defer_lock);
-		tVfLock.lock();
-		this->timeVsFitnessFile << this->timestamp->MS_SinceStart() << "," << fitness*exposureTimesRatio << "," << this->cc->finalExposureTime << "," << exposureTimesRatio << std::endl;
-		tVfLock.unlock();
-	}
-	//Save elite info of last generation
-	if (indID == (population[0]->getSize() - 1)) {
-		std::unique_lock<std::mutex> tFileLock(tfileMutex, std::defer_lock);
-		tFileLock.lock();
-		this->tfile << "SGA GENERATION," << this->curr_gen << "," << fitness*exposureTimesRatio << std::endl;
-		tFileLock.unlock();
-		if (saveImages) {
-			std::string imgFilePath = "logs/SGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite.jpg";
-			this->cc->saveImage(curImage, imgFilePath);
+		for (int i = 0; i < this->popCount; i++) {
+			// Scale the individual genome to fit SLM
+			this->scalers[i]->TranslateImage(this->population[i]->getGenome(indID), this->slmScaledImages[i]); // Translate the vector genome into char array image
+			// Write to SLM
+			this->sc->writeImageToBoard(i, this->slmScaledImages[i]);
 		}
-		// Also save the image
-		std::unique_lock<std::mutex> imageLock(imageMutex, std::defer_lock);
-		imageLock.lock();
-		this->bestImage = curImage;
-		imageLock.unlock();
-	}
 
-	// Check stop conditions, only assign true if we reached the condition (race condition if done directly)
-	if (stopConditionsReached((fitness*exposureTimesRatio), this->timestamp->S_SinceStart(), this->curr_gen + 1) == true) {
-		this->stopConditionsMetFlag = true;
-	}
+		// Acquire image // - take image
+		curImage = this->cc->AcquireImage();
 
-	// Update fitness for the individuals
-	for (int popID = 0; popID < this->population.size(); popID++) {
-		this->population[popID]->setFitness(indID, fitness * exposureTimesRatio);
-	}
-	// If the fitness value is too high, flag that the exposure needs to be shortened
-	if (fitness > this->maxFitnessValue) {
-		std::unique_lock<std::mutex> expsureFlagLock(exposureFlagMutex, std::defer_lock);
-		expsureFlagLock.lock();
-		this->shortenExposureFlag = true;
-		expsureFlagLock.unlock();
-	}
-	// If the pointer to current image does not also point to the best image we are safe to delete
-	if (curImage != bestImage) {
-		delete curImage;
-	}
+		this->usingHardware = false;
+		hardwareLock.unlock(); // Now done with the hardware
 
+		if (curImage == NULL) { // TODO: I think this is dangerous as Individual does not have default fitness if left unevaluated
+			consoleLock.lock();
+			Utility::printLine("ERROR: Image Acquisition has failed!");
+			consoleLock.unlock();
+			return false;
+		}
+
+		// Getting the image dimensions and data from resulting image
+		int imgWidth = curImage->getWidth();
+		int imgHeight = curImage->getHeight();
+		unsigned char * camImg = curImage->getRawData<unsigned char>();
+
+		// Giving error and ends early if there is no data
+
+		// Get current exposure setting of camera (relative to initial)
+		double exposureTimesRatio = this->cc->GetExposureRatio();	// needed for proper fitness value across changing exposure time
+		// Determine the fitness by intensity of the image within circle of target radius
+		double fitness = Utility::FindAverageValue(camImg, imgWidth, imgHeight, this->cc->targetRadius);
+
+		// Display first individual
+		if (indID == 0 && this->displayCamImage) {
+			std::unique_lock<std::mutex> camLock(camDisplayMutex, std::defer_lock);
+			camLock.lock();
+			this->camDisplay->UpdateDisplay(camImg);
+			camLock.unlock();
+		}
+		// Record values for the top six individuals in each generation
+		if (indID > 23) {
+			std::unique_lock<std::mutex> tVfLock(timeVsFitMutex, std::defer_lock);
+			tVfLock.lock();
+			this->timeVsFitnessFile << this->timestamp->MS_SinceStart() << "," << fitness*exposureTimesRatio << "," << this->cc->finalExposureTime << "," << exposureTimesRatio << std::endl;
+			tVfLock.unlock();
+		}
+		//Save elite info of last generation
+		if (indID == (population[0]->getSize() - 1)) {
+			std::unique_lock<std::mutex> tFileLock(tfileMutex, std::defer_lock);
+			tFileLock.lock();
+			this->tfile << "SGA GENERATION," << this->curr_gen << "," << fitness*exposureTimesRatio << std::endl;
+			tFileLock.unlock();
+			std::unique_lock<std::mutex> imageLock(imageMutex, std::defer_lock);
+			imageLock.lock();
+			if (saveImages) {
+				this->cc->saveImage(curImage, std::string("logs/SGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite" + ".jpg"));
+			}
+			// Also save the image
+			this->bestImage = curImage;
+			imageLock.unlock();
+		}
+
+		// Check stop conditions, only assign true if we reached the condition (race condition if done directly)
+		if (stopConditionsReached((fitness*exposureTimesRatio), this->timestamp->S_SinceStart(), this->curr_gen + 1) == true) {
+			this->stopConditionsMetFlag = true;
+		}
+
+		// Update fitness for the individuals
+		for (int popID = 0; popID < this->population.size(); popID++) {
+			this->population[popID]->setFitness(indID, fitness * exposureTimesRatio);
+		}
+		// If the fitness value is too high, flag that the exposure needs to be shortened
+		if (fitness > this->maxFitnessValue) {
+			std::unique_lock<std::mutex> expsureFlagLock(exposureFlagMutex, std::defer_lock);
+			expsureFlagLock.lock();
+			this->shortenExposureFlag = true;
+			expsureFlagLock.unlock();
+		}
+		// If the pointer to current image does not also point to the best image we are safe to delete
+		if (curImage != bestImage) {
+			delete curImage;
+		}
+	}
+	catch (std::exception &e) {
+		Utility::printLine(e.what());
+	}
 	return true; // No errors!
 }
 
@@ -216,12 +220,12 @@ bool SGA_Optimization::setupInstanceVariables() {
 	// Setting population vector
 	this->population.clear();
 	for (int i = 0; i < this->popCount; i++) {
-		this->population.push_back(new SGAPopulation<int>(this->cc->numberOfBinsY * this->cc->numberOfBinsX * this->cc->populationDensity, this->populationSize, this->eliteSize, this->acceptedSimilarity));
+		this->population.push_back(new SGAPopulation<int>(this->cc->numberOfBinsY * this->cc->numberOfBinsX * this->cc->populationDensity, this->populationSize, this->eliteSize, this->acceptedSimilarity, this->multithreadEnable));
 	}
 
 	this->shortenExposureFlag = false;		// Set to true by individual if fitness is too high
 	this->stopConditionsMetFlag = false;	// Set to true if a stop condition was reached by one of the individuals
-
+	this->bestImage = NULL;
 	// Setup image displays for camera and SLM
 	this->camDisplay = new CameraDisplay(this->cc->cameraImageHeight, this->cc->cameraImageWidth, "Camera Display");
 	this->slmDisplay = new CameraDisplay(this->sc->getBoardHeight(0), this->sc->getBoardWidth(0), "SLM Display");
@@ -314,6 +318,5 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 		delete[] this->slmScaledImages[i];
 	}
 	this->slmScaledImages.clear();
-	delete this->bestImage;
 	return true;
 }
