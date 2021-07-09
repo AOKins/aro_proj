@@ -23,9 +23,6 @@
 #include "SLMController.h"		// Wrapper for SLM control
 #include "CameraController.h"	// Spinnaker Camera interface wrapper
 
-//[NAMESPACES]
-using namespace cv;
-
 #define MAX_CFileDialog_FILE_COUNT 99
 #define FILE_LIST_BUFFER_SIZE ((MAX_CFileDialog_FILE_COUNT * (MAX_PATH + 1)) + 1)
 
@@ -195,12 +192,12 @@ void MainDialog::setDefaultUI() {
 	// - if the liquid crystal type is nematic, then allow the user the option to
 	//compensate for phase imperfections by applying a phase compensation image
 	if (this->slmCtrl != nullptr)	{
-		if (!this->slmCtrl->IsAnyNematic())
+		if (!this->slmCtrl->IsAnyNematic()) {
 			this->m_slmControlDlg.m_CompensatePhaseCheckbox.ShowWindow(false);
-		else
+		} else {
 			this->m_slmControlDlg.m_CompensatePhaseCheckbox.ShowWindow(true);
-	}
-	else {
+		}
+	} else {
 		Utility::printLine("WARNING: SLM Control NULL");
 	}
 
@@ -405,7 +402,7 @@ void MainDialog::OnTcnSelchangeTab1(NMHDR *pNMHDR, LRESULT *pResult) {
 
 // [UI UPDATE]
 void MainDialog::disableMainUI(bool isMainEnabled) {
-	//All controls have thesame state
+	//All controls have the same state
 	// - enabled: when nothing is running
 	// - disabled when the algorithm is running
 

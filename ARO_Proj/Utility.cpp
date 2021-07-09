@@ -17,8 +17,7 @@ void Utility::printLine(std::string msg, bool isDebug) {
 		return;
 	}
 	std::cout << "\n" << msg;
-	/*
-	std::string curMsg = "\n" + msg;
+	/*std::string curMsg = "\n" + msg;
 	const char * dimMsgC = curMsg.c_str();
 	_cprintf(dimMsgC);*/
 }
