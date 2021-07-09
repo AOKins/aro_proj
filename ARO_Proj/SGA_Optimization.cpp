@@ -234,13 +234,13 @@ bool SGA_Optimization::setupInstanceVariables() {
 	this->stopConditionsMetFlag = false;	// Set to true if a stop condition was reached by one of the individuals
 	this->bestImage = NULL;
 	// Setup image displays for camera and SLM
-	this->camDisplay = new CameraDisplay(this->cc->cameraImageHeight, this->cc->cameraImageWidth, "Camera Display");
-	this->slmDisplay = new CameraDisplay(this->sc->getBoardHeight(0), this->sc->getBoardWidth(0), "SLM Display");
 	// Open displays if preference is set
 	if (this->displayCamImage) {
+		this->camDisplay = new CameraDisplay(this->cc->cameraImageHeight, this->cc->cameraImageWidth, "Camera Display");
 		this->camDisplay->OpenDisplay();
 	}
 	if (this->displaySLMImage) {
+		this->slmDisplay = new CameraDisplay(this->sc->getBoardHeight(0), this->sc->getBoardWidth(0), "SLM Display");
 		this->slmDisplay->OpenDisplay();
 	}
 	// Scaler Setup (using base class)
@@ -301,8 +301,14 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	saveParameters(curTime, "SGA");
 
 	// - image displays
-	this->camDisplay->CloseDisplay();
-	this->slmDisplay->CloseDisplay();
+	if (this->camDisplay != NULL) {
+		this->camDisplay->CloseDisplay();
+		delete this->camDisplay;
+	}
+	if (this->slmDisplay != NULL) {
+		this->slmDisplay->CloseDisplay();
+		delete this->slmDisplay;
+	}
 	// - camera
 	this->cc->stopCamera();
 	//this->cc->shutdownCamera();
@@ -312,8 +318,6 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 		delete this->population[i];
 	}
 	this->population.clear();
-	delete this->camDisplay;
-	delete this->slmDisplay;
 	delete this->timestamp;
 	// Delete all the scalers in the vector
 	for (int i = 0; i < this->scalers.size(); i++) {

@@ -12,8 +12,8 @@ CameraController::CameraController(MainDialog& dlg_) : dlg(dlg_) {
 //[DESTRUCTOR]
 CameraController::~CameraController() {
 	Utility::printLine("INFO: Beginning to shutdown camera!");
-	if (isCamCreated) {
-		stopCamera();
+	if (this->isCamCreated) {
+		//stopCamera();
 		shutdownCamera();
 	}
 	delete[] this->targetMatrix;
@@ -102,8 +102,6 @@ bool CameraController::startCamera() {
 }
 
 bool CameraController::stopCamera() {
-	//TODO: release any image(s) that are currently used
-
 	cam->EndAcquisition();
 	return true;
 }

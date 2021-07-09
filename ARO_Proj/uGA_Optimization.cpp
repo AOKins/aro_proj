@@ -301,8 +301,14 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 	saveParameters(curTime, "uGA");
 	
 	// - image displays
-	this->camDisplay->CloseDisplay();
-	this->slmDisplay->CloseDisplay();
+	if (this->camDisplay != NULL) {
+		this->camDisplay->CloseDisplay();
+		delete this->camDisplay;
+	}
+	if (this->slmDisplay != NULL) {
+		this->slmDisplay->CloseDisplay();
+		delete this->slmDisplay;
+	}
 	// - camera
 	this->cc->stopCamera();
 	//this->cc->shutdownCamera();
@@ -312,8 +318,6 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 		delete this->population[i];
 	}
 	this->population.clear();
-	delete this->camDisplay;
-	delete this->slmDisplay;
 	delete this->timestamp;
 	// Delete all the scalers in the vector
 	for (int i = 0; i < this->scalers.size(); i++) {
