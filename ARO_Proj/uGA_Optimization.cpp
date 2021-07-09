@@ -305,7 +305,7 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 	this->slmDisplay->CloseDisplay();
 	// - camera
 	this->cc->stopCamera();
-	this->cc->shutdownCamera();
+	//this->cc->shutdownCamera();
 	// - pointers
 	delete this->bestImage;
 	for (int i = 0; i < this->population.size(); i++) {

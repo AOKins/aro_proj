@@ -218,11 +218,15 @@ bool SLMController::ReadLUTFile(unsigned char *LUTBuf, std::string LUTPath) {
 	//the LUT file
 	errorFlag = false;
 
-	stream = fopen(LUTPath.c_str(), "r");
+	//stream = fopen(LUTPath.c_str(), "r"); // Depreceated in VS
+	fopen_s(&stream, LUTPath.c_str(), "r");
+
 	if ((stream != NULL) && (errorFlag == false)) {
 		//read in all 256 values
 		for (i = 0; i < 256; i++) {
-			ReturnVal = fscanf(stream, "%d %d", &seqnum, &tmpLUT);
+			//ReturnVal = fscanf(stream, "%d %d", &seqnum, &tmpLUT); // Depreceated in VS
+			ReturnVal = fscanf_s(stream, "%d %d", &seqnum, &tmpLUT);
+
 			if (ReturnVal != 2 || seqnum != i || tmpLUT < 0 || tmpLUT > 255) {
 				fclose(stream);
 				errorFlag = true;
@@ -428,8 +432,8 @@ bool SLMController::ReadZernikeFile(SLM_Board* board, unsigned char *GeneratedIm
 	if (ZernikeFile.is_open()) {
 		while (ZernikeFile.getline(inBuf, MAX_ZERNIKE_LINE, '\n')) {
 			//read in a line from the file
-			sscanf(inBuf, "%[^= ]%*[= ]%s", inputKey, inputString);
-
+			//sscanf(inBuf, "%[^= ]%*[= ]%s", inputKey, inputString); // Depreceated in VS
+			sscanf_s(inBuf, "%[^= ]%*[= ]%s", inputKey, inputString);
 			//get the zernikes
 			if (strcmp(inputKey, "Piston") == 0)
 				Piston = atof(inputString);

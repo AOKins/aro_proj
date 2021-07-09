@@ -255,7 +255,7 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 
 	// - camera shutdown
 	this->cc->stopCamera();
-	this->cc->shutdownCamera();
+	//this->cc->shutdownCamera();
 
 	// - memory deallocation
 	delete this->bestImage;

@@ -258,9 +258,9 @@ bool SGA_Optimization::setupInstanceVariables() {
 	this->cc->startCamera();
 
 	//Open up files to which progress will be logged
-	this->tfile.open(this->outputFolder+ "SGA_functionEvals_vs_fitness.txt", std::ios::app);
-	this->timeVsFitnessFile.open(this->outputFolder + "SGA_time_vs_fitness.txt", std::ios::app);
-	this->efile.open(this->outputFolder + "exposure.txt", std::ios::app);
+	this->tfile.open(this->outputFolder+ "SGA_functionEvals_vs_fitness.txt");
+	this->timeVsFitnessFile.open(this->outputFolder + "SGA_time_vs_fitness.txt");
+	this->efile.open(this->outputFolder + "exposure.txt");
 
 	return true; // Returning true if no issues met
 }
@@ -305,7 +305,7 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	this->slmDisplay->CloseDisplay();
 	// - camera
 	this->cc->stopCamera();
-	this->cc->shutdownCamera();
+	//this->cc->shutdownCamera();
 	// - pointers
 	delete this->bestImage;
 	for (int i = 0; i < this->population.size(); i++) {
