@@ -148,8 +148,8 @@ bool uGA_Optimization::runIndividual(int indID) {
 			this->camDisplay->UpdateDisplay(camImg);
 			camLock.unlock();
 		}
-		// Record values for the top six individuals in each generation
-		if (indID > 23 && this->loggingFilesEnable) {
+		// Record values for the individuals in each generation
+		if (this->loggingFilesEnable) {
 			std::unique_lock<std::mutex> tVfLock(timeVsFitMutex, std::defer_lock);
 			tVfLock.lock();
 			this->timeVsFitnessFile << this->timestamp->MS_SinceStart() << "," << fitness*exposureTimesRatio << "," << this->cc->finalExposureTime << "," << exposureTimesRatio << std::endl;

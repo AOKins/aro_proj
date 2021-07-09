@@ -16,8 +16,6 @@ SLM_Board::SLM_Board(bool isNematic, int width, int height) {
 
 // Destructor
 SLM_Board::~SLM_Board() {
-	delete[] this->FrameOne;
-	delete[] this->FrameTwo;
 	delete[] this->PhaseCompensationData;
 	delete[] this->SystemPhaseCompensationData;
 	delete[] this->LUT;

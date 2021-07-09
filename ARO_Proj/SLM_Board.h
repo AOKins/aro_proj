@@ -10,8 +10,6 @@ public:
 	int imageWidth;
 	int imageHeight;
 
-	unsigned char * FrameOne;
-	unsigned char * FrameTwo;
 	unsigned char * PhaseCompensationData;
 	unsigned char * SystemPhaseCompensationData;
 	// LUT file data

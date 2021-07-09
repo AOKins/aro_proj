@@ -152,10 +152,6 @@ BOOL MainDialog::OnInitDialog() {
 			MB_ICONWARNING | MB_OK);
 	}
 
-	// Send the currently selected image from the PCIe card memory board
-	// to the SLM. User will immediately see first image in sequence. 
-	this->m_slmControlDlg.OnSelchangeImageListbox();
-
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
@@ -163,13 +159,6 @@ BOOL MainDialog::OnInitDialog() {
 void MainDialog::setDefaultUI() {
 	// Multithreading enabled by default
 	this->m_MultiThreadEnable.SetCheck(BST_CHECKED);
-	// - image names to the listbox and select the first image
-	// TODO: check if this is the correct image list box setup 
-	this->m_slmControlDlg.m_ImageListBox.ResetContent();
-	this->m_slmControlDlg.m_ImageListBox.AddString(_T("ImageOne.bmp"));
-	this->m_slmControlDlg.m_ImageListBox.AddString(_T("ImageTwo.zrn"));
-	this->m_slmControlDlg.m_ImageListBox.SetCurSel(0);
-
 	this->m_cameraControlDlg.m_FramesPerSecond.SetWindowTextW(_T("200"));
 	this->m_cameraControlDlg.m_initialExposureTimeInput.SetWindowTextW(_T("2000"));
 	this->m_cameraControlDlg.m_gammaValue.SetWindowTextW(_T("1.25"));
@@ -406,7 +395,6 @@ void MainDialog::disableMainUI(bool isMainEnabled) {
 	// - enabled: when nothing is running
 	// - disabled when the algorithm is running
 
-	this->m_slmControlDlg.m_ImageListBox.EnableWindow(isMainEnabled);
 	this->m_uGAButton.EnableWindow(isMainEnabled);
 	this->m_SGAButton.EnableWindow(isMainEnabled);
 	this->m_OptButton.EnableWindow(isMainEnabled);

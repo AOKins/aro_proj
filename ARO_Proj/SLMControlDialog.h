@@ -47,8 +47,6 @@ public:
 	afx_msg void OnCompensatePhaseCheckbox();
 	CButton dualEnable;
 	afx_msg void OnBnClickedSlmDual();
-	CListBox m_ImageListBox;
-	afx_msg void OnSelchangeImageListbox();
 	BOOL m_CompensatePhase;
 	CButton m_CompensatePhaseCheckbox;
 

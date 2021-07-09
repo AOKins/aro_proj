@@ -49,8 +49,6 @@ bool SLMController::setupSLM(bool repopulateBoardList, int boardIdx) {
 			curBoard->LUTFileName = SLMSerialNum + ".LUT";
 			curBoard->PhaseCompensationFileName = SLMSerialNumphase + ".bmp";
 			curBoard->SystemPhaseCompensationFileName = "Blank.bmp";
-			curBoard->FrameOne = new unsigned char[boardArea];
-			curBoard->FrameTwo = new unsigned char[boardArea];
 			curBoard->LUT = new unsigned char[256];
 			curBoard->PhaseCompensationData = new unsigned char[boardArea];
 			curBoard->SystemPhaseCompensationData = new unsigned char[boardArea];
@@ -163,31 +161,19 @@ void SLMController::LoadSequence() {
 			memset(boards[h]->SystemPhaseCompensationData, 0, boards[h]->GetArea()); //set SystemPhaseCompensationData to 0
 		}
 
-		//Read in the first image -- this one is a bitmap
-		ReadAndScaleBitmap(boards[h], boards[h]->FrameOne, "ImageOne.bmp"); //save to FrameOne
-
 		int total;
 		//Superimpose the SLM phase compensation, the system phase compensation, and
 		//the image data. Then store the image in FrameOne
 		for (i = 0; i < boards[h]->GetArea(); i++) {
-			total = boards[h]->FrameOne[i] +
-					boards[h]->PhaseCompensationData[i] +
+			total = boards[h]->PhaseCompensationData[i] +
 					boards[h]->SystemPhaseCompensationData[i];
-
-			boards[h]->FrameOne[i] = total % 256;
 		}
-
-		//Read in the second image. For the sake of an example this is a zernike file
-		ReadZernikeFile(boards[h], boards[h]->FrameTwo, "ImageTwo.zrn");
 
 		//Superimpose the SLM phase compensation, the system phase compensation, and
 		//the image data. Then store the image in FrameTwo
 		for (i = 0; i < boards[h]->GetArea(); i++) {
-			total = boards[h]->FrameTwo[i] +
-					boards[h]->PhaseCompensationData[i] +
+			total = boards[h]->PhaseCompensationData[i] +
 					boards[h]->SystemPhaseCompensationData[i];
-
-			boards[h]->FrameTwo[i] = total % 256;
 		}
 	}
 }
@@ -553,21 +539,6 @@ bool SLMController::IsAnyNematic() {
 		}
 	}
 	return false;
-}
-
-//index  - the image index to use to write to slm
-void SLMController::ImageListBoxUpdate(int index) {
-	for (int i = 0; i < boards.size(); i++)	{
-		// Send the data of the selected image in the sequence list out to the SLM
-		// LARGE TODO: instead of storing frames in the board struct store this 
-		// info on the main dlg as a n object and pass into this function
-		if (index == 0) {
-			blink_sdk->Write_image(i + 1, boards[i]->FrameOne, boards[i]->imageHeight, false, false, 0);
-		}
-		if (index == 1) {
-			blink_sdk->Write_image(i + 1, boards[i]->FrameTwo, boards[i]->imageHeight, false, false, 0);
-		}
-	}
 }
 
 bool SLMController::slmCtrlReady() {

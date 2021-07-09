@@ -50,7 +50,6 @@ public:
 	void removeBoard(int boardIdx);
 
 	bool IsAnyNematic();
-	void ImageListBoxUpdate(int index);
 
 	// Assign and load LUT file
 	// Input:

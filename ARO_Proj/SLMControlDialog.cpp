@@ -39,7 +39,6 @@ void SLMControlDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_SLM_MULTI, multiEnable);
 	DDX_Control(pDX, IDC_SLM_ALLSAME, SLM_SetALLSame_);
 	DDX_Control(pDX, IDC_SLM_DUAL, dualEnable);
-	DDX_Control(pDX, IDC_IMAGE_LISTBOX, m_ImageListBox);
 }
 
 BEGIN_MESSAGE_MAP(SLMControlDialog, CDialogEx)
@@ -51,7 +50,6 @@ BEGIN_MESSAGE_MAP(SLMControlDialog, CDialogEx)
 	ON_CBN_SELCHANGE(ID_SLM_SELECT, &SLMControlDialog::OnCbnSelchangeSlmSelect)
 	ON_BN_CLICKED(IDC_COMPENSATE_PHASE_CHECKBOX, &SLMControlDialog::OnCompensatePhaseCheckbox)
 	ON_BN_CLICKED(IDC_SLM_DUAL, &SLMControlDialog::OnBnClickedSlmDual)
-	ON_LBN_SELCHANGE(IDC_IMAGE_LISTBOX, OnSelchangeImageListbox)
 END_MESSAGE_MAP()
 
 // SLMControlDialog message handlers
@@ -271,9 +269,6 @@ void SLMControlDialog::populateSLMlist() {
 	}
 }
 
-// Update selection ID value
-void SLMControlDialog::OnCbnSelchangeSlmSelect() { this->slmSelectionID_ = this->slmSelection_.GetCurSel(); }
-
 void SLMControlDialog::OnBnClickedMultiSLM() {
 	// When attempting to enable Multi SLM setup, will confirm that there are enough boards
 	if (this->multiEnable.GetCheck() == BST_CHECKED) {
@@ -320,28 +315,6 @@ void SLMControlDialog::OnBnClickedSlmDual() {
 	}
 }
 
-//////////////////////////////////////////////
-//
-//   OnSelchangeImageListbox()
-//
-//   Inputs: none
-//
-//   Returns: none
-//
-//   Purpose: This function allows the user to select an image from the image list, then see the image on the SLM
-//
-//   Modifications:
-//
-//////////////////////////////////////////////
-void SLMControlDialog::OnSelchangeImageListbox() {
-	//Figure out which image in the list was just selected
-	int sel = this->m_ImageListBox.GetCurSel();
-	if (sel == LB_ERR) { //nothing selected
-		return;
-	}
-	this->slmCtrl->ImageListBoxUpdate(sel);
-}
-
 /////////////////////////////////////////////////////
 //
 //   OnCompensatePhaseCheckbox()
@@ -365,6 +338,4 @@ void SLMControlDialog::OnCompensatePhaseCheckbox() {
 
 	//Re-load the sequence if apropriate checkbox pressed
 	slmCtrl->LoadSequence();
-	//Load the currently selected image to the SLM
-	OnSelchangeImageListbox();
 }
