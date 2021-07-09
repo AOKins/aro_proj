@@ -1,5 +1,6 @@
 #ifndef TIMING_H_
 #define TIMING_H_
+
 #include <Windows.h>
 
 //Keeps track of time intervals relative to the timer's start time. Pausing

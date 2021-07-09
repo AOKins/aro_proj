@@ -8,10 +8,8 @@ class SLMController;
 #include <string>
 // SLMControlDialog dialog
 
-class SLMControlDialog : public CDialogEx
-{
+class SLMControlDialog : public CDialogEx {
 	DECLARE_DYNAMIC(SLMControlDialog)
-
 public:
 	SLMControlDialog(CWnd* pParent = NULL);   // standard constructor
 	virtual ~SLMControlDialog();

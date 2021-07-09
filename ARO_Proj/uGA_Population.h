@@ -4,6 +4,7 @@
 ////////////////////
 #ifndef UGAPOPULATION_H_
 #define UGAPOPULATION_H_
+
 #include "Population.h"
 
 template <class T>

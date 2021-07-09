@@ -6,9 +6,7 @@
 class CameraController;
 
 // AOIControlDialog dialog
-
-class AOIControlDialog : public CDialogEx
-{
+class AOIControlDialog : public CDialogEx {
 	DECLARE_DYNAMIC(AOIControlDialog)
 
 public:

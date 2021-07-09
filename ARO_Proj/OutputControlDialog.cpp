@@ -5,7 +5,6 @@
 #include "OutputControlDialog.h"
 #include "afxdialogex.h"
 #include "Utility.h"
-#include <string>
 
 // OutputControlDialog dialog
 

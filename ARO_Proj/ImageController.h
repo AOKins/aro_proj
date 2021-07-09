@@ -7,8 +7,6 @@
 #include "SpinGenApi\SpinnakerGenApi.h"
 using namespace Spinnaker::GenApi;
 
-#include <ostream> // Debug, should be removed when done
-
 // Class to encaspsulate interactions required to accessing image data and current SDK
 //		(this is so that optimization classes aren't relying on an SDK's specific behaviors)
 class ImageController {

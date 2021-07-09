@@ -10,13 +10,11 @@
 #include <string>
 
 // AOIControlDialog dialog
-
 IMPLEMENT_DYNAMIC(AOIControlDialog, CDialogEx)
 
 AOIControlDialog::AOIControlDialog(CWnd* pParent /*=NULL*/)
 	: CDialogEx(AOIControlDialog::IDD, pParent)
 {
-
 }
 
 AOIControlDialog::~AOIControlDialog()
@@ -52,8 +50,7 @@ void AOIControlDialog::OnBnClickedCenterAoiButton()
 	int centerX;
 	int centerY;
 
-	if (this->cc != nullptr)
-	{
+	if (this->cc != nullptr) {
 		if (!cc->GetCenter(centerX, centerY))
 			Utility::printLine("ERROR: Cannot retrieve the center information for camera controller!");
 	}
@@ -68,8 +65,7 @@ void AOIControlDialog::OnBnClickedCenterAoiButton()
 	//Get Current width and height from the input feilds
 	int curWidth;
 	int curHeight;
-	try
-	{
+	try	{
 		CString path("");
 		m_widthInput.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
@@ -79,8 +75,7 @@ void AOIControlDialog::OnBnClickedCenterAoiButton()
 		if (path.IsEmpty()) throw new std::exception();
 		curHeight = _tstoi(path);
 	}
-	catch (...)
-	{
+	catch (...)	{
 		Utility::printLine("ERROR: Cannot retrieve current width and height when centering AOI");
 	}
 
@@ -89,14 +84,12 @@ void AOIControlDialog::OnBnClickedCenterAoiButton()
 	int finalY = 0;
 	int finalWidth = maxWidth;
 	int finalHeight = maxHeight;
-	if (curWidth < maxWidth && curWidth >= 0)
-	{
+	if (curWidth < maxWidth && curWidth >= 0) {
 		int halfWidth = curWidth / 2;
 		finalX = centerX - curWidth;
 		finalWidth = curWidth;
 	}
-	if (curHeight < maxHeight && curHeight >= 0)
-	{
+	if (curHeight < maxHeight && curHeight >= 0) {
 		int halfHeight = curHeight / 2;
 		finalY = centerY - halfHeight;
 		finalHeight = curHeight;
@@ -135,18 +128,13 @@ void AOIControlDialog::OnBnClickedMaxImageSizeButton()
 	int finalWidth;
 	int finalHeight;
 
-	if (cc != nullptr)
-	{
-		if (!cc->GetFullImage(finalWidth, finalHeight))
-		{
+	if (cc != nullptr) {
+		if (!cc->GetFullImage(finalWidth, finalHeight)) {
 			Utility::printLine("ERROR: Cannot retrieve the max image information from camera controller!");
-			return;
 		}
 	}
-	else
-	{
+	else {
 		Utility::printLine("ERROR: Cannot find the camera controller to center the AOI settings!");
-		return;
 	}
 
 	SetAOIFeilds(0, 0, finalWidth, finalHeight);

@@ -4,10 +4,8 @@
 #include "afxwin.h"
 
 // OptimizationControlDialog dialog
-
 class OptimizationControlDialog : public CDialogEx {
 	DECLARE_DYNAMIC(OptimizationControlDialog)
-
 public:
 	OptimizationControlDialog(CWnd* pParent = NULL);   // standard constructor
 	virtual ~OptimizationControlDialog();

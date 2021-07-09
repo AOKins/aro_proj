@@ -137,7 +137,6 @@ private:
 	//
 	/////////////////////////////////////////////////////////////////////////
 	unsigned char* ScaleBitmap(unsigned char* InvertedImage, int BitmapSize, int FinalBitmapSize);
-	
 };
 
 #endif

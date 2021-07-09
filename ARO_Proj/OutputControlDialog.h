@@ -1,13 +1,11 @@
 #pragma once
+
 #include "afxwin.h"
 #include "resource.h"
 
 // OutputControlDialog dialog
-
-class OutputControlDialog : public CDialogEx
-{
+class OutputControlDialog : public CDialogEx {
 	DECLARE_DYNAMIC(OutputControlDialog)
-
 public:
 	OutputControlDialog(CWnd* pParent = NULL);   // standard constructor
 	virtual ~OutputControlDialog();

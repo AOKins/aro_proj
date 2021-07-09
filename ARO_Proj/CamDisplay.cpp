@@ -2,10 +2,6 @@
 #include "CamDisplay.h"
 #include "Utility.h"
 
-#include <opencv2\core\core.hpp>
-#include <opencv2\highgui\highgui.hpp>
-#include <opencv2\imgproc\imgproc.hpp>
-
 // Constructor
 // Display has twice the dimensions of inputted image height and width
 CameraDisplay::CameraDisplay(int input_image_height, int input_image_width, std::string display_name) :	//ASK why twice larger?

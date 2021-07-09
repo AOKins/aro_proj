@@ -1,5 +1,4 @@
 // Header for TimeStamp class to generate label
-
 #ifndef TIME_STAMP
 #define TIME_STAMP
 
