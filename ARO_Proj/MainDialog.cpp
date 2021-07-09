@@ -210,7 +210,7 @@ void MainDialog::setDefaultUI() {
 	this->m_outputControlDlg.m_displayCameraCheck.SetCheck(BST_CHECKED);
 		// Default to not displaying SLM
 	this->m_outputControlDlg.m_displaySLM.SetCheck(BST_UNCHECKED);
-	this->m_outputControlDlg.m_OutputLocationField.SetWindowTextW(_T("\logs\\"));
+	this->m_outputControlDlg.m_OutputLocationField.SetWindowTextW(_T(".\\logs\\"));
 }
 
 /////////////////////////////////////////////////////////////////////

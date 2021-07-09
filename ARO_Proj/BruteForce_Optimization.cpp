@@ -242,7 +242,7 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 		saveParameters(curTime, "OPT5");
 
 		//Record total time taken for optimization
-		std::ofstream tfile2(this->outputFolder + curTime + "_OPT5_time.txt", std::ios::app);
+		std::ofstream tfile2(this->outputFolder + curTime + "_OPT5_time.txt");
 		tfile2 << this->timestamp->MS_SinceStart() << std::endl;
 		tfile2.close();
 	}
@@ -255,14 +255,18 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 
 	// - camera shutdown
 	this->cc->stopCamera();
-	this->cc->shutdownCamera();
+	//this->cc->shutdownCamera();
 
 	// - memory deallocation
 	delete this->bestImage;
-	this->camDisplay->CloseDisplay();
-	this->slmDisplay->CloseDisplay();
-	delete this->camDisplay;
-	delete this->slmDisplay;
+	if (this->camDisplay != NULL) {
+		this->camDisplay->CloseDisplay();
+		delete this->camDisplay;
+	}
+	if (this->slmDisplay != NULL) {
+		this->slmDisplay->CloseDisplay();
+		delete this->slmDisplay;
+	}
 	delete this->timestamp;
 
 	// Delete all the scalers in the vector

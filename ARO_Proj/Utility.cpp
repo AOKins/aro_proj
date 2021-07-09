@@ -52,14 +52,18 @@ bool Utility::IsButtonText(CButton& btn, std::string text) {
 
 
 // [TIMING FEATURES]
-//getCurTime: This function returns the current time and date in Month-Day-Year Year-Minute-Second forat
+//getCurTime: This function returns the current time and date in Month-Day-Year Year-Minute-Second format
 std::string Utility::getCurTime() {
 	time_t tt;
-	struct tm * curTime;
+	struct tm curTime;
 	time(&tt);
-	curTime = localtime(&tt);
-	
-	std::vector<std::string> timeParts = seperateByDelim(asctime(curTime), ' ');
+	//curTime = localtime(&tt); // Depreceated version
+	localtime_s(&curTime,&tt);
+
+	// https://en.cppreference.com/w/c/chrono/asctime
+	char ascBuf[26]; // Buffer to hold output from asctime_s
+	asctime_s(ascBuf, sizeof ascBuf, &curTime);
+	std::vector<std::string> timeParts = seperateByDelim(ascBuf, ' ');
 	std::vector<std::string> hourMinuteSecondParts = seperateByDelim(timeParts[3], ':');
 
 	std::string finalTimeString = "";

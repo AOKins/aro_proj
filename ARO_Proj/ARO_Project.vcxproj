@@ -74,7 +74,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Dynamic</UseOfMfc>
@@ -257,14 +257,14 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\rebecca.tucker\Downloads\opencv\build\include;C:\Users\rebecca.tucker\Downloads\Blink;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\Point Grey Research\Spinnaker2013\include;C:\opencv\build\include;C:\Program Files\Meadowlark Optics\Blink OverDrive Plus\SDK;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>opencv_core248.lib;Blink_SDK.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Users\rebecca.tucker\Downloads\opencv\build\x64\vc12\lib;C:\Users\rebecca.tucker\Downloads\Blink;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opencv_core248.lib;opencv_imgproc248d.lib;opencv_highgui248d.lib;Blink_SDK.lib;Spinnakerd_$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Program Files\Point Grey Research\Spinnaker2013\lib64\vs2013;C:\opencv\build\x64\vc12\lib;C:\Program Files\Meadowlark Optics\Blink OverDrive Plus\SDK;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -324,7 +324,9 @@
     <ClCompile Include="SettingsOutput.cpp" />
     <ClCompile Include="SGA_Optimization.cpp" />
     <ClCompile Include="SLMControlDialog.cpp" />
-    <ClCompile Include="SLMController.cpp" />
+    <ClCompile Include="SLMController.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\opencv\build\include;C:\Program Files\Meadowlark Optics\Blink OverDrive Plus\SDK;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
     <ClCompile Include="SLM_Board.cpp" />
     <ClCompile Include="uGA_Optimization.cpp" />
     <ClCompile Include="Utility.cpp" />
