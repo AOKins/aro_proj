@@ -23,14 +23,6 @@ bool BruteForce_Optimization::runOptimization() {
 		Utility::printLine("ERROR: Failed to prepare values and files for OPT 5 Optimization");
 		return false;
 	}
-	// Creating displays if desired
-	if (this->displayCamImage) {
-		this->camDisplay->OpenDisplay();
-	}
-	if (this->displaySLMImage) {
-		this->slmDisplay->OpenDisplay();
-	}
-
 	this->timestamp = new TimeStampGenerator();
 
 	Utility::printLine("INFO: Currently optimizing board 0");
@@ -127,7 +119,7 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 
 					//Record current performance to file //Ask what kind of calcualtion is this?
 					double ms = boardID*dphi + curBinVal / dphi;
-					if (this->loggingFilesEnable) {
+					if (this->loggingFilesEnable || this->saveTimeVSFitness) {
 						this->timeVsFitnessFile << this->timestamp->MS_SinceStart() << " " << fitness * this->cc->GetExposureRatio() << " " << this->cc->GetExposureRatio() << std::endl;
 						this->tfile << ms << " " << fitness * this->cc->GetExposureRatio() << " " << this->cc->GetExposureRatio() << std::endl;
 					}
@@ -190,23 +182,24 @@ bool BruteForce_Optimization::setupInstanceVariables() {
 	}
 
 	this->cc->startCamera(); // setup camera
-	if (this->loggingFilesEnable) {
+	if (this->loggingFilesEnable || this->saveTimeVSFitness) {
 		this->tfile.open(this->outputFolder + "Opt_functionEvals_vs_fitness.txt", std::ios::app);
 		this->timeVsFitnessFile.open(this->outputFolder + "Opt_time_vs_fitness.txt", std::ios::app);
 	}
 	// Setup displays
 	if (this->displayCamImage) {
 		this->camDisplay = new CameraDisplay(this->cc->cameraImageHeight, this->cc->cameraImageWidth, "Camera Display");
+		this->camDisplay->OpenDisplay();
 	}
 	if (this->displaySLMImage) {
 		this->slmDisplay = new CameraDisplay(this->sc->getBoardHeight(0), this->sc->getBoardWidth(0), "SLM Display");
+		this->slmDisplay->OpenDisplay();
 	}
 
 	// Scaler Setup (using base class)
 	this->slmScaledImages.clear();
 	// Setup the scaled images vector
 	this->slmScaledImages = std::vector<unsigned char*>(this->sc->boards.size());
-
 	this->scalers.clear();
 	// Setup a vector for every board and initializing all slmScaledImages to 0s
 	for (int i = 0; i < sc->boards.size(); i++) {
@@ -283,9 +276,9 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 	//Record the final (most fit) slm images followed by deleting them
 	for (int i = int(this->finalImages_.size())-1; i >= 0; i--) {
 		// Save image
-		if (this->saveImages) {
+		if (this->saveEliteImages) {
 			cv::Mat m_ary = cv::Mat(512, 512, CV_8UC1, this->finalImages_[i]);
-			cv::imwrite(this->outputFolder + curTime + "_OPT5_phaseopt.bmp", m_ary);
+			cv::imwrite(this->outputFolder + curTime + "_OPT5_phaseopt_"+std::to_string(i)+".bmp", m_ary);
 		}
 		delete[] this->finalImages_[i]; // deallocate then
 		this->finalImages_.pop_back();  // remove from vector

@@ -39,7 +39,6 @@ bool SGA_Optimization::runOptimization() {
 				else {
 					this->runIndividual(indID); // Serial
 				}
-			
 			}
 			Utility::rejoinClear(this->ind_threads);
 			// Perform GA crossover/breeding to produce next generation
@@ -57,7 +56,9 @@ bool SGA_Optimization::runOptimization() {
 			if (this->shortenExposureFlag) {
 				this->cc->HalfExposureTime();
 				this->shortenExposureFlag = false;
-				this->efile << "Exposure shortened after gen: " << this->curr_gen + 1 << " with new ratio " << this->cc->GetExposureRatio() << std::endl;
+				if (this->saveExposureShorten || this->logAllFiles) {
+					this->efile << "Exposure shortened after gen: " << this->curr_gen + 1 << " with new ratio " << this->cc->GetExposureRatio() << std::endl;
+				}
 			}
 		}
 		// Cleanup & Save resulting instance
@@ -92,18 +93,18 @@ bool SGA_Optimization::runIndividual(int indID) {
 		std::unique_lock<std::mutex>  consoleLock(consoleMutex, std::defer_lock);
 		std::unique_lock<std::mutex> hardwareLock(hardwareMutex, std::defer_lock);
 
+		hardwareLock.lock();
 		// Pre end the result for the individual if the stop flag has been raised while waiting
 		if (this->dlg.stopFlag == true) {
+			hardwareLock.unlock();
 			return true;
 		}
-
-		hardwareLock.lock();
 		// If the hardware boolean is already true, then that means another thread is using this hardware and we have an issue
 		if (this->usingHardware) {
+			hardwareLock.unlock();
 			consoleLock.lock();
 			Utility::printLine("ERROR: HARDWARE BEING USED BY OTHER THREAD(S)! Exiting out of this individual");
 			consoleLock.unlock();
-			hardwareLock.unlock();
 			return false;
 		}
 		this->usingHardware = true;
@@ -124,6 +125,7 @@ bool SGA_Optimization::runIndividual(int indID) {
 		this->usingHardware = false;
 		hardwareLock.unlock(); // Now done with the hardware
 
+		// Giving error and ends early if there is no data
 		if (curImage == NULL) { // TODO: I think this is dangerous as Individual does not have default fitness if left unevaluated
 			consoleLock.lock();
 			Utility::printLine("ERROR: Image Acquisition has failed!");
@@ -136,22 +138,13 @@ bool SGA_Optimization::runIndividual(int indID) {
 		int imgHeight = curImage->getHeight();
 		unsigned char * camImg = curImage->getRawData<unsigned char>();
 
-		// Giving error and ends early if there is no data
-
 		// Get current exposure setting of camera (relative to initial)
 		double exposureTimesRatio = this->cc->GetExposureRatio();	// needed for proper fitness value across changing exposure time
 		// Determine the fitness by intensity of the image within circle of target radius
 		double fitness = Utility::FindAverageValue(camImg, imgWidth, imgHeight, this->cc->targetRadius);
 
-		// Display first individual
-		if (indID == 0 && this->displayCamImage) {
-			std::unique_lock<std::mutex> camLock(camDisplayMutex, std::defer_lock);
-			camLock.lock();
-			this->camDisplay->UpdateDisplay(camImg);
-			camLock.unlock();
-		}
-		// Record values for the top six individuals in each generation
-		if (indID > 23 && this->loggingFilesEnable) {
+		// Record files
+		if (this->logAllFiles || this->saveTimeVSFitness) {
 			std::unique_lock<std::mutex> tVfLock(this->timeVsFitMutex, std::defer_lock);
 			tVfLock.lock();
 			this->timeVsFitnessFile << this->timestamp->MS_SinceStart() << "," << fitness*exposureTimesRatio << "," << this->cc->finalExposureTime << "," << exposureTimesRatio << std::endl;
@@ -159,18 +152,33 @@ bool SGA_Optimization::runIndividual(int indID) {
 		}
 		//Save elite info of last generation
 		if (indID == (population[0]->getSize() - 1)) {
-			if (this->loggingFilesEnable) {
+			if (this->logAllFiles || this->saveEliteImages) {
+				// Save Info
 				std::unique_lock<std::mutex> tFileLock(tfileMutex, std::defer_lock);
 				tFileLock.lock();
 				this->tfile << "SGA GENERATION," << this->curr_gen << "," << fitness*exposureTimesRatio << std::endl;
 				tFileLock.unlock();
+
+				this->cc->saveImage(curImage, std::string(this->outputFolder + "SGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite" + ".jpg"));
 			}
+			// Display best individual
+			if (this->displayCamImage) {
+				std::unique_lock<std::mutex> camLock(camDisplayMutex, std::defer_lock);
+				camLock.lock();
+				this->camDisplay->UpdateDisplay(camImg);
+				camLock.unlock();
+			}
+			if (this->displaySLMImage) {
+				std::unique_lock<std::mutex> slmLock(slmDisplayMutex, std::defer_lock);
+				slmLock.lock();
+				// TODO: Support more boards
+				this->slmDisplay->UpdateDisplay(this->slmScaledImages[0]);
+				slmLock.unlock();
+			}
+
+			// Also save the image as current best regardless
 			std::unique_lock<std::mutex> imageLock(this->imageMutex, std::defer_lock);
 			imageLock.lock();
-			if (this->saveImages) {
-				this->cc->saveImage(curImage, std::string(this->outputFolder +"SGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite" + ".jpg"));
-			}
-			// Also save the image
 			this->bestImage = curImage;
 			imageLock.unlock();
 		}
@@ -200,6 +208,7 @@ bool SGA_Optimization::runIndividual(int indID) {
 		}
 	}
 	catch (std::exception &e) {
+		Utility::printLine("ERROR: Unidentified error occured while running individual #" + std::to_string(indID));
 		Utility::printLine(e.what());
 	}
 	return true; // No errors!
@@ -276,7 +285,7 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	std::string curTime = Utility::getCurTime();
 
 	// Only save images if not aborting (successful results)
-	if (dlg.stopFlag == false) {
+	if (dlg.stopFlag == false && this->saveResultImages) {
 		// Get elite info
 		unsigned char* eliteImage = this->bestImage->getRawData<unsigned char>();
 		int imgHeight = this->bestImage->getHeight();

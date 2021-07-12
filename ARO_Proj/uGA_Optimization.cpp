@@ -56,7 +56,9 @@ bool uGA_Optimization::runOptimization() {
 			if (this->shortenExposureFlag) {
 				this->cc->HalfExposureTime();
 				this->shortenExposureFlag = false;
-				this->efile << "Exposure shortened after gen: " << this->curr_gen + 1 << " with new ratio " << this->cc->GetExposureRatio() << std::endl;
+				if (this->saveExposureShorten || this->logAllFiles) {
+					this->efile << "Exposure shortened after gen: " << this->curr_gen + 1 << " with new ratio " << this->cc->GetExposureRatio() << std::endl;
+				}
 			}
 		}
 		// Cleanup & Save resulting instance
@@ -141,42 +143,50 @@ bool uGA_Optimization::runIndividual(int indID) {
 		// Determine the fitness by intensity of the image within circle of target radius
 		double fitness = Utility::FindAverageValue(camImg, imgWidth, imgHeight, this->cc->targetRadius);
 
-		// Display first individual
-		if (indID == 0 && this->displayCamImage) {
-			std::unique_lock<std::mutex> camLock(camDisplayMutex, std::defer_lock);
-			camLock.lock();
-			this->camDisplay->UpdateDisplay(camImg);
-			camLock.unlock();
-		}
-		// Record values for the individuals in each generation
-		if (this->loggingFilesEnable) {
-			std::unique_lock<std::mutex> tVfLock(timeVsFitMutex, std::defer_lock);
+		// Record files
+		if (this->logAllFiles || this->saveTimeVSFitness) {
+			std::unique_lock<std::mutex> tVfLock(this->timeVsFitMutex, std::defer_lock);
 			tVfLock.lock();
 			this->timeVsFitnessFile << this->timestamp->MS_SinceStart() << "," << fitness*exposureTimesRatio << "," << this->cc->finalExposureTime << "," << exposureTimesRatio << std::endl;
 			tVfLock.unlock();
 		}
 		//Save elite info of last generation
 		if (indID == (population[0]->getSize() - 1)) {
-			if (this->loggingFilesEnable) {
+			if (this->logAllFiles || this->saveEliteImages) {
+				// Save Info
 				std::unique_lock<std::mutex> tFileLock(tfileMutex, std::defer_lock);
 				tFileLock.lock();
 				this->tfile << "uGA GENERATION," << this->curr_gen << "," << fitness*exposureTimesRatio << std::endl;
 				tFileLock.unlock();
+
+				this->cc->saveImage(curImage, std::string(this->outputFolder + "uGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite" +".jpg"));
 			}
-			std::unique_lock<std::mutex> imageLock(imageMutex, std::defer_lock);
+			// Display best individual
+			if (this->displayCamImage) {
+				std::unique_lock<std::mutex> camLock(camDisplayMutex, std::defer_lock);
+				camLock.lock();
+				this->camDisplay->UpdateDisplay(camImg);
+				camLock.unlock();
+			}
+			if (this->displaySLMImage) {
+				std::unique_lock<std::mutex> slmLock(slmDisplayMutex, std::defer_lock);
+				slmLock.lock();
+				// TODO: Support more boards
+				this->slmDisplay->UpdateDisplay(this->slmScaledImages[0]);
+				slmLock.unlock();
+			}
+
+			// Also save the image as current best regardless
+			std::unique_lock<std::mutex> imageLock(this->imageMutex, std::defer_lock);
 			imageLock.lock();
-			if (this->saveImages) {
-				cc->saveImage(curImage, std::string(this->outputFolder + "UGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite" + ".jpg"));
-			}
-			// Also save the image as current best
-			this->bestImage = curImage; // Deep copy image over to best
+			this->bestImage = curImage;
 			imageLock.unlock();
 		}
 
 		// Check stop conditions, only assign true if we reached the condition (race condition if done directly)
 		if (stopConditionsReached((fitness*exposureTimesRatio), this->timestamp->S_SinceStart(), this->curr_gen + 1) == true) {
 			std::unique_lock<std::mutex> stopLock(this->stopFlagMutex, std::defer_lock);
-			stopLock.lock(); 
+			stopLock.lock();
 			this->stopConditionsMetFlag = true;
 			stopLock.unlock();
 		}
@@ -192,7 +202,8 @@ bool uGA_Optimization::runIndividual(int indID) {
 			this->shortenExposureFlag = true;
 			expsureFlagLock.unlock();
 		}
-		if (curImage != this->bestImage) {
+		// If the pointer to current image does not also point to the best image we are safe to delete
+		if (curImage != bestImage) {
 			delete curImage;
 		}
 	}
@@ -230,17 +241,15 @@ bool uGA_Optimization::setupInstanceVariables() {
 
 	this->shortenExposureFlag   = false; // Set to true by individual if fitness is too high, initially false
 	this->stopConditionsMetFlag = false; // Set to true if a stop condition was reached by one of the individuals, initially assumed false
-
 	this->bestImage = NULL;
-
 	// Setup image displays for camera and SLM
-	this->camDisplay = new CameraDisplay(this->cc->cameraImageHeight, this->cc->cameraImageWidth, "Camera Display");
-	this->slmDisplay = new CameraDisplay(this->sc->getBoardHeight(0), this->sc->getBoardWidth(0), "SLM Display");
 	// Open displays if preference is set
 	if (this->displayCamImage) {
+		this->camDisplay = new CameraDisplay(this->cc->cameraImageHeight, this->cc->cameraImageWidth, "Camera Display");
 		this->camDisplay->OpenDisplay();
 	}
 	if (this->displaySLMImage) {
+		this->slmDisplay = new CameraDisplay(this->sc->getBoardHeight(0), this->sc->getBoardWidth(0), "SLM Display");
 		this->slmDisplay->OpenDisplay();
 	}
 	// Scaler Setup (using base class)
@@ -276,7 +285,7 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 	std::string curTime = Utility::getCurTime();
 
 	// Only save images if not aborting (successful results
-	if (dlg.stopFlag == false) {
+	if (dlg.stopFlag == false && this->saveResultImages) {
 		// Get elite info
 		unsigned char* eliteImage = this->bestImage->getRawData<unsigned char>();
 		int imgHeight = this->bestImage->getHeight();

@@ -34,10 +34,13 @@ protected:
 	double genEvalToStop = 0; // minimum number of generations to do
 
 	//Preference-type parameters
-	bool saveImages = false;		// TRUE -> save images of the fittest individual of each gen
 	bool displayCamImage = true;    // TRUE -> opens a window showing the camera image
 	bool displaySLMImage = false;   // TODO: only first SLM right now - add functionality to display any or all boards
-	bool loggingFilesEnable = true; // TRUE -> output various logging files to record performance
+	bool logAllFiles = true; // TRUE -> output all logging files to record performance
+	bool saveEliteImages = false;		// TRUE -> save images of the fittest individual of each gen
+	bool saveResultImages = true;
+	bool saveTimeVSFitness = true;
+	bool saveExposureShorten = true;
 	bool multithreadEnable = true; // TRUE -> use multithreading
 	//Instance variables (used during optimization process)
 	// Values assigned within setupInstanceVariables(), then if needed cleared in shutdownOptimizationInstance()
@@ -60,7 +63,7 @@ protected:
 	// Logging file streams // TODO at finished state may seek to change/remove these to improve performance while running
 	std::ofstream tfile;				// Record elite individual progress over generations
 	std::ofstream timeVsFitnessFile;	// Recoding general fitness progress
-	std::ofstream efile;				// Expsoure file to record when exposure is shortened
+	std::ofstream efile;				// Exposure file to record when exposure is shortened
 	std::string outputFolder;
 	// Methods for use in runOptimization()
 	// Pull GUI settings to set parameters
@@ -101,7 +104,7 @@ protected:
 	std::vector<std::thread> ind_threads;
 	// Mutexes to protect critical sections
 	std::mutex hardwareMutex; // Mutex to protect access to the hardware used in evaluating an individual (SLM, Camera, etc.)
-	std::mutex consoleMutex, imageMutex, camDisplayMutex;	// Mutex to protect access to i/o and lastImage dimension values
+	std::mutex consoleMutex, imageMutex, camDisplayMutex, slmDisplayMutex;	// Mutex to protect access to i/o and lastImage dimension values
 	std::mutex tfileMutex, timeVsFitMutex, efileMutex;					// Mutex to protect file i/o
 	std::mutex stopFlagMutex, exposureFlagMutex;						// Mutex to protect important flags 
 public:

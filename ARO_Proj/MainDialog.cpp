@@ -161,7 +161,7 @@ void MainDialog::setDefaultUI() {
 	this->m_MultiThreadEnable.SetCheck(BST_CHECKED);
 	this->m_cameraControlDlg.m_FramesPerSecond.SetWindowTextW(_T("200"));
 	this->m_cameraControlDlg.m_initialExposureTimeInput.SetWindowTextW(_T("2000"));
-	this->m_cameraControlDlg.m_gammaValue.SetWindowTextW(_T("1.25"));
+	this->m_cameraControlDlg.m_gammaValue.SetWindowTextW(_T("1.00"));
 	
 	this->m_optimizationControlDlg.m_binSize.SetWindowTextW(_T("16"));
 	this->m_optimizationControlDlg.m_numberBins.SetWindowTextW(_T("32"));
@@ -194,7 +194,8 @@ void MainDialog::setDefaultUI() {
 
 	// Output controls
 		// Default to saving images
-	this->m_outputControlDlg.m_SaveImagesCheck.SetCheck(BST_CHECKED);
+	this->m_outputControlDlg.m_logAllFilesCheck.SetCheck(BST_CHECKED);
+	this->m_outputControlDlg.OnBnClickedLogallFiles();
 		// Default to displaying camera
 	this->m_outputControlDlg.m_displayCameraCheck.SetCheck(BST_CHECKED);
 		// Default to not displaying SLM

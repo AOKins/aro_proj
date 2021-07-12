@@ -112,17 +112,38 @@ bool Optimization::prepareOutputSettings() {
 		this->displaySLMImage = false;
 	}
 
-	if (this->dlg.m_outputControlDlg.m_SaveImagesCheck.GetCheck() == BST_CHECKED) {
-		this->saveImages = true;
+	if (this->dlg.m_outputControlDlg.m_logAllFilesCheck.GetCheck() == BST_CHECKED) {
+		this->logAllFiles = true;
 	}
 	else {
-		this->saveImages = false;
+		this->logAllFiles = false;
 	}
-	if (this->dlg.m_outputControlDlg.m_logFilesCheck.GetCheck() == BST_CHECKED) {
-		this->loggingFilesEnable = true;
-	}
-	else {
-		this->loggingFilesEnable = false;
+	// If this enable all checkbox isn't enabled, then we must check the more specific ones
+	if (this->logAllFiles == false) {
+		if (this->dlg.m_outputControlDlg.m_SaveFinalImagesCheck.GetCheck() == BST_CHECKED) {
+			this->saveResultImages = true;
+		}
+		else {
+			this->saveResultImages = false;
+		}
+		if (this->dlg.m_outputControlDlg.m_SaveEliteImagesCheck.GetCheck() == BST_CHECKED) {
+			this->saveEliteImages = true;
+		}
+		else {
+			this->saveEliteImages = false;
+		}
+		if (this->dlg.m_outputControlDlg.m_SaveExposureShortCheck.GetCheck() == BST_CHECKED) {
+			this->saveExposureShorten = true;
+		}
+		else {
+			this->saveExposureShorten = false;
+		}
+		if (this->dlg.m_outputControlDlg.m_SaveTimeVFitnessCheck.GetCheck() == BST_CHECKED) {
+			this->saveTimeVSFitness = true;
+		}
+		else {
+			this->saveTimeVSFitness = false;
+		}
 	}
 	// Get where to store the outputs
 	CString buff;
