@@ -159,7 +159,8 @@ bool uGA_Optimization::runIndividual(int indID) {
 				this->tfile << "uGA GENERATION," << this->curr_gen << "," << fitness*exposureTimesRatio << std::endl;
 				tFileLock.unlock();
 
-				this->cc->saveImage(curImage, std::string(this->outputFolder + "uGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite" +".jpg"));
+				std::string curTime = Utility::getCurTime(); // Get current time to use as timeStamp
+				this->cc->saveImage(curImage, std::string(this->outputFolder + "_uGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite" + ".jpg"));
 			}
 			// Display best individual
 			if (this->displayCamImage) {
