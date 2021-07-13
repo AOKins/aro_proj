@@ -111,6 +111,9 @@ public:
 		uGA
 	};
 	OptType opt_selection_; // Current selected optimization algorithm
+
+
+	CToolTipCtrl * m_mainToolTips;
 };
 
 // Worker thread process for running optimization while MainDialog continues listening for other input

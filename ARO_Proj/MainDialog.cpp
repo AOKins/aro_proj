@@ -118,6 +118,15 @@ BOOL MainDialog::OnInitDialog() {
 	m_outputControlDlg.Create(IDD_OUTPUT_CONTROL, &m_TabControl);
 	m_outputControlDlg.SetWindowPos(NULL, rect.top + 5, rect.left + 30, rect.Width() - 10, rect.Height() - 35, SWP_HIDEWINDOW | SWP_NOZORDER);
 
+	// Setup the tool tip controller for main dialog
+	this->m_mainToolTips = new CToolTipCtrl();
+	this->m_mainToolTips->AddTool(NULL, L"Controls for stop/timeout conditions and image dimensions", NULL, IDD_OPTIMIZATION_CONTROL);
+	this->m_mainToolTips->AddTool(NULL, L"Configure options for SLM(s) being optimized", NULL, IDD_SLM_CONTROL);
+	this->m_mainToolTips->AddTool(NULL, L"Configure options for camera being used", NULL, IDD_CAMERA_CONTROL);
+	this->m_mainToolTips->AddTool(NULL, L"Set Areas of Interest to use from the camera", NULL, IDD_AOI_CONTROL);
+	this->m_mainToolTips->AddTool(NULL, L"Settings for outputs made from the optimization", NULL, IDD_OUTPUT_CONTROL);
+
+	this->m_mainToolTips->Activate(true);
 
 	//[SET UI DEFAULTS]
 	// - get reference to slm controller
@@ -314,6 +323,7 @@ void MainDialog::OnClose() {
 			AfxMessageBox(L"Could not free the console!");
 		}
 		Utility::printLine("INFO: Console realeased (why are you seeing this?)");
+		delete this->m_mainToolTips;
 		CDialog::OnClose();
 	}
 }
