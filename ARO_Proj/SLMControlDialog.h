@@ -43,7 +43,6 @@ public:
 	// If true, then running optimization with dual SLM configuration
 	CButton multiEnable;
 
-
 	// If TRUE then treat all the SLMs as the same rather than distinct
 	CButton SLM_SetALLSame_;
 	afx_msg void OnCbnSelchangeSlmSelect();
@@ -53,4 +52,7 @@ public:
 	BOOL m_CompensatePhase;
 	CButton m_CompensatePhaseCheckbox;
 
+	// Tool tips to help inform the user about a control
+	CToolTipCtrl * m_mainToolTips;
+	BOOL virtual PreTranslateMessage(MSG* pMsg);
 };

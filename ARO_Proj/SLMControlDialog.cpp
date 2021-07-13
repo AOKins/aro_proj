@@ -22,10 +22,24 @@ SLMControlDialog::SLMControlDialog(CWnd* pParent /*=NULL*/)
 {
 	this->slmCtrl = new SLMController();
 	this->slmSelectionID_ = 0;
+
+	this->m_mainToolTips = new CToolTipCtrl();
+	this->m_mainToolTips->Create(this);
+
+	this->m_mainToolTips->AddTool(GetDlgItem(IDC_SLM_PWR_BUTTON), L"Enable ALL the boards to be on/off");
+	this->m_mainToolTips->AddTool(GetDlgItem(ID_SLM_SELECT), L"Set which board to assign LUT or WFC file to");
+	this->m_mainToolTips->AddTool(GetDlgItem(IDC_SLM_MULTI), L"If enabled, optimize all connected boards");
+	this->m_mainToolTips->AddTool(GetDlgItem(IDC_SLM_DUAL), L"If enabled, optimize the first two connected boards");
+	this->m_mainToolTips->AddTool(GetDlgItem(IDC_SLM_ALLSAME), L"If enabled, ignore the select field and apply LUT or WFC files to all baords");
+
+	this->m_mainToolTips->Activate(true);
 }
 
 SLMControlDialog::~SLMControlDialog()
 {
+	delete this->m_mainToolTips;
+	int result = int();
+	this->EndDialog(result);
 	delete this->slmCtrl;
 }
 
@@ -52,8 +66,12 @@ BEGIN_MESSAGE_MAP(SLMControlDialog, CDialogEx)
 	ON_BN_CLICKED(IDC_SLM_DUAL, &SLMControlDialog::OnBnClickedSlmDual)
 END_MESSAGE_MAP()
 
-
-
+BOOL SLMControlDialog::PreTranslateMessage(MSG* pMsg) {
+	if (this->m_mainToolTips != NULL) {
+		this->m_mainToolTips->RelayEvent(pMsg);
+	}
+	return CDialog::PreTranslateMessage(pMsg);
+}
 // Update selection ID value
 void SLMControlDialog::OnCbnSelchangeSlmSelect() { this->slmSelectionID_ = this->slmSelection_.GetCurSel(); }
 

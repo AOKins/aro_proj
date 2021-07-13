@@ -14,10 +14,17 @@ CameraControlDialog::CameraControlDialog(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CameraControlDialog::IDD, pParent)
 {
 
+	this->m_mainToolTips = new CToolTipCtrl();
+	this->m_mainToolTips->Create(this);
+	// Currently no active tool tips used
+	this->m_mainToolTips->Activate(true);
 }
 
 CameraControlDialog::~CameraControlDialog()
 {
+	int result = int();
+	this->EndDialog(result);
+	CDialog::OnClose();
 }
 
 void CameraControlDialog::DoDataExchange(CDataExchange* pDX)
@@ -33,4 +40,10 @@ BEGIN_MESSAGE_MAP(CameraControlDialog, CDialogEx)
 END_MESSAGE_MAP()
 
 
+BOOL CameraControlDialog::PreTranslateMessage(MSG* pMsg) {
+	if (this->m_mainToolTips != NULL) {
+		this->m_mainToolTips->RelayEvent(pMsg);
+	}
+	return CDialog::PreTranslateMessage(pMsg);
+}
 // CameraControlDialog message handlers

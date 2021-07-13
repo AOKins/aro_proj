@@ -15,10 +15,17 @@ IMPLEMENT_DYNAMIC(AOIControlDialog, CDialogEx)
 AOIControlDialog::AOIControlDialog(CWnd* pParent /*=NULL*/)
 	: CDialogEx(AOIControlDialog::IDD, pParent)
 {
+	this->m_mainToolTips = new CToolTipCtrl();
+	this->m_mainToolTips->Create(this);
+
+	this->m_mainToolTips->Activate(true);
 }
 
 AOIControlDialog::~AOIControlDialog()
 {
+	int result = int();
+	this->EndDialog(result);
+	CDialog::OnClose();
 }
 
 void AOIControlDialog::DoDataExchange(CDataExchange* pDX)
@@ -34,11 +41,8 @@ void AOIControlDialog::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(AOIControlDialog, CDialogEx)
-//	ON_BN_CLICKED(IDC_MAX_IMAGE_SIZE_BUTTON, &AOIControlDialog::OnBnClickedMaxImageSizeButton)
 	ON_BN_CLICKED(IDC_CENTER_AOI_BUTTON, &AOIControlDialog::OnBnClickedCenterAoiButton)
-//	ON_BN_DOUBLECLICKED(IDC_MAX_IMAGE_SIZE_BUTTON, &AOIControlDialog::OnBnDoubleclickedMaxImageSizeButton)
-//	ON_BN_CLICKED(IDC_MAX_IMAGE_SIZE_BUTTON, &AOIControlDialog::OnBnClickedMaxImageSizeButton)
-ON_BN_CLICKED(IDC_MAX_IMAGE_SIZE_BUTTON, &AOIControlDialog::OnBnClickedMaxImageSizeButton)
+	ON_BN_CLICKED(IDC_MAX_IMAGE_SIZE_BUTTON, &AOIControlDialog::OnBnClickedMaxImageSizeButton)
 END_MESSAGE_MAP()
 
 

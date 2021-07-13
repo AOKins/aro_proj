@@ -111,8 +111,8 @@ public:
 		uGA
 	};
 	OptType opt_selection_; // Current selected optimization algorithm
-
-
+	
+	// Tool tips to help inform the user about a control
 	CToolTipCtrl * m_mainToolTips;
 	BOOL virtual PreTranslateMessage(MSG* pMsg);
 };

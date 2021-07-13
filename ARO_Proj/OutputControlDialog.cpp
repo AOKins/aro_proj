@@ -16,11 +16,24 @@ IMPLEMENT_DYNAMIC(OutputControlDialog, CDialogEx)
 OutputControlDialog::OutputControlDialog(CWnd* pParent /*=NULL*/)
 	: CDialogEx(OutputControlDialog::IDD, pParent)
 {
+	this->m_mainToolTips = new CToolTipCtrl();
+	this->m_mainToolTips->Create(this);
 
+	this->m_mainToolTips->AddTool(GetDlgItem(IDC_LOGALL_FILES), L"Enable ALL file exports, overriding others");
+	this->m_mainToolTips->AddTool(GetDlgItem(IDC_SAVE_ELITEIMAGE), L"Save the elite image for every generation");
+	this->m_mainToolTips->AddTool(GetDlgItem(IDC_SAVE_TIMEVFIT), L"Record time performances");
+	this->m_mainToolTips->AddTool(GetDlgItem(IDC_SAVE_FINALIMAGE), L"Save the final optimized images from camera and SLM");
+	this->m_mainToolTips->AddTool(GetDlgItem(IDC_EXPOSURE_FILE), L"Record when exposure is changed during optimization");
+	this->m_mainToolTips->AddTool(GetDlgItem(IDC_OUTPUT_LOCATION), L"Set where to store outputs to");
+
+	this->m_mainToolTips->Activate(true);
 }
 
 OutputControlDialog::~OutputControlDialog()
 {
+	int result = int();
+	this->EndDialog(result);
+	CDialog::OnClose();
 }
 
 void OutputControlDialog::DoDataExchange(CDataExchange* pDX)
@@ -77,4 +90,11 @@ void OutputControlDialog::OnBnClickedLogallFiles() {
 	this->m_SaveTimeVFitnessCheck.EnableWindow(enable);
 	this->m_SaveExposureShortCheck.EnableWindow(enable);
 
+}
+
+BOOL OutputControlDialog::PreTranslateMessage(MSG* pMsg) {
+	if (this->m_mainToolTips != NULL) {
+		this->m_mainToolTips->RelayEvent(pMsg);
+	}
+	return CDialog::PreTranslateMessage(pMsg);
 }

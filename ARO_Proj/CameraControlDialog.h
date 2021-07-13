@@ -22,4 +22,8 @@ public:
 	CEdit m_initialExposureTimeInput;
 	CEdit m_FramesPerSecond;
 	CEdit m_gammaValue;
+
+	// Tool tips to help inform the user about a control
+	CToolTipCtrl * m_mainToolTips;
+	BOOL virtual PreTranslateMessage(MSG* pMsg);
 };
