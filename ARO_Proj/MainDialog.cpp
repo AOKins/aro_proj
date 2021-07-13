@@ -74,10 +74,6 @@ END_MESSAGE_MAP()
 //			  initialize variables for the program. First build the board class and set the
 //			  run parameters. Then pre-load images to the hardware.
 //
-//   Modifications: With the new Blink SDK, opening communication has a new, more streamlined function 
-//					(Blink_SDK(...)).Calculating TrueFrames for the FLC has its own function. Assumes 
-//					only one board for now.
-//
 ///////////////////////////////////////////////////////
 BOOL MainDialog::OnInitDialog() {
 	//[CONSOLE OUTPUT]
@@ -120,11 +116,15 @@ BOOL MainDialog::OnInitDialog() {
 
 	// Setup the tool tip controller for main dialog
 	this->m_mainToolTips = new CToolTipCtrl();
-	this->m_mainToolTips->AddTool(NULL, L"Controls for stop/timeout conditions and image dimensions", NULL, IDD_OPTIMIZATION_CONTROL);
-	this->m_mainToolTips->AddTool(NULL, L"Configure options for SLM(s) being optimized", NULL, IDD_SLM_CONTROL);
-	this->m_mainToolTips->AddTool(NULL, L"Configure options for camera being used", NULL, IDD_CAMERA_CONTROL);
-	this->m_mainToolTips->AddTool(NULL, L"Set Areas of Interest to use from the camera", NULL, IDD_AOI_CONTROL);
-	this->m_mainToolTips->AddTool(NULL, L"Settings for outputs made from the optimization", NULL, IDD_OUTPUT_CONTROL);
+	this->m_mainToolTips->Create(this);
+	
+	this->m_mainToolTips->AddTool(GetDlgItem(IDC_SAVE_SETTINGS), L"Save current configurations to a file");
+	this->m_mainToolTips->AddTool(GetDlgItem(IDC_LOAD_SETTINGS), L"Load a pre-made configuration from a file");
+	this->m_mainToolTips->AddTool(GetDlgItem(IDC_MULTITHREAD_ENABLE), L"Enable the usage of more than one thread to perform the GAs faster");
+	this->m_mainToolTips->AddTool(GetDlgItem(IDC_SGA_BUTTON), L"Use the Simple Genetic Algorithm");
+	this->m_mainToolTips->AddTool(GetDlgItem(IDC_UGA_BUTTON), L"Use the Micro Genetic Algorith");
+	this->m_mainToolTips->AddTool(GetDlgItem(IDC_OPT_BUTTON), L"Use the Brute Force Algorithm (multithreading is not utilized!)");
+	this->m_mainToolTips->AddTool(GetDlgItem(IDC_START_STOP_BUTTON), L"Control start/abort of the algorithm");
 
 	this->m_mainToolTips->Activate(true);
 
@@ -315,6 +315,7 @@ void MainDialog::OnClose() {
 	else {
 		Utility::printLine("INFO: System beginning to close closing!");
 
+		delete this->m_mainToolTips;
 		delete this->camCtrl;
 		// SLM controller is destructed by the SLM Dialog Controller
 		//Finish console output
@@ -323,13 +324,23 @@ void MainDialog::OnClose() {
 			AfxMessageBox(L"Could not free the console!");
 		}
 		Utility::printLine("INFO: Console realeased (why are you seeing this?)");
-		delete this->m_mainToolTips;
+
+		int result = int();
+		this->EndDialog(result);
 		CDialog::OnClose();
 	}
 }
 
-/* OnOK: perfomrs enter key functions - used to prevent accidental exit of program and equipment damag e*/
-void MainDialog::OnOK() {}
+/* OnOK: perfomrs enter key functions - used to prevent accidental exit of program and equipment damage */
+void MainDialog::OnOK() {
+}
+
+BOOL MainDialog::PreTranslateMessage(MSG* pMsg) {
+	if (this->m_mainToolTips != NULL) {
+		this->m_mainToolTips->RelayEvent(pMsg);
+	}
+	return CDialog::PreTranslateMessage(pMsg);
+}
 
 //OnBnClickedUgaButton: Select the uGA Algorithm Button
 void MainDialog::OnBnClickedUgaButton() {

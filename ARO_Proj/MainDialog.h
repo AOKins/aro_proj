@@ -114,6 +114,7 @@ public:
 
 
 	CToolTipCtrl * m_mainToolTips;
+	BOOL virtual PreTranslateMessage(MSG* pMsg);
 };
 
 // Worker thread process for running optimization while MainDialog continues listening for other input
