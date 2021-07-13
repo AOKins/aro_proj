@@ -13,11 +13,19 @@ IMPLEMENT_DYNAMIC(OptimizationControlDialog, CDialogEx)
 OptimizationControlDialog::OptimizationControlDialog(CWnd* pParent /*=NULL*/)
 	: CDialogEx(OptimizationControlDialog::IDD, pParent)
 {
+	this->m_mainToolTips = new CToolTipCtrl();
+}
 
+BOOL OptimizationControlDialog::OnInitDialog() {
+	this->m_mainToolTips->Create(this);
+	// Currently no active tool tips used
+	this->m_mainToolTips->Activate(true);
+	return CDialogEx::OnInitDialog();
 }
 
 OptimizationControlDialog::~OptimizationControlDialog()
 {
+	delete this->m_mainToolTips;
 }
 
 void OptimizationControlDialog::DoDataExchange(CDataExchange* pDX)
@@ -29,9 +37,16 @@ void OptimizationControlDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT_BIN_SIZE, m_binSize);
 	DDX_Control(pDX, IDC_EDIT_NUMBER_BINS, m_numberBins);
 	DDX_Control(pDX, IDC_EDIT_TARGET_RADIUS, m_targetRadius);
-	//DDX_Control(pDX, IDC_SAMPLE_CHECKMARK, m_SampleCheckmark);
 	DDX_Control(pDX, IDC_MAX_GENERATIONS, m_maxGenerations);
 	DDX_Control(pDX, IDC_MAX_SEC_INPUT, m_maxSeconds);
+}
+
+
+BOOL OptimizationControlDialog::PreTranslateMessage(MSG* pMsg) {
+	if (this->m_mainToolTips != NULL) {
+		this->m_mainToolTips->RelayEvent(pMsg);
+	}
+	return CDialog::PreTranslateMessage(pMsg);
 }
 
 

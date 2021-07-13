@@ -15,6 +15,7 @@ public:
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+	virtual BOOL OnInitDialog();
 
 	DECLARE_MESSAGE_MAP()
 public:
@@ -28,4 +29,8 @@ public:
 	CEdit m_maxGenerations;
 	// The maximum amount of time (in seconds) to run the optimization algorithm, set to 0 for indefinite time
 	CEdit m_maxSeconds;
+
+	// Tool tips to help inform the user about a control
+	CToolTipCtrl * m_mainToolTips;
+	BOOL virtual PreTranslateMessage(MSG* pMsg);
 };

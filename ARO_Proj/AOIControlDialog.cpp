@@ -16,16 +16,21 @@ AOIControlDialog::AOIControlDialog(CWnd* pParent /*=NULL*/)
 	: CDialogEx(AOIControlDialog::IDD, pParent)
 {
 	this->m_mainToolTips = new CToolTipCtrl();
+}
+
+BOOL AOIControlDialog::OnInitDialog() {
 	this->m_mainToolTips->Create(this);
 
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_CENTER_AOI_BUTTON), L"Take width and height but have image be center of camera's view");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_MAX_IMAGE_SIZE_BUTTON), L"Take full image of entire camera view");
+
 	this->m_mainToolTips->Activate(true);
+	return CDialogEx::OnInitDialog();
 }
 
 AOIControlDialog::~AOIControlDialog()
 {
-	int result = int();
-	this->EndDialog(result);
-	CDialog::OnClose();
+	delete this->m_mainToolTips;
 }
 
 void AOIControlDialog::DoDataExchange(CDataExchange* pDX)
@@ -45,6 +50,12 @@ BEGIN_MESSAGE_MAP(AOIControlDialog, CDialogEx)
 	ON_BN_CLICKED(IDC_MAX_IMAGE_SIZE_BUTTON, &AOIControlDialog::OnBnClickedMaxImageSizeButton)
 END_MESSAGE_MAP()
 
+BOOL AOIControlDialog::PreTranslateMessage(MSG* pMsg) {
+	if (this->m_mainToolTips != NULL) {
+		this->m_mainToolTips->RelayEvent(pMsg);
+	}
+	return CDialog::PreTranslateMessage(pMsg);
+}
 
 // AOIControlDialog message handlers
 void AOIControlDialog::OnBnClickedCenterAoiButton()

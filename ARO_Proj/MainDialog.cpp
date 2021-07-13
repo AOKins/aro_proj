@@ -104,6 +104,7 @@ BOOL MainDialog::OnInitDialog() {
 
 	m_slmControlDlg.Create(IDD_SLM_CONTROL, &m_TabControl);
 	m_slmControlDlg.SetWindowPos(NULL, rect.top + 5, rect.left + 30, rect.Width() - 10, rect.Height() - 35, SWP_HIDEWINDOW | SWP_NOZORDER);
+	
 
 	m_cameraControlDlg.Create(IDD_CAMERA_CONTROL, &m_TabControl);
 	m_cameraControlDlg.SetWindowPos(NULL, rect.top + 5, rect.left + 30, rect.Width() - 10, rect.Height() - 35, SWP_HIDEWINDOW | SWP_NOZORDER);
@@ -122,7 +123,7 @@ BOOL MainDialog::OnInitDialog() {
 	this->m_mainToolTips->AddTool(GetDlgItem(IDC_LOAD_SETTINGS), L"Load a pre-made configuration from a file");
 	this->m_mainToolTips->AddTool(GetDlgItem(IDC_MULTITHREAD_ENABLE), L"Enable the usage of more than one thread to perform the GAs faster");
 	this->m_mainToolTips->AddTool(GetDlgItem(IDC_SGA_BUTTON), L"Use the Simple Genetic Algorithm");
-	this->m_mainToolTips->AddTool(GetDlgItem(IDC_UGA_BUTTON), L"Use the Micro Genetic Algorith");
+	this->m_mainToolTips->AddTool(GetDlgItem(IDC_UGA_BUTTON), L"Use the Micro Genetic Algorithm");
 	this->m_mainToolTips->AddTool(GetDlgItem(IDC_OPT_BUTTON), L"Use the Brute Force Algorithm (multithreading is not utilized!)");
 	this->m_mainToolTips->AddTool(GetDlgItem(IDC_START_STOP_BUTTON), L"Control start/abort of the algorithm");
 

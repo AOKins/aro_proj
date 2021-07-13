@@ -13,18 +13,19 @@ IMPLEMENT_DYNAMIC(CameraControlDialog, CDialogEx)
 CameraControlDialog::CameraControlDialog(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CameraControlDialog::IDD, pParent)
 {
-
 	this->m_mainToolTips = new CToolTipCtrl();
+}
+
+BOOL CameraControlDialog::OnInitDialog() {
 	this->m_mainToolTips->Create(this);
-	// Currently no active tool tips used
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_EXPOSURE_TIME_INPUT), L"The intial exposure used, when intensity is too high the exposure will be halved each time during optimization");
 	this->m_mainToolTips->Activate(true);
+	return CDialogEx::OnInitDialog();
 }
 
 CameraControlDialog::~CameraControlDialog()
 {
-	int result = int();
-	this->EndDialog(result);
-	CDialog::OnClose();
+	delete this->m_mainToolTips;
 }
 
 void CameraControlDialog::DoDataExchange(CDataExchange* pDX)

@@ -17,23 +17,27 @@ OutputControlDialog::OutputControlDialog(CWnd* pParent /*=NULL*/)
 	: CDialogEx(OutputControlDialog::IDD, pParent)
 {
 	this->m_mainToolTips = new CToolTipCtrl();
-	this->m_mainToolTips->Create(this);
+}
 
-	this->m_mainToolTips->AddTool(GetDlgItem(IDC_LOGALL_FILES), L"Enable ALL file exports, overriding others");
-	this->m_mainToolTips->AddTool(GetDlgItem(IDC_SAVE_ELITEIMAGE), L"Save the elite image for every generation");
-	this->m_mainToolTips->AddTool(GetDlgItem(IDC_SAVE_TIMEVFIT), L"Record time performances");
-	this->m_mainToolTips->AddTool(GetDlgItem(IDC_SAVE_FINALIMAGE), L"Save the final optimized images from camera and SLM");
-	this->m_mainToolTips->AddTool(GetDlgItem(IDC_EXPOSURE_FILE), L"Record when exposure is changed during optimization");
-	this->m_mainToolTips->AddTool(GetDlgItem(IDC_OUTPUT_LOCATION), L"Set where to store outputs to");
+BOOL OutputControlDialog::OnInitDialog() {
+	this->m_mainToolTips->Create(this);
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_LOGALL_FILES), L"Enable all outputs");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SAVE_ELITEIMAGE), L"Save elite results every generation");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SAVE_FINALIMAGE), L"Save final optimized results");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SAVE_TIMEVFIT), L"Record time performances");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_DISPLAY_CAM), L"Display the camera as the optimization runs");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_DISPLAY_SLM), L"Display the SLMs being optimized as the optimization runs");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_OUTPUT_LOCATION), L"Directory where the outputs will be stored");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_EXPOSURE_FILE), L"Record when the exposure is changed during optimization");
 
 	this->m_mainToolTips->Activate(true);
+
+	return CDialogEx::OnInitDialog();
 }
 
 OutputControlDialog::~OutputControlDialog()
 {
-	int result = int();
-	this->EndDialog(result);
-	CDialog::OnClose();
+	delete this->m_mainToolTips;
 }
 
 void OutputControlDialog::DoDataExchange(CDataExchange* pDX)

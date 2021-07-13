@@ -18,29 +18,33 @@
 IMPLEMENT_DYNAMIC(SLMControlDialog, CDialogEx)
 
 SLMControlDialog::SLMControlDialog(CWnd* pParent /*=NULL*/)
-	: CDialogEx(SLMControlDialog::IDD, pParent)
+: CDialogEx(SLMControlDialog::IDD, pParent)
 {
 	this->slmCtrl = new SLMController();
 	this->slmSelectionID_ = 0;
-
 	this->m_mainToolTips = new CToolTipCtrl();
+}
+
+BOOL SLMControlDialog::OnInitDialog() {
+	// Setup tool tips for SLM dialog window
+	
 	this->m_mainToolTips->Create(this);
 
-	this->m_mainToolTips->AddTool(GetDlgItem(IDC_SLM_PWR_BUTTON), L"Enable ALL the boards to be on/off");
-	this->m_mainToolTips->AddTool(GetDlgItem(ID_SLM_SELECT), L"Set which board to assign LUT or WFC file to");
-	this->m_mainToolTips->AddTool(GetDlgItem(IDC_SLM_MULTI), L"If enabled, optimize all connected boards");
-	this->m_mainToolTips->AddTool(GetDlgItem(IDC_SLM_DUAL), L"If enabled, optimize the first two connected boards");
-	this->m_mainToolTips->AddTool(GetDlgItem(IDC_SLM_ALLSAME), L"If enabled, ignore the select field and apply LUT or WFC files to all baords");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SETLUT), L"Set LUT file for the selected board(s)");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SETWFC), L"Set wavefront compensation file for the selected board(s)");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_DUAL), L"Optimize first two connected boards at the same time");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_MULTI), L"Optimize all connected boards at the same time");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(ID_SLM_SELECT), L"Select SLM to assign LUT and wavefront compensation files to");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_ALLSAME), L"Set to ignore select SLM and set LUT and wavefront compensation files to all connected boards");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_PWR_BUTTON), L"Turn all boards on/off");
 
 	this->m_mainToolTips->Activate(true);
+	return CDialogEx::OnInitDialog();
 }
 
 SLMControlDialog::~SLMControlDialog()
 {
 	delete this->m_mainToolTips;
-	int result = int();
-	this->EndDialog(result);
-	delete this->slmCtrl;
 }
 
 void SLMControlDialog::DoDataExchange(CDataExchange* pDX)
