@@ -26,6 +26,7 @@ public:
 	afx_msg void OnBnClickedSlmPwrButton();
 	afx_msg void OnBnClickedSetlut();
 	afx_msg void OnBnClickedSetwfc();
+
 	CButton m_SlmPwrButton;
 	SLMController* getSLMCtrl();
 	afx_msg void OnBnClickedMultiSLM();
@@ -41,6 +42,8 @@ public:
 	int slmSelectionID_;
 	// If true, then running optimization with dual SLM configuration
 	CButton multiEnable;
+
+
 	// If TRUE then treat all the SLMs as the same rather than distinct
 	CButton SLM_SetALLSame_;
 	afx_msg void OnCbnSelchangeSlmSelect();

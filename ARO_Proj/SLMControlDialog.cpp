@@ -52,6 +52,10 @@ BEGIN_MESSAGE_MAP(SLMControlDialog, CDialogEx)
 	ON_BN_CLICKED(IDC_SLM_DUAL, &SLMControlDialog::OnBnClickedSlmDual)
 END_MESSAGE_MAP()
 
+
+
+
+
 // SLMControlDialog message handlers
 
 void SLMControlDialog::OnBnClickedSlmPwrButton() {

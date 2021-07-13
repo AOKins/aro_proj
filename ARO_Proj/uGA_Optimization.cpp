@@ -60,6 +60,10 @@ bool uGA_Optimization::runOptimization() {
 					this->efile << "Exposure shortened after gen: " << this->curr_gen + 1 << " with new ratio " << this->cc->GetExposureRatio() << std::endl;
 				}
 			}
+			// Output to the terminal progress to help show progress
+			if (this->curr_gen % 10 == 0) {
+				Utility::printLine("INFO: Finished generation #" + std::to_string(this->curr_gen)+ " with a fitness of " + std::to_string(this->population[0]->getFitness(this->populationSize-1)));
+			}
 		}
 		// Cleanup & Save resulting instance
 		if (shutdownOptimizationInstance()) {
