@@ -54,6 +54,8 @@ END_MESSAGE_MAP()
 
 
 
+// Update selection ID value
+void SLMControlDialog::OnCbnSelchangeSlmSelect() { this->slmSelectionID_ = this->slmSelection_.GetCurSel(); }
 
 
 // SLMControlDialog message handlers

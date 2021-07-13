@@ -128,11 +128,13 @@ BOOL MainDialog::OnInitDialog() {
 	setDefaultUI();
 	this->m_slmControlDlg.m_SlmPwrButton.SetWindowTextW(_T("Turn power ON")); // - power button (TODO: determine if SLM is actually off at start)
 
+	Utility::printLine("INFO: There are " + std::to_string(this->slmCtrl->numBoards) + " boards");
+
 	// Give a warning message if no boards have been detected
-	if (this->slmCtrl != nullptr && this->slmCtrl->boards.size() < 1) {
-		MessageBox((LPCWSTR)L"No SLM detected!",
-				   (LPCWSTR)L"No SLM has been detected to be connected!",
-					MB_ICONWARNING | MB_OK);
+	if (this->slmCtrl != nullptr && this->slmCtrl->numBoards < 1) {
+		MessageBox((LPCWSTR)L"No SLM has been detected to be connected!",
+				(LPCWSTR)L"No SLM detected!",
+				MB_ICONWARNING | MB_OK);
 	}
 	//Show the default tab (optimizations settings)
 	m_pwndShow = &m_optimizationControlDlg;

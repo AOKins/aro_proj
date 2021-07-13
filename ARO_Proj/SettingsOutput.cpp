@@ -199,12 +199,12 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 	}
 
 	// Output Controls Dialog variables
-	else if (name == "saveImage") {
+	else if (name == "saveEliteImage") {
 		if (value == "true") {
-			this->m_outputControlDlg.m_SaveImagesCheck.SetCheck(BST_CHECKED);
+			this->m_outputControlDlg.m_SaveEliteImagesCheck.SetCheck(BST_CHECKED);
 		}
 		else {
-			this->m_outputControlDlg.m_SaveImagesCheck.SetCheck(BST_UNCHECKED);
+			this->m_outputControlDlg.m_SaveEliteImagesCheck.SetCheck(BST_UNCHECKED);
 		}
 	}
 	else if (name == "displayCamera") {
@@ -225,10 +225,10 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 	}
 	else if (name == "logFilesEnable") {
 		if (value == "true") {
-			this->m_outputControlDlg.m_logFilesCheck.SetCheck(BST_CHECKED);
+			this->m_outputControlDlg.m_logAllFilesCheck.SetCheck(BST_CHECKED);
 		}
 		else {
-			this->m_outputControlDlg.m_logFilesCheck.SetCheck(BST_UNCHECKED);
+			this->m_outputControlDlg.m_logAllFilesCheck.SetCheck(BST_UNCHECKED);
 		}
 	}
 	else if (name == "multiThreading") {
@@ -367,8 +367,8 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	else { outFile << "false\n"; }
 
 	// Output Dialog
-	outFile << "saveImage=";
-	if (this->m_outputControlDlg.m_SaveImagesCheck.GetCheck() == BST_CHECKED) {	outFile << "true\n"; }
+	outFile << "saveEliteImage=";
+	if (this->m_outputControlDlg.m_SaveEliteImagesCheck.GetCheck() == BST_CHECKED) {	outFile << "true\n"; }
 	else { outFile << "false\n"; }
 	
 	outFile << "displayCamera=";
@@ -379,8 +379,8 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	if (this->m_outputControlDlg.m_displaySLM.GetCheck() == BST_CHECKED) { outFile << "true\n"; }
 	else { outFile << "false\n"; }
 	
-	outFile << "logFilesEnable=";
-	if (this->m_outputControlDlg.m_logFilesCheck.GetCheck() == BST_CHECKED) { outFile << "true\n"; }
+	outFile << "logAllFilesEnable=";
+	if (this->m_outputControlDlg.m_logAllFilesCheck.GetCheck() == BST_CHECKED) { outFile << "true\n"; }
 	else { outFile << "false\n"; }
 	this->m_outputControlDlg.m_OutputLocationField.GetWindowTextW(tempBuff);
 	outFile << "outputFolder=" << tempBuff << std::endl;

@@ -119,7 +119,7 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 
 					//Record current performance to file //Ask what kind of calcualtion is this?
 					double ms = boardID*dphi + curBinVal / dphi;
-					if (this->loggingFilesEnable || this->saveTimeVSFitness) {
+					if (this->logAllFiles || this->saveTimeVSFitness) {
 						this->timeVsFitnessFile << this->timestamp->MS_SinceStart() << " " << fitness * this->cc->GetExposureRatio() << " " << this->cc->GetExposureRatio() << std::endl;
 						this->tfile << ms << " " << fitness * this->cc->GetExposureRatio() << " " << this->cc->GetExposureRatio() << std::endl;
 					}
@@ -152,7 +152,7 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 				slmImg[binIndex] = binValMax;
 
 				// Save progress data
-				if (this->loggingFilesEnable) {
+				if (this->logAllFiles) {
 					lmaxfile << binValMax << " " << fitValMax << std::endl;
 					rtime << this->timestamp->MS_SinceStart() << " ms  " << fitValMax << "   " << this->cc->finalExposureTime << std::endl;
 				}
@@ -182,7 +182,7 @@ bool BruteForce_Optimization::setupInstanceVariables() {
 	}
 
 	this->cc->startCamera(); // setup camera
-	if (this->loggingFilesEnable || this->saveTimeVSFitness) {
+	if (this->logAllFiles || this->saveTimeVSFitness) {
 		this->tfile.open(this->outputFolder + "Opt_functionEvals_vs_fitness.txt", std::ios::app);
 		this->timeVsFitnessFile.open(this->outputFolder + "Opt_time_vs_fitness.txt", std::ios::app);
 	}
@@ -210,7 +210,7 @@ bool BruteForce_Optimization::setupInstanceVariables() {
 	this->allTimeBestFitness = 0;
 
 	// Open files for logging algorithm progress 
-	if (this->loggingFilesEnable) {
+	if (this->logAllFiles) {
 		this->lmaxfile.open(this->outputFolder + "lmax.txt");
 		this->rtime.open(this->outputFolder + "Opt_rtime.txt");
 	}
@@ -219,7 +219,7 @@ bool BruteForce_Optimization::setupInstanceVariables() {
 
 bool BruteForce_Optimization::shutdownOptimizationInstance() {
 	// - log files close
-	if (this->loggingFilesEnable) {
+	if (this->logAllFiles) {
 		this->timeVsFitnessFile.close();
 		this->tfile.close();
 		this->lmaxfile.close();
@@ -227,7 +227,7 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 	}
 	std::string curTime = Utility::getCurTime();
 	// Generic file renaming to include time stamps
-	if (this->loggingFilesEnable){
+	if (this->logAllFiles){
 		std::rename((this->outputFolder + "Opt_functionEvals_vs_fitness.txt").c_str(), (this->outputFolder + curTime + "_OPT5_functionEvals_vs_fitness.txt").c_str());
 		std::rename((this->outputFolder + "Opt_time_vs_fitness.txt").c_str(), (this->outputFolder + curTime + "_OPT5_time_vs_fitness.txt").c_str());
 		std::rename((this->outputFolder + "lmax.txt").c_str(), (this->outputFolder + curTime + "_OPT5_lmax.txt").c_str());
@@ -240,7 +240,7 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 		tfile2.close();
 	}
 	// Save how final optimization looks through camera
-	if (this->bestImage != NULL && this->saveImages) {
+	if (this->bestImage != NULL && this->saveResultImages) {
 		unsigned char* camImg = this->bestImage->getRawData<unsigned char>();
 		cv::Mat Opt_ary = cv::Mat(this->bestImage->getHeight(), this->bestImage->getWidth(), CV_8UC1, camImg);
 		cv::imwrite(this->outputFolder + curTime + "_OPT5_Optimized.bmp", Opt_ary);
