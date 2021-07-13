@@ -96,7 +96,7 @@ bool Optimization::prepareStopConditions() {
 	return result;
 }
 
-
+// Draw from GUI the output settings
 bool Optimization::prepareOutputSettings() {
 	if (this->dlg.m_outputControlDlg.m_displayCameraCheck.GetCheck() == BST_CHECKED) {
 		this->displayCamImage = true;

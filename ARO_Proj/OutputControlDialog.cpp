@@ -22,13 +22,14 @@ OutputControlDialog::OutputControlDialog(CWnd* pParent /*=NULL*/)
 BOOL OutputControlDialog::OnInitDialog() {
 	this->m_mainToolTips->Create(this);
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_LOGALL_FILES), L"Enable all outputs");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SAVE_ELITEIMAGE), L"Save elite results every generation");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SAVE_ELITEIMAGE), L"Save elite results across generations during optimization");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SAVE_FINALIMAGE), L"Save final optimized results");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SAVE_TIMEVFIT), L"Record time performances");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_DISPLAY_CAM), L"Display the camera as the optimization runs");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_DISPLAY_SLM), L"Display the SLMs being optimized as the optimization runs");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_OUTPUT_LOCATION), L"Directory where the outputs will be stored");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_EXPOSURE_FILE), L"Record when the exposure is changed during optimization");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_ELITE_SAVE_FREQ), L"How frequent to save elite results (units of generation)");
 
 	this->m_mainToolTips->Activate(true);
 
@@ -51,12 +52,14 @@ void OutputControlDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_SAVE_FINALIMAGE, m_SaveFinalImagesCheck);
 	DDX_Control(pDX, IDC_EXPOSURE_FILE, m_SaveExposureShortCheck);
 	DDX_Control(pDX, IDC_OUTPUT_LOCATION, m_OutputLocationField);
+	DDX_Control(pDX, IDC_ELITE_SAVE_FREQ, m_eliteSaveFreq);
 }
 
 
 BEGIN_MESSAGE_MAP(OutputControlDialog, CDialogEx)
 	ON_BN_CLICKED(IDC_OUTPUT_LOCATION_BUTTON, &OutputControlDialog::OnBnClickedOutputLocationButton)
 	ON_BN_CLICKED(IDC_LOGALL_FILES, &OutputControlDialog::OnBnClickedLogallFiles)
+	ON_BN_CLICKED(IDC_SAVE_ELITEIMAGE, &OutputControlDialog::OnBnClickedSaveEliteimage)
 END_MESSAGE_MAP()
 
 
@@ -93,6 +96,7 @@ void OutputControlDialog::OnBnClickedLogallFiles() {
 	this->m_SaveFinalImagesCheck.EnableWindow(enable);
 	this->m_SaveTimeVFitnessCheck.EnableWindow(enable);
 	this->m_SaveExposureShortCheck.EnableWindow(enable);
+	this->OnBnClickedSaveEliteimage();
 
 }
 
@@ -101,4 +105,11 @@ BOOL OutputControlDialog::PreTranslateMessage(MSG* pMsg) {
 		this->m_mainToolTips->RelayEvent(pMsg);
 	}
 	return CDialog::PreTranslateMessage(pMsg);
+}
+
+
+void OutputControlDialog::OnBnClickedSaveEliteimage()
+{
+	bool enabled = this->m_SaveEliteImagesCheck.GetCheck() == BST_CHECKED || this->m_logAllFilesCheck.GetCheck() == BST_CHECKED;
+	this->m_eliteSaveFreq.EnableWindow(enabled);
 }

@@ -105,7 +105,6 @@ BOOL MainDialog::OnInitDialog() {
 	m_slmControlDlg.Create(IDD_SLM_CONTROL, &m_TabControl);
 	m_slmControlDlg.SetWindowPos(NULL, rect.top + 5, rect.left + 30, rect.Width() - 10, rect.Height() - 35, SWP_HIDEWINDOW | SWP_NOZORDER);
 	
-
 	m_cameraControlDlg.Create(IDD_CAMERA_CONTROL, &m_TabControl);
 	m_cameraControlDlg.SetWindowPos(NULL, rect.top + 5, rect.left + 30, rect.Width() - 10, rect.Height() - 35, SWP_HIDEWINDOW | SWP_NOZORDER);
 
@@ -207,12 +206,15 @@ void MainDialog::setDefaultUI() {
 	// Output controls
 		// Default to saving images
 	this->m_outputControlDlg.m_logAllFilesCheck.SetCheck(BST_CHECKED);
-	this->m_outputControlDlg.OnBnClickedLogallFiles();
 		// Default to displaying camera
 	this->m_outputControlDlg.m_displayCameraCheck.SetCheck(BST_CHECKED);
 		// Default to not displaying SLM
-	this->m_outputControlDlg.m_displaySLM.SetCheck(BST_UNCHECKED);
+	this->m_outputControlDlg.m_displaySLM.SetCheck(BST_CHECKED);
 	this->m_outputControlDlg.m_OutputLocationField.SetWindowTextW(_T(".\\logs\\"));
+	this->m_outputControlDlg.m_eliteSaveFreq.SetWindowTextW(_T("1"));
+		// Calling methods to disable/enable appropriate fields
+	this->m_outputControlDlg.OnBnClickedLogallFiles();
+	this->m_outputControlDlg.OnBnClickedSaveEliteimage();
 }
 
 /////////////////////////////////////////////////////////////////////

@@ -177,8 +177,8 @@ bool SGA_Optimization::runIndividual(int indID) {
 			if (this->displaySLMImage) {
 				std::unique_lock<std::mutex> slmLock(slmDisplayMutex, std::defer_lock);
 				slmLock.lock();
-				// TODO: Support more boards
-				this->slmDisplay->UpdateDisplay(this->slmScaledImages[0]);
+				for (int slmID = 0; slmID < this->popCount; slmID++)
+					this->slmDisplayVector[slmID]->UpdateDisplay(this->slmScaledImages[slmID]);
 				slmLock.unlock();
 			}
 
@@ -254,9 +254,15 @@ bool SGA_Optimization::setupInstanceVariables() {
 		this->camDisplay = new CameraDisplay(this->cc->cameraImageHeight, this->cc->cameraImageWidth, "Camera Display");
 		this->camDisplay->OpenDisplay();
 	}
+	this->slmDisplayVector.clear();
 	if (this->displaySLMImage) {
-		this->slmDisplay = new CameraDisplay(this->sc->getBoardHeight(0), this->sc->getBoardWidth(0), "SLM Display");
-		this->slmDisplay->OpenDisplay();
+		this->slmDisplayVector.push_back(new CameraDisplay(this->sc->getBoardHeight(0), this->sc->getBoardWidth(0), "SLM Display 1"));
+		for (int displayNum = 1; displayNum < this->popCount; displayNum++) {
+			this->slmDisplayVector.push_back(new CameraDisplay(this->sc->getBoardHeight(displayNum), this->sc->getBoardWidth(displayNum), ("SLM Display " + std::to_string(displayNum + 1)).c_str()));
+		}
+		for (int i = 0; i < this->popCount; i++) {
+			this->slmDisplayVector[i]->OpenDisplay();
+		}
 	}
 	// Scaler Setup (using base class)
 	this->slmScaledImages.clear();
@@ -320,10 +326,12 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 		this->camDisplay->CloseDisplay();
 		delete this->camDisplay;
 	}
-	if (this->slmDisplay != NULL) {
-		this->slmDisplay->CloseDisplay();
-		delete this->slmDisplay;
+	for (int i = 0; i < this->slmDisplayVector.size(); i++) {
+		this->slmDisplayVector[i]->CloseDisplay();
+		delete this->slmDisplayVector[i];
 	}
+	this->slmDisplayVector.clear();
+
 	// - camera
 	this->cc->stopCamera();
 	//this->cc->shutdownCamera();

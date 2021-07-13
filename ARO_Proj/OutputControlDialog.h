@@ -42,4 +42,7 @@ public:
 	// Tool tips to help inform the user about a control
 	CToolTipCtrl * m_mainToolTips;
 	BOOL virtual PreTranslateMessage(MSG* pMsg);
+	afx_msg void OnBnClickedSaveEliteimage();
+	// Field for how frequent to save elite images during optimization if enabled
+	CEdit m_eliteSaveFreq;
 };

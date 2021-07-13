@@ -112,6 +112,9 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 					if (this->displayCamImage) {
 						this->camDisplay->UpdateDisplay(camImg);
 					}
+					if (this->displaySLMImage) {
+						this->slmDisplayVector[0]->UpdateDisplay(this->slmScaledImages[boardID]);
+					}
 					// Determine fitness
 
 					double exposureTimesRatio = this->cc->GetExposureRatio();
@@ -183,8 +186,8 @@ bool BruteForce_Optimization::setupInstanceVariables() {
 
 	this->cc->startCamera(); // setup camera
 	if (this->logAllFiles || this->saveTimeVSFitness) {
-		this->tfile.open(this->outputFolder + "Opt_functionEvals_vs_fitness.txt", std::ios::app);
-		this->timeVsFitnessFile.open(this->outputFolder + "Opt_time_vs_fitness.txt", std::ios::app);
+		this->tfile.open(this->outputFolder + "Opt_functionEvals_vs_fitness.txt");
+		this->timeVsFitnessFile.open(this->outputFolder + "Opt_time_vs_fitness.txt");
 	}
 	// Setup displays
 	if (this->displayCamImage) {
@@ -192,8 +195,8 @@ bool BruteForce_Optimization::setupInstanceVariables() {
 		this->camDisplay->OpenDisplay();
 	}
 	if (this->displaySLMImage) {
-		this->slmDisplay = new CameraDisplay(this->sc->getBoardHeight(0), this->sc->getBoardWidth(0), "SLM Display");
-		this->slmDisplay->OpenDisplay();
+		this->slmDisplayVector.push_back(new CameraDisplay(this->sc->getBoardHeight(0), this->sc->getBoardWidth(0), "SLM Display"));
+		this->slmDisplayVector[0]->OpenDisplay();
 	}
 
 	// Scaler Setup (using base class)
@@ -256,10 +259,11 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 		this->camDisplay->CloseDisplay();
 		delete this->camDisplay;
 	}
-	if (this->slmDisplay != NULL) {
-		this->slmDisplay->CloseDisplay();
-		delete this->slmDisplay;
+	if (this->slmDisplayVector[0] != NULL) {
+		this->slmDisplayVector[0]->CloseDisplay();
+		delete this->slmDisplayVector[0];
 	}
+	this->slmDisplayVector.clear();
 	delete this->timestamp;
 
 	// Delete all the scalers in the vector

@@ -52,7 +52,7 @@ protected:
 	bool shortenExposureFlag;   // Set to true by individual if fitness is too high
 	bool stopConditionsMetFlag; // Set to true if a stop condition was reached by one of the individuals
 	CameraDisplay * camDisplay; // Display for camera
-	CameraDisplay * slmDisplay; // Display for SLM (currently [June 24th 2021] only board at index 0)
+	std::vector<CameraDisplay *> slmDisplayVector; // Display for SLM (currently [June 24th 2021] only board at index 0)
 	int curr_gen;				// Current generation being evaluated (start at 0)
 	TimeStampGenerator * timestamp; // Timer to track and store elapsed time as the algorithm executes
 
