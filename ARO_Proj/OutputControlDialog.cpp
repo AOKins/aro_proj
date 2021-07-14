@@ -22,7 +22,7 @@ OutputControlDialog::OutputControlDialog(CWnd* pParent /*=NULL*/)
 BOOL OutputControlDialog::OnInitDialog() {
 	this->m_mainToolTips->Create(this);
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_LOGALL_FILES), L"Enable all outputs");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SAVE_PARAMETERS), L"Save current settings in both loadable and readable files for reference");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_OUTPUT_PARAMETERS), L"Save current settings in both loadable and readable files for reference");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SAVE_ELITEIMAGE), L"Save elite results across generations during optimization");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SAVE_FINALIMAGE), L"Save final optimized results");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SAVE_TIMEVFIT), L"Record time performances");
@@ -98,6 +98,7 @@ void OutputControlDialog::OnBnClickedLogallFiles() {
 	this->m_SaveFinalImagesCheck.EnableWindow(enable);
 	this->m_SaveTimeVFitnessCheck.EnableWindow(enable);
 	this->m_SaveExposureShortCheck.EnableWindow(enable);
+	this->m_SaveParameters.EnableWindow(enable);
 	this->OnBnClickedSaveEliteimage();
 
 }

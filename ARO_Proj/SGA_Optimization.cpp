@@ -344,7 +344,7 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 		this->efile.close();
 		std::rename((this->outputFolder + "SGA_exposure.txt").c_str(), (this->outputFolder + curTime + "_SGA_exposure.txt").c_str());
 	}
-	if (this->logAllFiles || this->saveParameters) {
+	if (this->logAllFiles || this->saveParametersPref) {
 		saveParameters(curTime, "SGA");
 	}
 

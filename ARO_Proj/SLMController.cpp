@@ -563,14 +563,28 @@ int SLMController::getBoardHeight(int boardIdx) {
 	return boards[boardIdx]->imageHeight;
 }
 
-void SLMController::setBoardPower(bool isOn) {
+void SLMController::setBoardPowerALL(bool isOn) {
 	if (blink_sdk != NULL) {
 		blink_sdk->SLM_power(isOn);
+		for (int i = 0; i < this->boards.size(); i++) {
+			this->boards[i]->setPower(isOn);
+		}
 	}
 	else {
 		Utility::printLine("WARNING: SDK not avalible cannot power ON/OFF the boards!");
 	}
 }
+
+void SLMController::setBoardPower(int boardID, bool isOn) {
+	if (blink_sdk != NULL) {
+		blink_sdk->SLM_power(boardID+1, isOn);
+		this->boards[boardID]->setPower(isOn);
+	}
+	else {
+		Utility::printLine("WARNING: SDK not avalible cannot power ON/OFF the board!");
+	}
+}
+
 
 // Write an image to a board
 // Input:

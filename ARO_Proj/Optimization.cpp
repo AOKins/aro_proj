@@ -121,10 +121,10 @@ bool Optimization::prepareOutputSettings() {
 		this->logAllFiles = false;
 	}
 	if (this->dlg.m_outputControlDlg.m_SaveParameters.GetCheck() == BST_CHECKED) {
-		this->saveParameters = true;
+		this->saveParametersPref = true;
 	}
 	else {
-		this->saveParameters = false;
+		this->saveParametersPref = false;
 	}
 	// If this enable all checkbox isn't enabled, then we must check the more specific ones
 	if (this->logAllFiles == false) {

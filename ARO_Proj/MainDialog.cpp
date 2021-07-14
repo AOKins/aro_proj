@@ -120,7 +120,7 @@ BOOL MainDialog::OnInitDialog() {
 	
 	this->m_mainToolTips->AddTool(GetDlgItem(IDC_SAVE_SETTINGS), L"Save current configurations to a file");
 	this->m_mainToolTips->AddTool(GetDlgItem(IDC_LOAD_SETTINGS), L"Load a pre-made configuration from a file");
-	this->m_mainToolTips->AddTool(GetDlgItem(IDC_MULTITHREAD_ENABLE), L"Enable the usage of more than one thread to perform the GAs faster");
+	this->m_mainToolTips->AddTool(GetDlgItem(IDC_MULTITHREAD_ENABLE), L"Enable the usage of multithreading to perform the GAs faster");
 	this->m_mainToolTips->AddTool(GetDlgItem(IDC_SGA_BUTTON), L"Use the Simple Genetic Algorithm");
 	this->m_mainToolTips->AddTool(GetDlgItem(IDC_UGA_BUTTON), L"Use the Micro Genetic Algorithm");
 	this->m_mainToolTips->AddTool(GetDlgItem(IDC_OPT_BUTTON), L"Use the Brute Force Algorithm (multithreading is not utilized!)");
@@ -135,7 +135,6 @@ BOOL MainDialog::OnInitDialog() {
 
 	// - set all default settings
 	setDefaultUI();
-	this->m_slmControlDlg.m_SlmPwrButton.SetWindowTextW(_T("Turn power ON")); // - power button (TODO: determine if SLM is actually off at start)
 
 	Utility::printLine("INFO: There are " + std::to_string(this->slmCtrl->numBoards) + " boards");
 
@@ -202,6 +201,7 @@ void MainDialog::setDefaultUI() {
 	}
 
 	this->m_slmControlDlg.populateSLMlist(); // Simple method to setup the list of selections
+	this->m_slmControlDlg.OnCbnSelchangeSlmSelect();
 
 	// Output controls
 		// Default to saving images

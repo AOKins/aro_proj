@@ -40,6 +40,7 @@ protected:
 	bool saveEliteImages = false;		// TRUE -> save images of the fittest individual of each gen
 	int saveEliteFrequency = 1; // How often per generation to save elite images if enabled
 	bool saveResultImages = true;
+	bool saveParametersPref = true;
 	bool saveTimeVSFitness = true;
 	bool saveExposureShorten = true;
 	bool multithreadEnable = true; // TRUE -> use multithreading

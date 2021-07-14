@@ -83,7 +83,12 @@ public:
 
 	int getBoardWidth(int boardIdx);
 	int getBoardHeight(int boardIdx);
-	void setBoardPower(bool isOn);
+	void setBoardPowerALL(bool isOn);
+	// Set power to a specific board
+	// Input:
+	//		boardID - index for which board (0 based index)
+	//		isOn - boolean for if on or off toggle
+	void setBoardPower(int boardID, bool isOn);
 
 	void SetMainDlg(MainDialog* dlg_) { dlg = dlg_; }
 
