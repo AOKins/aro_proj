@@ -45,4 +45,6 @@ public:
 	afx_msg void OnBnClickedSaveEliteimage();
 	// Field for how frequent to save elite images during optimization if enabled
 	CEdit m_eliteSaveFreq;
+	// If enabled, output the current settings in a readable file
+	CButton m_SaveParameters;
 };

@@ -56,4 +56,9 @@ public:
 	// Tool tips to help inform the user about a control
 	CToolTipCtrl * m_mainToolTips;
 	BOOL virtual PreTranslateMessage(MSG* pMsg);
+	// Field to show current WFC for a given board
+	CEdit m_WFC_pathDisplay;
+
+	// Field to show current board's LUT file path
+	CEdit m_LUT_pathDisplay;
 };

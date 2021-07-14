@@ -42,7 +42,6 @@ bool SLMController::setupSLM(bool repopulateBoardList, int boardIdx) {
 		for (unsigned int i = 1; i <= numBoards; i++) {
 			SLM_Board *curBoard = new SLM_Board(true, blink_sdk->Get_image_width(i), blink_sdk->Get_image_height(i));
 			int boardArea = blink_sdk->Get_image_width(i) * blink_sdk->Get_image_height(i);
-
 			//Build paths to the calibrations for this SLM -- regional LUT included in Blink_SDK(), but need to pass NULL to that param to disable ODP. Might need to make a class.
 			std::string SLMSerialNum = "linear";
 			std::string SLMSerialNumphase = "slm929_8bit";

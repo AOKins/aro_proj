@@ -98,25 +98,33 @@ bool Optimization::prepareStopConditions() {
 
 // Draw from GUI the output settings
 bool Optimization::prepareOutputSettings() {
+	// Display Camera
 	if (this->dlg.m_outputControlDlg.m_displayCameraCheck.GetCheck() == BST_CHECKED) {
 		this->displayCamImage = true;
 	}
 	else {
 		this->displayCamImage = false;
 	}
-
+	// Display SLMs
 	if (this->dlg.m_outputControlDlg.m_displaySLM.GetCheck() == BST_CHECKED) {
 		this->displaySLMImage = true;
 	}
 	else {
 		this->displaySLMImage = false;
 	}
-
+	// A check all Enable all option
 	if (this->dlg.m_outputControlDlg.m_logAllFilesCheck.GetCheck() == BST_CHECKED) {
 		this->logAllFiles = true;
+		this->saveEliteImages = true;
 	}
 	else {
 		this->logAllFiles = false;
+	}
+	if (this->dlg.m_outputControlDlg.m_SaveParameters.GetCheck() == BST_CHECKED) {
+		this->saveParameters = true;
+	}
+	else {
+		this->saveParameters = false;
 	}
 	// If this enable all checkbox isn't enabled, then we must check the more specific ones
 	if (this->logAllFiles == false) {
@@ -149,6 +157,18 @@ bool Optimization::prepareOutputSettings() {
 	CString buff;
 	this->dlg.m_outputControlDlg.m_OutputLocationField.GetWindowTextW(buff);
 	this->outputFolder = CT2A(buff);
+	// Get freqency of saving elite images (getting value regardless of if it is enabled or not)
+	try	{
+		this->dlg.m_outputControlDlg.m_eliteSaveFreq.GetWindowTextW(buff);
+		if (buff.IsEmpty()) {
+			throw new std::exception();
+		}
+		this->saveEliteFrequency = _tstoi(buff);
+	}
+	catch (...)	{
+		Utility::printLine("ERROR: Failure to read save elite frequency! Disabling save elite");
+		this->saveEliteImages = false;
+	}
 
 	return true;
 }

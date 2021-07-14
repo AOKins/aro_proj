@@ -57,6 +57,8 @@ void SLMControlDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_SLM_MULTI, multiEnable);
 	DDX_Control(pDX, IDC_SLM_ALLSAME, SLM_SetALLSame_);
 	DDX_Control(pDX, IDC_SLM_DUAL, dualEnable);
+	DDX_Control(pDX, IDC_CURRENT_WFC_OUT, m_WFC_pathDisplay);
+	DDX_Control(pDX, IDC_CURR_LUT_OUT, m_LUT_pathDisplay);
 }
 
 BEGIN_MESSAGE_MAP(SLMControlDialog, CDialogEx)
@@ -76,13 +78,25 @@ BOOL SLMControlDialog::PreTranslateMessage(MSG* pMsg) {
 	}
 	return CDialog::PreTranslateMessage(pMsg);
 }
+
 // Update selection ID value
-void SLMControlDialog::OnCbnSelchangeSlmSelect() { this->slmSelectionID_ = this->slmSelection_.GetCurSel(); }
+void SLMControlDialog::OnCbnSelchangeSlmSelect() { 
+	this->slmSelectionID_ = this->slmSelection_.GetCurSel();
+	// Update the fields to show the user the current paths for WFC and LUT files
 
+	CString WFCpath(this->slmCtrl->boards[this->slmSelectionID_]->PhaseCompensationFileName.c_str());
+	this->m_WFC_pathDisplay.SetWindowTextW(WFCpath);
 
-// SLMControlDialog message handlers
+	CString LUTpath(this->slmCtrl->boards[this->slmSelectionID_]->LUTFileName.c_str());
+	this->m_LUT_pathDisplay.SetWindowTextW(LUTpath);
+
+	// TODO: Modify power button accordingly (would need some way to now current power state)
+
+}
+
 
 void SLMControlDialog::OnBnClickedSlmPwrButton() {
+	// TODO: Consider/Modify this function to allow board specific power control
 	CString PowerState;
 	m_SlmPwrButton.GetWindowTextW(PowerState);
 	CStringA pState(PowerState);

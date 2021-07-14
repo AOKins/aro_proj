@@ -12,6 +12,7 @@ SLM_Board::SLM_Board(bool isNematic, int width, int height) {
 	this->LUTFileName = "";
 	this->PhaseCompensationFileName = "";
 	this->SystemPhaseCompensationFileName = "";
+	this->powered_On = false;
 }
 
 // Destructor
@@ -24,4 +25,12 @@ SLM_Board::~SLM_Board() {
 // Return area of board image (width*height)
 int SLM_Board::GetArea() {
 	return this->imageWidth * this->imageHeight;
+}
+
+bool SLM_Board::isPoweredOn() {
+	return this->powered_On;
+}
+
+void SLM_Board::setPower(bool status) {
+	this->powered_On = status;
 }

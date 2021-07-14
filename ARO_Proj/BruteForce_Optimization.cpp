@@ -280,7 +280,7 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 	//Record the final (most fit) slm images followed by deleting them
 	for (int i = int(this->finalImages_.size())-1; i >= 0; i--) {
 		// Save image
-		if (this->saveEliteImages) {
+		if (this->logAllFiles || this->saveResultImages) {
 			cv::Mat m_ary = cv::Mat(512, 512, CV_8UC1, this->finalImages_[i]);
 			cv::imwrite(this->outputFolder + curTime + "_OPT5_phaseopt_"+std::to_string(i)+".bmp", m_ary);
 		}

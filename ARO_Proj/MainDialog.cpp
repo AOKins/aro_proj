@@ -211,7 +211,7 @@ void MainDialog::setDefaultUI() {
 		// Default to not displaying SLM
 	this->m_outputControlDlg.m_displaySLM.SetCheck(BST_CHECKED);
 	this->m_outputControlDlg.m_OutputLocationField.SetWindowTextW(_T(".\\logs\\"));
-	this->m_outputControlDlg.m_eliteSaveFreq.SetWindowTextW(_T("1"));
+	this->m_outputControlDlg.m_eliteSaveFreq.SetWindowTextW(_T("10"));
 		// Calling methods to disable/enable appropriate fields
 	this->m_outputControlDlg.OnBnClickedLogallFiles();
 	this->m_outputControlDlg.OnBnClickedSaveEliteimage();

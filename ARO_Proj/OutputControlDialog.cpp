@@ -22,6 +22,7 @@ OutputControlDialog::OutputControlDialog(CWnd* pParent /*=NULL*/)
 BOOL OutputControlDialog::OnInitDialog() {
 	this->m_mainToolTips->Create(this);
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_LOGALL_FILES), L"Enable all outputs");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SAVE_PARAMETERS), L"Save current settings in both loadable and readable files for reference");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SAVE_ELITEIMAGE), L"Save elite results across generations during optimization");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SAVE_FINALIMAGE), L"Save final optimized results");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SAVE_TIMEVFIT), L"Record time performances");
@@ -53,6 +54,7 @@ void OutputControlDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EXPOSURE_FILE, m_SaveExposureShortCheck);
 	DDX_Control(pDX, IDC_OUTPUT_LOCATION, m_OutputLocationField);
 	DDX_Control(pDX, IDC_ELITE_SAVE_FREQ, m_eliteSaveFreq);
+	DDX_Control(pDX, IDC_OUTPUT_PARAMETERS, m_SaveParameters);
 }
 
 

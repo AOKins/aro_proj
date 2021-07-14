@@ -1,6 +1,6 @@
 ////////////////////
 // Optimization handler methods implementation for micro-genetic algorithm
-// Last edited: 07/06/2021 by Andrew O'Kins
+// Last edited: 07/14/2021 by Andrew O'Kins
 ////////////////////
 #include "stdafx.h"				// Required in source
 #include "uGA_Optimization.h"	// Header file
@@ -24,6 +24,8 @@ bool uGA_Optimization::runOptimization() {
 		Utility::printLine("ERROR: Failed to prepare values and files for SGA Optimization");
 		return false;
 	}
+	double start = 0;
+	double end = 0;
 	try {	// Begin camera exception handling while optimization loop is going
 		this->timestamp = new TimeStampGenerator();		// Starting time stamp to track elapsed time
 		// Optimization loop for each generation
@@ -63,6 +65,11 @@ bool uGA_Optimization::runOptimization() {
 			// Output to the terminal progress to help show progress
 			if (this->curr_gen % 10 == 0) {
 				Utility::printLine("INFO: Finished generation #" + std::to_string(this->curr_gen)+ " with a fitness of " + std::to_string(this->population[0]->getFitness(this->populationSize-1)));
+			}
+			if (this->saveTimeVSFitness) {
+				end = this->timestamp->MS_SinceStart();
+				this->timePerGenFile << this->curr_gen << "," << end - start << std::endl;
+				start = end;
 			}
 		}
 		// Cleanup & Save resulting instance
@@ -156,15 +163,21 @@ bool uGA_Optimization::runIndividual(int indID) {
 		}
 		//Save elite info of last generation
 		if (indID == (population[0]->getSize() - 1)) {
-			if (this->logAllFiles || this->saveEliteImages) {
+			if ((this->saveEliteImages) && (this->curr_gen % this->saveEliteFrequency == 0)) {
 				// Save Info
 				std::unique_lock<std::mutex> tFileLock(tfileMutex, std::defer_lock);
 				tFileLock.lock();
 				this->tfile << "uGA GENERATION," << this->curr_gen << "," << fitness*exposureTimesRatio << std::endl;
 				tFileLock.unlock();
-
+				// Save image
 				std::string curTime = Utility::getCurTime(); // Get current time to use as timeStamp
-				this->cc->saveImage(curImage, std::string(this->outputFolder + curTime + "_uGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite" + ".jpg"));
+				this->cc->saveImage(curImage, std::string(this->outputFolder + curTime + "_uGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite_Camera" + ".jpg"));
+
+				for (int popID = 0; popID < this->population.size(); popID++) {
+					scalers[popID]->TranslateImage(this->population[popID]->getGenome(this->population[popID]->getSize() - 1), this->slmScaledImages[popID]);
+					cv::Mat m_ary = cv::Mat(512, 512, CV_8UC1, this->slmScaledImages[popID]);
+					cv::imwrite(this->outputFolder + curTime + "_uGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite_SLM_" + std::to_string(popID) + ".bmp", m_ary);
+				}
 			}
 			// Display best individual
 			if (this->displayCamImage) {
@@ -278,20 +291,23 @@ bool uGA_Optimization::setupInstanceVariables() {
 	this->cc->startCamera();
 
 	//Open up files to which progress will be logged
-	this->tfile.open(this->outputFolder + "uGA_functionEvals_vs_fitness.txt");
-	this->timeVsFitnessFile.open(this->outputFolder + "uGA_time_vs_fitness.txt");
-	this->efile.open(this->outputFolder + "exposure.txt");
+	if (this->logAllFiles || this->saveTimeVSFitness) {
+		this->timePerGenFile.open(this->outputFolder + "uGA_timePerformance.txt");
+		timePerGenFile << "Generation,Time\n";
+		this->timeVsFitnessFile.open(this->outputFolder + "uGA_time_vs_fitness.txt");
+	}
+	if (this->logAllFiles || this->saveExposureShorten) {
+		this->efile.open(this->outputFolder + "uGA_exposure.txt");
+	}
+	if (this->logAllFiles || this->saveEliteImages) {
+		this->tfile.open(this->outputFolder + "uGA_functionEvals_vs_fitness.txt");
+	}
 
 	return true; // Returning true if no issues met
 }
 
 // Method to clean up & save resulting runOptimziation() instance
 bool uGA_Optimization::shutdownOptimizationInstance() {
-	// - fitness logging files
-	this->timeVsFitnessFile << this->timestamp->MS_SinceStart() << " " << 0 << std::endl;
-	this->timeVsFitnessFile.close();
-	this->tfile.close();
-	this->efile.close();
 
 	std::string curTime = Utility::getCurTime();
 
@@ -313,12 +329,25 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 			imwrite(this->outputFolder + curTime + "_uGA_phaseopt_SLM" + std::to_string(popID) + ".bmp", m_ary);
 		}
 	}	
-	Utility::printLine("INFO: Final Fitness: " + std::to_string(this->population[0]->getFitness(this->population[0]->getSize() - 1)));
+	
 	// Generic file renaming to have time stamps of run
-	std::rename((this->outputFolder + "uGA_functionEvals_vs_fitness.txt").c_str(), (this->outputFolder + curTime + "_uGA_functionEvals_vs_fitness.txt").c_str());
-	std::rename((this->outputFolder + "uGA_time_vs_fitness.txt").c_str(), (this->outputFolder + curTime + "_uGA_time_vs_fitness.txt").c_str());
-	std::rename((this->outputFolder + "exposure.txt").c_str(), (this->outputFolder + curTime + "_uGA_exposure.txt").c_str());
-	saveParameters(curTime, "uGA");
+	if (this->logAllFiles || this->saveTimeVSFitness) {
+		this->timeVsFitnessFile << this->timestamp->MS_SinceStart() << " " << 0 << std::endl;
+		this->timeVsFitnessFile.close();
+		std::rename((this->outputFolder + "uGA_timePerformance.txt").c_str(), (this->outputFolder + curTime + "_uGA_timePerformance.txt").c_str());
+		std::rename((this->outputFolder + "uGA_time_vs_fitness.txt").c_str(), (this->outputFolder + curTime + "_uGA_time_vs_fitness.txt").c_str());
+	}
+	if (this->logAllFiles || this->saveEliteImages) {
+		this->tfile.close();
+		std::rename((this->outputFolder + "uGA_functionEvals_vs_fitness.txt").c_str(), (this->outputFolder + curTime + "_uGA_functionEvals_vs_fitness.txt").c_str());
+	}
+	if (this->logAllFiles || this->saveExposureShorten) {
+		this->efile.close();
+		std::rename((this->outputFolder + "uGA_exposure.txt").c_str(), (this->outputFolder + curTime + "_uGA_exposure.txt").c_str());
+	}
+	if (this->logAllFiles || this->saveParameters) {
+		saveParameters(curTime, "uGA");
+	}
 	
 	// - image displays
 	if (this->camDisplay != NULL) {

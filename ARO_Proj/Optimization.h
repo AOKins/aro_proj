@@ -38,6 +38,7 @@ protected:
 	bool displaySLMImage = false;   // TODO: only first SLM right now - add functionality to display any or all boards
 	bool logAllFiles = true; // TRUE -> output all logging files to record performance
 	bool saveEliteImages = false;		// TRUE -> save images of the fittest individual of each gen
+	int saveEliteFrequency = 1; // How often per generation to save elite images if enabled
 	bool saveResultImages = true;
 	bool saveTimeVSFitness = true;
 	bool saveExposureShorten = true;
@@ -62,7 +63,8 @@ protected:
 	
 	// Logging file streams // TODO at finished state may seek to change/remove these to improve performance while running
 	std::ofstream tfile;				// Record elite individual progress over generations
-	std::ofstream timeVsFitnessFile;	// Recoding general fitness progress
+	std::ofstream timePerGenFile;		// Record time it took to perform each generation during optimization
+	std::ofstream timeVsFitnessFile;	// Recording general fitness progress
 	std::ofstream efile;				// Exposure file to record when exposure is shortened
 	std::string outputFolder;
 	// Methods for use in runOptimization()

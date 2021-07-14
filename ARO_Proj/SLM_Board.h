@@ -9,12 +9,13 @@ public:
 	bool is_LC_Nematic;
 	int imageWidth;
 	int imageHeight;
+	// Track if this board has been powered on or not (default start with false)
+	bool powered_On;
 
 	unsigned char * PhaseCompensationData;
 	unsigned char * SystemPhaseCompensationData;
 	// LUT file data
 	unsigned char * LUT;
-
 	// Filepath to LUT file being used
 	std::string LUTFileName;
 	// Filepath to phase compensation file being used
@@ -30,6 +31,10 @@ public:
 	~SLM_Board();
 	// Getter for area (image's width*height)
 	int GetArea();
+	// Getter for if powered
+	bool isPoweredOn();
+	// Setter for if powered (should be only done within SLM_Controller!)
+	void setPower(bool status);
 };
 
 #endif
