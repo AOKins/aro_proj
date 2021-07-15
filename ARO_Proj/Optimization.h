@@ -19,7 +19,7 @@
 class Optimization {
 protected:
 	//Object references
-	MainDialog& dlg;		// The GUI to draw the desired settings from
+	MainDialog* dlg;		// The GUI to draw the desired settings from
 	CameraController* cc;	// Interface with camera hardware
 	SLMController* sc;		// Interface with SLM hardware
 	//Base algorithm parameters
@@ -44,12 +44,14 @@ protected:
 	bool saveTimeVSFitness = true;
 	bool saveExposureShorten = true;
 	bool multithreadEnable = true; // TRUE -> use multithreading
+
 	//Instance variables (used during optimization process)
 	// Values assigned within setupInstanceVariables(), then if needed cleared in shutdownOptimizationInstance()
 	bool isWorking = false;		// true if currently actively running the optimization algorithm
 	bool usingHardware = false; // debug flag of using hardware currently in a run of an individual (to know if accidentally having two threads use hardware at once!)
 	int populationSize;			// Size of the populations being used (number of individuals in a population class)
 	int popCount;				// Number of populations working with (equal to sc->boards.size() if multi-SLM mode)
+	int selectSLM;				// If optimizing only 1 SLM, index for the board being optimized
 	int eliteSize;				// Number of elite individuals within the population (should be less than populationSize)
 	bool shortenExposureFlag;   // Set to true by individual if fitness is too high
 	bool stopConditionsMetFlag; // Set to true if a stop condition was reached by one of the individuals
@@ -73,7 +75,6 @@ protected:
 	bool prepareStopConditions();
 	// Setup camera and slm controllers
 	bool prepareSoftwareHardware();
-
 	// Pull GUI settings for output settings such as save images
 	bool prepareOutputSettings();
 
@@ -113,7 +114,7 @@ protected:
 	std::mutex slmScalersMutex; // Mutex to protect the usage of the the SLM scalers (which are used in both for hardware and in image output)
 public:
 	// Constructor
-	Optimization(MainDialog& dlg_, CameraController* cc, SLMController* sc);
+	Optimization(MainDialog* dlg, CameraController* cc, SLMController* sc);
 
 	// Method for performing the optimization
 	// Output: returns true if successful ran without error, false if error occurs

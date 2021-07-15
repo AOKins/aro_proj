@@ -31,7 +31,7 @@ class SGA_Optimization : public Optimization {
 	std::vector<SGAPopulation<int>*> population;
 public:
 	// Constructor - inherits from base class
-	SGA_Optimization(MainDialog& dlg, CameraController* cc, SLMController* sc) : Optimization(dlg, cc, sc){};
+	SGA_Optimization(MainDialog* dlg, CameraController* cc, SLMController* sc) : Optimization(dlg, cc, sc){};
 
 	// Method for executing the optimization
 	// Output: returns true if successful ran without error, false if error occurs

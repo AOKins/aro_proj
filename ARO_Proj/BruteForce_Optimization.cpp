@@ -9,8 +9,6 @@
 #include <chrono>
 #include <string>
 
-// TODO: Debug refactored/multi-SLM setup
-
 bool BruteForce_Optimization::runOptimization() {
 	Utility::printLine("INFO: Starting OPT5 Optimization!");
 	//Setup before optimization (see base class for implementation)
@@ -32,15 +30,15 @@ bool BruteForce_Optimization::runOptimization() {
 	Utility::printLine("INFO: Finished optimizing board 0");
 
 	// If dual or multi, run second SLM
-	if ( (this->dualEnable_ || this->multiEnable_) && this->dlg.stopFlag != true) {
+	if ((this->dualEnable_ || this->multiEnable_) && this->dlg->stopFlag != true) {
 		Utility::printLine("INFO: Currently optimizing board 1");
 		runIndividual(1);
 		Utility::printLine("INFO: Finished optimizing board 1");
 	}
 	
 	// If multi, run rest of boards
-	if (this->multiEnable_  && this->dlg.stopFlag != true) {
-		for (int boardID = 2; boardID < this->sc->boards.size() && this->dlg.stopFlag != true; boardID++) {
+	if (this->multiEnable_  && this->dlg->stopFlag != true) {
+		for (int boardID = 2; boardID < this->sc->boards.size() && this->dlg->stopFlag != true; boardID++) {
 			Utility::printLine("INFO: Optimizing board "+std::to_string(boardID));
 			runIndividual(boardID);
 			Utility::printLine("INFO: Finished optimizing board " + std::to_string(boardID));
@@ -83,7 +81,7 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 				// Find max phase for this bin
 				for (int curBinVal = 0; curBinVal< 256; curBinVal += dphi) {
 					// Abort if stop button was pressed
-					if (dlg.stopFlag == true) {
+					if (dlg->stopFlag == true) {
 						return true;
 					}
 
@@ -140,7 +138,7 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 						this->cc->HalfExposureTime();
 					}
 
-					endOpt = dlg.stopFlag;
+					endOpt = dlg->stopFlag;
 					if (curImage != this->bestImage) {
 						delete curImage;
 					}
@@ -177,10 +175,10 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 bool BruteForce_Optimization::setupInstanceVariables() {
 	this->multiEnable_ = false;
 	this->dualEnable_ = false;
-	if (dlg.m_slmControlDlg.multiEnable.GetCheck() == BST_CHECKED) {
+	if (dlg->m_slmControlDlg.multiEnable.GetCheck() == BST_CHECKED) {
 		this->multiEnable_ = true;
 	}
-	else if (dlg.m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED) {
+	else if (dlg->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED) {
 		this->dualEnable_ = true;
 	}
 
@@ -251,7 +249,6 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 
 	// - camera shutdown
 	this->cc->stopCamera();
-	//this->cc->shutdownCamera();
 
 	// - memory deallocation
 	delete this->bestImage;
@@ -291,7 +288,7 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 
 	//Reset UI State
 	this->isWorking = false;
-	this->dlg.disableMainUI(!isWorking);
+	this->dlg->disableMainUI(!isWorking);
 	return true;
 }
 

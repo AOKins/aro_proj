@@ -1,6 +1,6 @@
 ////////////////////
 // Optimization handler methods implementation for micro-genetic algorithm
-// Last edited: 07/14/2021 by Andrew O'Kins
+// Last edited: 07/15/2021 by Andrew O'Kins
 ////////////////////
 #include "stdafx.h"				// Required in source
 #include "uGA_Optimization.h"	// Header file
@@ -21,7 +21,7 @@ bool uGA_Optimization::runOptimization() {
 	}
 	// Setup variables that are of instance and depend on this specific optimization method (such as pop size)
 	if (!setupInstanceVariables()) {
-		Utility::printLine("ERROR: Failed to prepare values and files for SGA Optimization");
+		Utility::printLine("ERROR: Failed to prepare values and files for uGA Optimization");
 		return false;
 	}
 	double start = 0;
@@ -53,7 +53,16 @@ bool uGA_Optimization::runOptimization() {
 				}
 			}
 			Utility::rejoinClear(this->ind_threads);
-
+			// Update displays with best individual now that they are done
+			if (this->displayCamImage) {
+				this->camDisplay->UpdateDisplay(this->bestImage->getRawData<unsigned char>());
+			}
+			if (this->displaySLMImage) {
+				for (int slmID = 0; slmID < this->popCount; slmID++) {
+					this->scalers[slmID]->TranslateImage(this->population[slmID]->getGenome(this->populationSize - 1), this->slmScaledImages[slmID]);
+					this->slmDisplayVector[slmID]->UpdateDisplay(this->slmScaledImages[slmID]);
+				}
+			}
 			// Half exposure time if fitness value is too high
 			if (this->shortenExposureFlag) {
 				this->cc->HalfExposureTime();
@@ -86,7 +95,7 @@ bool uGA_Optimization::runOptimization() {
 	}
 	//Reset UI State
 	this->isWorking = false;
-	this->dlg.disableMainUI(!isWorking);
+	this->dlg->disableMainUI(!isWorking);
 	return true;
 }
 
@@ -101,12 +110,13 @@ bool uGA_Optimization::runIndividual(int indID) {
 	try {
 		ImageController * curImage = NULL;
 
-		std::unique_lock<std::mutex>  consoleLock(consoleMutex, std::defer_lock);
-		std::unique_lock<std::mutex> hardwareLock(hardwareMutex, std::defer_lock);
+		std::unique_lock<std::mutex> consoleLock(this->consoleMutex, std::defer_lock);
+		std::unique_lock<std::mutex> hardwareLock(this->hardwareMutex, std::defer_lock);
+		std::unique_lock<std::mutex> scalerLock(this->slmScalersMutex, std::defer_lock);
 
 		hardwareLock.lock();
 		// Pre end the result for the individual if the stop flag has been raised while waiting
-		if (this->dlg.stopFlag == true) {
+		if (this->dlg->stopFlag == true) {
 			hardwareLock.unlock();
 			return true;
 		}
@@ -123,12 +133,14 @@ bool uGA_Optimization::runIndividual(int indID) {
 		// Write translated image to SLM boards, assumes there are at least as many boards as populations
 		// Multi SLM engaged -> should write to every board (popCount = # of boards)
 		// Single SLM -> should only write to board 0 (popCount = 1)
+		scalerLock.lock();
 		for (int i = 0; i < this->popCount; i++) {
 			// Scale the individual genome to fit SLMs
 			this->scalers[i]->TranslateImage(this->population[i]->getGenome(indID), this->slmScaledImages[i]); // Translate the vector genome into char array image
 			// Write to SLM
 			this->sc->writeImageToBoard(i, this->slmScaledImages[i]);
 		}
+		scalerLock.unlock();
 
 		// Acquire image // - take image
 		curImage = this->cc->AcquireImage();
@@ -143,7 +155,6 @@ bool uGA_Optimization::runIndividual(int indID) {
 			consoleLock.unlock();
 			return false;
 		}
-
 		// Getting the image dimensions and data from resulting image
 		int imgWidth = curImage->getWidth();
 		int imgHeight = curImage->getHeight();
@@ -172,28 +183,14 @@ bool uGA_Optimization::runIndividual(int indID) {
 				// Save image
 				std::string curTime = Utility::getCurTime(); // Get current time to use as timeStamp
 				this->cc->saveImage(curImage, std::string(this->outputFolder + curTime + "_uGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite_Camera" + ".jpg"));
-
+				scalerLock.lock();
 				for (int popID = 0; popID < this->population.size(); popID++) {
 					scalers[popID]->TranslateImage(this->population[popID]->getGenome(this->population[popID]->getSize() - 1), this->slmScaledImages[popID]);
 					cv::Mat m_ary = cv::Mat(512, 512, CV_8UC1, this->slmScaledImages[popID]);
 					cv::imwrite(this->outputFolder + curTime + "_uGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite_SLM_" + std::to_string(popID) + ".bmp", m_ary);
 				}
+				scalerLock.unlock();
 			}
-			// Display best individual
-			if (this->displayCamImage) {
-				std::unique_lock<std::mutex> camLock(camDisplayMutex, std::defer_lock);
-				camLock.lock();
-				this->camDisplay->UpdateDisplay(camImg);
-				camLock.unlock();
-			}
-			if (this->displaySLMImage) {
-				std::unique_lock<std::mutex> slmLock(slmDisplayMutex, std::defer_lock);
-				slmLock.lock();
-				for (int slmID = 0; slmID < this->popCount; slmID++)
-					this->slmDisplayVector[slmID]->UpdateDisplay(this->slmScaledImages[slmID]);
-				slmLock.unlock();
-			}
-
 			// Also save the image as current best regardless
 			std::unique_lock<std::mutex> imageLock(this->imageMutex, std::defer_lock);
 			imageLock.lock();
@@ -215,10 +212,10 @@ bool uGA_Optimization::runIndividual(int indID) {
 		}
 		// If the fitness value is too high, flag that the exposure needs to be shortened
 		if (fitness > this->maxFitnessValue) {
-			std::unique_lock<std::mutex> expsureFlagLock(exposureFlagMutex, std::defer_lock);
-			expsureFlagLock.lock();
+			std::unique_lock<std::mutex> exposureFlagLock(exposureFlagMutex, std::defer_lock);
+			exposureFlagLock.lock();
 			this->shortenExposureFlag = true;
-			expsureFlagLock.unlock();
+			exposureFlagLock.unlock();
 		}
 		// If the pointer to current image does not also point to the best image we are safe to delete
 		if (curImage != bestImage) {
@@ -240,10 +237,10 @@ bool uGA_Optimization::setupInstanceVariables() {
 	this->ind_threads.clear();
 
 	// Set things up accordingly if doing single or multi-SLM
-	if (dlg.m_slmControlDlg.multiEnable.GetCheck() == BST_CHECKED) {
+	if (this->dlg->m_slmControlDlg.multiEnable.GetCheck() == BST_CHECKED) {
 		this->popCount = int(sc->boards.size());
 	}
-	else if (dlg.m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED) {
+	else if (this->dlg->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED) {
 		// Will asume that if this is enabled that there are indeed 2 boards (not checking here right now)
 		this->popCount = 2;
 	}
@@ -271,9 +268,7 @@ bool uGA_Optimization::setupInstanceVariables() {
 		this->slmDisplayVector.push_back(new CameraDisplay(this->sc->getBoardHeight(0), this->sc->getBoardWidth(0), "SLM Display 1"));
 		for (int displayNum = 1; displayNum < this->popCount; displayNum++) {
 			this->slmDisplayVector.push_back(new CameraDisplay(this->sc->getBoardHeight(displayNum), this->sc->getBoardWidth(displayNum), ("SLM Display " + std::to_string(displayNum + 1)).c_str()));
-		}
-		for (int i = 0; i < this->popCount; i++) {
-			this->slmDisplayVector[i]->OpenDisplay();
+			this->slmDisplayVector[displayNum]->OpenDisplay();
 		}
 	}
 	// Scaler Setup (using base class)
@@ -312,7 +307,7 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 	std::string curTime = Utility::getCurTime();
 
 	// Only save images if not aborting (successful results
-	if (dlg.stopFlag == false && this->saveResultImages) {
+	if (this->dlg->stopFlag == false && this->saveResultImages) {
 		// Get elite info
 		unsigned char* eliteImage = this->bestImage->getRawData<unsigned char>();
 		int imgHeight = this->bestImage->getHeight();
@@ -361,7 +356,6 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 
 	// - camera
 	this->cc->stopCamera();
-	//this->cc->shutdownCamera();
 	// - pointers
 	delete this->bestImage;
 	for (int i = 0; i < this->population.size(); i++) {

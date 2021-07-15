@@ -1,21 +1,20 @@
 #include "stdafx.h"				// Required in source
 #include "Optimization.h"		// Header file
 
-#include <chrono>
-
-Optimization::Optimization(MainDialog& dlg_, CameraController* cc, SLMController* sc) : dlg(dlg_) {
+Optimization::Optimization(MainDialog* dlg, CameraController* cc, SLMController* sc) {
 	if (cc == nullptr)
 		Utility::printLine("WARNING: invalid camera controller passed to optimization!");
 	if (sc == nullptr)
 		Utility::printLine("WARNING: invalid SLM controller passed to optimization!");
 	this->cc = cc;
 	this->sc = sc;
+	this->dlg = dlg;
 	this->ind_threads.clear();
 	
 	// Read from the output dialog for output parameters
 	prepareOutputSettings();
 
-	if (dlg.m_MultiThreadEnable.GetCheck() == BST_CHECKED) {
+	if (dlg->m_MultiThreadEnable.GetCheck() == BST_CHECKED) {
 		this->multithreadEnable = true;
 	}
 	else {
@@ -31,7 +30,7 @@ bool Optimization::prepareStopConditions() {
 	// Fitness to stop at
 	try	{
 		CString path;
-		this->dlg.m_optimizationControlDlg.m_minFitness.GetWindowTextW(path);
+		this->dlg->m_optimizationControlDlg.m_minFitness.GetWindowTextW(path);
 		if (path.IsEmpty()){
 			throw new std::exception();
 		}
@@ -45,7 +44,7 @@ bool Optimization::prepareStopConditions() {
 	// Time (in sec) to stop at
 	try	{
 		CString path;
-		this->dlg.m_optimizationControlDlg.m_minSeconds.GetWindowTextW(path);
+		this->dlg->m_optimizationControlDlg.m_minSeconds.GetWindowTextW(path);
 		if (path.IsEmpty()) {
 			throw new std::exception();
 		}
@@ -57,7 +56,7 @@ bool Optimization::prepareStopConditions() {
 	}
 	try	{
 		CString path;
-		this->dlg.m_optimizationControlDlg.m_maxSeconds.GetWindowTextW(path);
+		this->dlg->m_optimizationControlDlg.m_maxSeconds.GetWindowTextW(path);
 		if (path.IsEmpty()) {
 			throw new std::exception();
 		}
@@ -70,7 +69,7 @@ bool Optimization::prepareStopConditions() {
 	// Generations evaluations to at least do (minimum)
 	try	{
 		CString path;
-		this->dlg.m_optimizationControlDlg.m_minGenerations.GetWindowTextW(path);
+		this->dlg->m_optimizationControlDlg.m_minGenerations.GetWindowTextW(path);
 		if (path.IsEmpty()) {
 			throw new std::exception();
 		}
@@ -83,7 +82,7 @@ bool Optimization::prepareStopConditions() {
 	// Generations evaluations to stop at (maximum)
 	try	{
 		CString path;
-		this->dlg.m_optimizationControlDlg.m_maxGenerations.GetWindowTextW(path);
+		this->dlg->m_optimizationControlDlg.m_maxGenerations.GetWindowTextW(path);
 		if (path.IsEmpty()) {
 			throw new std::exception();
 		}
@@ -99,28 +98,28 @@ bool Optimization::prepareStopConditions() {
 // Draw from GUI the output settings
 bool Optimization::prepareOutputSettings() {
 	// Display Camera
-	if (this->dlg.m_outputControlDlg.m_displayCameraCheck.GetCheck() == BST_CHECKED) {
+	if (this->dlg->m_outputControlDlg.m_displayCameraCheck.GetCheck() == BST_CHECKED) {
 		this->displayCamImage = true;
 	}
 	else {
 		this->displayCamImage = false;
 	}
 	// Display SLMs
-	if (this->dlg.m_outputControlDlg.m_displaySLM.GetCheck() == BST_CHECKED) {
+	if (this->dlg->m_outputControlDlg.m_displaySLM.GetCheck() == BST_CHECKED) {
 		this->displaySLMImage = true;
 	}
 	else {
 		this->displaySLMImage = false;
 	}
 	// A check all Enable all option
-	if (this->dlg.m_outputControlDlg.m_logAllFilesCheck.GetCheck() == BST_CHECKED) {
+	if (this->dlg->m_outputControlDlg.m_logAllFilesCheck.GetCheck() == BST_CHECKED) {
 		this->logAllFiles = true;
 		this->saveEliteImages = true;
 	}
 	else {
 		this->logAllFiles = false;
 	}
-	if (this->dlg.m_outputControlDlg.m_SaveParameters.GetCheck() == BST_CHECKED) {
+	if (this->dlg->m_outputControlDlg.m_SaveParameters.GetCheck() == BST_CHECKED) {
 		this->saveParametersPref = true;
 	}
 	else {
@@ -128,25 +127,25 @@ bool Optimization::prepareOutputSettings() {
 	}
 	// If this enable all checkbox isn't enabled, then we must check the more specific ones
 	if (this->logAllFiles == false) {
-		if (this->dlg.m_outputControlDlg.m_SaveFinalImagesCheck.GetCheck() == BST_CHECKED) {
+		if (this->dlg->m_outputControlDlg.m_SaveFinalImagesCheck.GetCheck() == BST_CHECKED) {
 			this->saveResultImages = true;
 		}
 		else {
 			this->saveResultImages = false;
 		}
-		if (this->dlg.m_outputControlDlg.m_SaveEliteImagesCheck.GetCheck() == BST_CHECKED) {
+		if (this->dlg->m_outputControlDlg.m_SaveEliteImagesCheck.GetCheck() == BST_CHECKED) {
 			this->saveEliteImages = true;
 		}
 		else {
 			this->saveEliteImages = false;
 		}
-		if (this->dlg.m_outputControlDlg.m_SaveExposureShortCheck.GetCheck() == BST_CHECKED) {
+		if (this->dlg->m_outputControlDlg.m_SaveExposureShortCheck.GetCheck() == BST_CHECKED) {
 			this->saveExposureShorten = true;
 		}
 		else {
 			this->saveExposureShorten = false;
 		}
-		if (this->dlg.m_outputControlDlg.m_SaveTimeVFitnessCheck.GetCheck() == BST_CHECKED) {
+		if (this->dlg->m_outputControlDlg.m_SaveTimeVFitnessCheck.GetCheck() == BST_CHECKED) {
 			this->saveTimeVSFitness = true;
 		}
 		else {
@@ -155,11 +154,11 @@ bool Optimization::prepareOutputSettings() {
 	}
 	// Get where to store the outputs
 	CString buff;
-	this->dlg.m_outputControlDlg.m_OutputLocationField.GetWindowTextW(buff);
+	this->dlg->m_outputControlDlg.m_OutputLocationField.GetWindowTextW(buff);
 	this->outputFolder = CT2A(buff);
 	// Get freqency of saving elite images (getting value regardless of if it is enabled or not)
 	try	{
-		this->dlg.m_outputControlDlg.m_eliteSaveFreq.GetWindowTextW(buff);
+		this->dlg->m_outputControlDlg.m_eliteSaveFreq.GetWindowTextW(buff);
 		if (buff.IsEmpty()) {
 			throw new std::exception();
 		}
@@ -207,7 +206,7 @@ bool Optimization::prepareSoftwareHardware() {
 
 	// - configure proper UI states
 	this->isWorking = true;
-	this->dlg.disableMainUI(!isWorking);
+	this->dlg->disableMainUI(!isWorking);
 	return true;
 }
 
@@ -238,9 +237,10 @@ void Optimization::saveParameters(std::string time, std::string optType) {
 	paramFile << "Type - " << optType << std::endl;
 	if (optType != "OPT5") {
 		paramFile << "Stop Fitness - " << std::to_string(this->fitnessToStop) << std::endl;
+		paramFile << "Min Stop Time - " << std::to_string(this->minSecondsToStop) << std::endl;
 		paramFile << "Max Stop Time - " << std::to_string(this->maxSecondsToStop) << std::endl;
-		paramFile << "Stop Generation - " << std::to_string(this->genEvalToStop) << std::endl;
-		paramFile << "Max Generation - " << std::to_string(this->maxGenenerations) << std::endl;
+		paramFile << "Min Generation - " << std::to_string(this->genEvalToStop) << std::endl;
+		paramFile << "Max Generation - " << std::to_string(this->maxGenenerations) << std::endl;;
 	}
 	paramFile << "----------------------------------------------------------------" << std::endl;
 	paramFile << "CAMERA SETTINGS:" << std::endl;
@@ -259,6 +259,11 @@ void Optimization::saveParameters(std::string time, std::string optType) {
 	paramFile << "----------------------------------------------------------------" << std::endl;
 	paramFile << "SLM SETTINGS:" << std::endl;
 	paramFile << "Board Amount - " << std::to_string(this->sc->numBoards) << std::endl;
+	paramFile << "Number of Boards being Optimized - " << std::to_string(this->popCount) << std::endl;
+	for (int i = 0; i < this->sc->numBoards; i++) {
+		paramFile << "Board #" << i << " LUT filePath - " << this->sc->boards[i]->LUTFileName << std::endl;
+		paramFile << "Board #" << i << " WFC filePath - " << this->sc->boards[i]->PhaseCompensationFileName << std::endl;
+	}
 	paramFile.close();
 }
 
@@ -269,7 +274,7 @@ bool Optimization::stopConditionsReached(double curFitness, double curSecPassed,
 		return true;
 	}
 	// If the stop button was pressed
-	if (dlg.stopFlag == true) {
+	if (dlg->stopFlag == true) {
 		return true;
 	}
 	// If exceeded the maximum allowed time (negative or zero value indicated indefinite)

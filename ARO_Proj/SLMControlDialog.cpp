@@ -29,18 +29,15 @@ BOOL SLMControlDialog::OnInitDialog() {
 	// Setup tool tips for SLM dialog window
 	
 	this->m_mainToolTips->Create(this);
-
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_PWR_BUTTON), L"Set currently selected SLM's power on or off");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(ID_SLM_SELECT), L"Select SLM to assign LUT and wavefront compensation files to and turn on/off");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_MULTI), L"Optimize all connected boards at the same time");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_ALLSAME), L"Set to ignore select SLM and apply changes in settings to all connected boards");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_DUAL), L"Optimize first two connected boards at the same time");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_CURRENT_WFC_OUT), L"The current wave compensation file being assigned to this SLM");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_CURR_LUT_OUT), L"The current LUT file being assigned to this SLM");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SETLUT), L"Set LUT file for the selected board(s)");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SETWFC), L"Set wavefront compensation file for the selected board(s)");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_DUAL), L"Optimize first two connected boards at the same time");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_MULTI), L"Optimize all connected boards at the same time");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(ID_SLM_SELECT), L"Select SLM to assign LUT and wavefront compensation files to and turn on/off");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_ALLSAME), L"Set to ignore select SLM and apply changes in settings to all connected boards");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_PWR_BUTTON), L"Set currently selected SLM's power on or off");
-
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_CURR_LUT_OUT), L"The current LUT file being assigned to this SLM");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_CURRENT_WFC_OUT), L"The current wave compensation file being assigned to this SLM");
-
 	this->m_mainToolTips->Activate(true);
 
 	return CDialogEx::OnInitDialog();
@@ -83,17 +80,17 @@ BOOL SLMControlDialog::PreTranslateMessage(MSG* pMsg) {
 	return CDialog::PreTranslateMessage(pMsg);
 }
 
-// Update selection ID value
+// Update selection ID value and rest of GUI
 void SLMControlDialog::OnCbnSelchangeSlmSelect() { 
+	// Update current SLM selection
 	this->slmSelectionID_ = this->slmSelection_.GetCurSel();
-	// Update the fields to show the user the current paths for WFC and LUT files
-
+	// Update Phase Compensation File path
 	CString WFCpath(this->slmCtrl->boards[this->slmSelectionID_]->PhaseCompensationFileName.c_str());
 	this->m_WFC_pathDisplay.SetWindowTextW(WFCpath);
-
+	// Update LUT file name
 	CString LUTpath(this->slmCtrl->boards[this->slmSelectionID_]->LUTFileName.c_str());
 	this->m_LUT_pathDisplay.SetWindowTextW(LUTpath);
-
+	// Update power button to reflect on current power state
 	CString pwrMsg;
 	if (this->slmCtrl->boards[this->slmSelectionID_]->isPoweredOn()) {
 		pwrMsg = "Turn power OFF";
@@ -110,31 +107,33 @@ void SLMControlDialog::OnBnClickedSlmPwrButton() {
 	m_SlmPwrButton.GetWindowTextW(PowerState);
 	CStringA pState(PowerState);
 
+	// Update SLM power
 	if (this->SLM_SetALLSame_.GetCheck() == BST_CHECKED) {
-		if (strcmp(pState, "Turn power ON") == 0) //the strings are equal, power is off
-		{
+		if (!this->slmCtrl->boards[this->slmSelectionID_]->isPoweredOn()) {//the strings are equal, power is off
 			this->slmCtrl->setBoardPowerALL(true); //turn the SLM on
-			m_SlmPwrButton.SetWindowTextW(_T("Turn power OFF")); //update button
 			Utility::printLine("INFO: All SLMs were turned ON");
 		}
 		else {
 			this->slmCtrl->setBoardPowerALL(false); //turn the SLM off
-			m_SlmPwrButton.SetWindowTextW(_T("Turn power ON")); //update button
 			Utility::printLine("INFO: All SLMs were turned OFF");
 		}
 	}
 	else {
-		if (strcmp(pState, "Turn power ON") == 0) //the strings are equal, power is off
-		{
+		if (!this->slmCtrl->boards[this->slmSelectionID_]->isPoweredOn()) {//the strings are equal, power is off
 			this->slmCtrl->setBoardPower(this->slmSelectionID_,true); //turn the SLM on
-			m_SlmPwrButton.SetWindowTextW(_T("Turn power OFF")); //update button
 			Utility::printLine("INFO: SLM #"+std::to_string(this->slmSelectionID_+1) + " was turned ON");
 		}
 		else {
 			this->slmCtrl->setBoardPower(this->slmSelectionID_, false); //turn the SLM off
-			m_SlmPwrButton.SetWindowTextW(_T("Turn power ON")); //update button
 			Utility::printLine("INFO: SLM #" + std::to_string(this->slmSelectionID_ + 1) + " was turned OFF");
 		}
+	}
+	// Update power button text
+	if (this->slmCtrl->boards[this->slmSelectionID_]->isPoweredOn()) {
+		m_SlmPwrButton.SetWindowTextW(_T("Turn power OFF")); //update button
+	}
+	else {
+		this->m_SlmPwrButton.SetWindowTextW(_T("Turn power OFF")); //update button
 	}
 }
 

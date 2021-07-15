@@ -148,7 +148,7 @@ BOOL MainDialog::OnInitDialog() {
 	m_pwndShow = &m_optimizationControlDlg;
 
 	this->camCtrl = new CameraController((*this));
-	if (this->camCtrl != nullptr)	{
+	if (this->camCtrl != nullptr) {
 		m_aoiControlDlg.SetCameraController(this->camCtrl);
 	}
 	else {
@@ -335,8 +335,7 @@ void MainDialog::OnClose() {
 }
 
 /* OnOK: perfomrs enter key functions - used to prevent accidental exit of program and equipment damage */
-void MainDialog::OnOK() {
-}
+void MainDialog::OnOK() {}
 
 BOOL MainDialog::PreTranslateMessage(MSG* pMsg) {
 	if (this->m_mainToolTips != NULL) {
@@ -470,15 +469,15 @@ UINT __cdecl optThreadMethod(LPVOID instance) {
 
 	// Perform the optimzation operation depending on selection
 	if (dlg->opt_selection_ == dlg->OptType::OPT5) {
-		BruteForce_Optimization opt((*dlg), dlg->camCtrl, dlg->slmCtrl);
+		BruteForce_Optimization opt(dlg, dlg->camCtrl, dlg->slmCtrl);
 		dlg->opt_success = opt.runOptimization();
 	}
 	else if (dlg->opt_selection_ == dlg->OptType::SGA) {
-		SGA_Optimization opt((*dlg), dlg->camCtrl, dlg->slmCtrl);
+		SGA_Optimization opt(dlg, dlg->camCtrl, dlg->slmCtrl);
 		dlg->opt_success = opt.runOptimization();
 	}
 	else if (dlg->opt_selection_ == dlg->OptType::uGA) {
-		uGA_Optimization opt((*dlg), dlg->camCtrl, dlg->slmCtrl);
+		uGA_Optimization opt(dlg, dlg->camCtrl, dlg->slmCtrl);
 		dlg->opt_success = opt.runOptimization();
 	}
 	else {
