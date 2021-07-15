@@ -318,14 +318,13 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 		int imgWidth = this->bestImage->getWidth();
 
 		// Save how final optimization looks through camera
-		cv::Mat Opt_ary = cv::Mat(imgHeight, imgWidth, CV_8UC1, eliteImage);
-		cv::imwrite(this->outputFolder + curTime + "_SGA_Optimized.bmp", Opt_ary);
+		this->cc->saveImage(this->bestImage, this->outputFolder + curTime + "_SGA_Optimized.bmp");
 
 		// Save final (most fit SLM images)
 		for (int popID = 0; popID < this->population.size(); popID++) {
 			scalers[popID]->TranslateImage(this->population[popID]->getGenome(this->population[popID]->getSize() - 1), this->slmScaledImages[popID]);
 			cv::Mat m_ary = cv::Mat(512, 512, CV_8UC1, this->slmScaledImages[popID]);
-			cv::imwrite(this->outputFolder + curTime + "_SGA_phaseopt_SLM" + std::to_string(popID) + ".bmp", m_ary);
+			cv::imwrite(this->outputFolder + curTime + "_SGA_phaseopt_SLM_" + std::to_string(popID) + ".bmp", m_ary);
 		}
 	}
 

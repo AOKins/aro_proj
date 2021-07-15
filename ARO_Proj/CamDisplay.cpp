@@ -52,7 +52,13 @@ void CameraDisplay::UpdateDisplay(unsigned char* image) {
 		OpenDisplay();
 	}
 	else {
-		imshow(this->display_name_, this->display_matrix_);
+		try {
+			cv::imshow(this->display_name_, this->display_matrix_);
+		}
+		catch (std::exception &e) {
+			Utility::printLine("ERROR: cv::imshow failed");
+			Utility::printLine(e.what());
+		}
 		cv::waitKey(1);
 	}
 }
