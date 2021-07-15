@@ -43,6 +43,18 @@ bool SGA_Optimization::runOptimization() {
 				}
 			}
 			Utility::rejoinClear(this->ind_threads);
+
+			// Update displays with best individual now that they are done
+			if (this->displayCamImage) {
+				this->camDisplay->UpdateDisplay(this->bestImage->getRawData<unsigned char>());
+			}
+			if (this->displaySLMImage) {
+				for (int slmID = 0; slmID < this->popCount; slmID++) {
+					this->scalers[slmID]->TranslateImage(this->population[slmID]->getGenome(this->populationSize-1), this->slmScaledImages[slmID]);
+					this->slmDisplayVector[slmID]->UpdateDisplay(this->slmScaledImages[slmID]);
+				}
+			}
+
 			// Perform GA crossover/breeding to produce next generation
 			for (int popID = 0; popID < population.size(); popID++) {
 				if (this->multithreadEnable == true) {
@@ -103,6 +115,7 @@ bool SGA_Optimization::runIndividual(int indID) {
 
 		std::unique_lock<std::mutex>  consoleLock(consoleMutex, std::defer_lock);
 		std::unique_lock<std::mutex> hardwareLock(hardwareMutex, std::defer_lock);
+		std::unique_lock<std::mutex> scalerLock(this->slmScalersMutex, std::defer_lock);
 
 		hardwareLock.lock();
 		// Pre end the result for the individual if the stop flag has been raised while waiting
@@ -123,12 +136,14 @@ bool SGA_Optimization::runIndividual(int indID) {
 		// Write translated image to SLM boards, assumes there are at least as many boards as populations
 		// Multi SLM engaged -> should write to every board (popCount = # of boards)
 		// Single SLM -> should only write to board 0 (popCount = 1)
+		scalerLock.lock();
 		for (int i = 0; i < this->popCount; i++) {
 			// Scale the individual genome to fit SLM
 			this->scalers[i]->TranslateImage(this->population[i]->getGenome(indID), this->slmScaledImages[i]); // Translate the vector genome into char array image
 			// Write to SLM
 			this->sc->writeImageToBoard(i, this->slmScaledImages[i]);
 		}
+		scalerLock.unlock();
 
 		// Acquire image // - take image
 		curImage = this->cc->AcquireImage();
@@ -172,26 +187,13 @@ bool SGA_Optimization::runIndividual(int indID) {
 				// Save image
 				std::string curTime = Utility::getCurTime(); // Get current time to use as timeStamp
 				this->cc->saveImage(curImage, std::string(this->outputFolder + curTime + "_SGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite_Camera" + ".jpg"));
-
+				scalerLock.lock();
 				for (int popID = 0; popID < this->population.size(); popID++) {
 					scalers[popID]->TranslateImage(this->population[popID]->getGenome(this->population[popID]->getSize() - 1), this->slmScaledImages[popID]);
 					cv::Mat m_ary = cv::Mat(512, 512, CV_8UC1, this->slmScaledImages[popID]);
 					cv::imwrite(this->outputFolder + curTime + "_SGA_Gen_"+std::to_string(this->curr_gen + 1) +"_Elite_SLM_" + std::to_string(popID) + ".bmp", m_ary);
 				}
-			}
-			// Update displays with best individual
-			if (this->displayCamImage) {
-				std::unique_lock<std::mutex> camLock(camDisplayMutex, std::defer_lock);
-				camLock.lock();
-				this->camDisplay->UpdateDisplay(camImg);
-				camLock.unlock();
-			}
-			if (this->displaySLMImage) {
-				std::unique_lock<std::mutex> slmLock(slmDisplayMutex, std::defer_lock);
-				slmLock.lock();
-				for (int slmID = 0; slmID < this->popCount; slmID++)
-					this->slmDisplayVector[slmID]->UpdateDisplay(this->slmScaledImages[slmID]);
-				slmLock.unlock();
+				scalerLock.unlock();
 			}
 
 			// Also save the image as current best regardless (not an output until end of optimization)
