@@ -319,8 +319,7 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 		int imgWidth = this->bestImage->getWidth();
 
 		// Save how final optimization looks through camera
-		cv::Mat Opt_ary = cv::Mat(int(imgHeight), int(imgWidth), CV_8UC1, eliteImage);
-		cv::imwrite(this->outputFolder + curTime + "_uGA_Optimized.bmp", Opt_ary);
+		this->cc->saveImage(this->bestImage, this->outputFolder + curTime + "_uGA_Optimized.bmp");
 
 		// Save final (most fit SLM images)
 		for (int popID = 0; popID < this->population.size(); popID++) {
