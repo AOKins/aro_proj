@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "ARO_App.h"
 
+
 // Handles F1 Help Menu
 BEGIN_MESSAGE_MAP(ARO_AppApp, CWinApp)
 	ON_COMMAND(ID_HELP, &CWinApp::OnHelp)

@@ -285,7 +285,9 @@
     <ClInclude Include="BruteForce_Optimization.h" />
     <ClInclude Include="CameraControlDialog.h" />
     <ClInclude Include="CameraController.h" />
-    <ClInclude Include="ImageController.h" />
+    <ClInclude Include="CameraControllerPICam.h" />
+    <ClInclude Include="CameraControllerSpinnaker.h" />
+    <ClInclude Include="ImageControllerSpinnaker.h" />
     <ClInclude Include="OutputControlDialog.h" />
     <ClInclude Include="uGA_Population.h" />
     <ClInclude Include="ImageScaler.h" />
@@ -315,7 +317,7 @@
     <ClCompile Include="ARO_App.cpp" />
     <ClCompile Include="BruteForce_Optimization.cpp" />
     <ClCompile Include="CameraControlDialog.cpp" />
-    <ClCompile Include="CameraController.cpp" />
+    <ClCompile Include="CameraControllerSpinnaker.cpp" />
     <ClCompile Include="ImageScaler.cpp" />
     <ClCompile Include="MainDialog.cpp" />
     <ClCompile Include="CamDisplay.cpp" />

@@ -3,6 +3,10 @@
 
 #include "stdafx.h"
 #include "afxdialogex.h"
+
+#ifndef SPINNAKER_VERSION
+#define SPINNAKER_VERSION
+#endif
 #include "CameraController.h"
 #include "AOIControlDialog.h"
 #include "Utility.h"
