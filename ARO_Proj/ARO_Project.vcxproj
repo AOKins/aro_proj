@@ -299,7 +299,6 @@
     <ClInclude Include="Optimization.h" />
     <ClInclude Include="OptimizationControlDialog.h" />
     <ClInclude Include="Population.h" />
-    <ClInclude Include="Resource.h" />
     <ClInclude Include="SGA_Optimization.h" />
     <ClInclude Include="SGA_Population.h" />
     <ClInclude Include="SLMControlDialog.h" />
