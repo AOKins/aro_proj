@@ -7,7 +7,6 @@
 //	- Custom classes
 #include "MainDialog.h"
 #include "ImageScaler.h"
-#include "CameraController.h"
 #include "SLMController.h"		// Header file
 
 #include "Utility.h"
@@ -55,6 +54,7 @@ bool SLMController::setupSLM(int boardIdx = 0) {
 		Utility::printLine("WARNING: Failure to assign default LUT file for SLM!");
 		return false;
 	}
+	return true;
 }
 
 // Repopulate the array of boards with what is currently connected and with some default values

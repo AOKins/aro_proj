@@ -261,7 +261,7 @@ void Optimization::saveParameters(std::string time, std::string optType) {
 	paramFile << "SLM SETTINGS:" << std::endl;
 	paramFile << "Board Amount - " << std::to_string(this->sc->numBoards) << std::endl;
 	paramFile << "Number of Boards being Optimized - " << std::to_string(this->popCount) << std::endl;
-	for (int i = 0; i < this->sc->numBoards; i++) {
+	for (int i = 0; i < int(this->sc->numBoards); i++) {
 		paramFile << "Board #" << i << " LUT filePath - " << this->sc->boards[i]->LUTFileName << std::endl;
 		paramFile << "Board #" << i << " WFC filePath - " << this->sc->boards[i]->PhaseCompensationFileName << std::endl;
 	}

@@ -21,6 +21,9 @@
 //	- Helper
 #include "Utility.h"			// Collection of static helper functions
 #include "SLMController.h"		// Wrapper for SLM control
+#ifndef SPINNAKER_VERSION
+#define SPINNAKER_VERSION
+#endif
 #include "CameraController.h"	// Spinnaker Camera interface wrapper
 
 #define MAX_CFileDialog_FILE_COUNT 99

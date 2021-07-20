@@ -9,8 +9,12 @@
 #include <mutex>  // Mutexes to protect identified critical sections
 
 #include "MainDialog.h"			// used for UI reference
-#include "CameraController.h"	// pointer to access custom interface with camera
-#include "ImageController.h"
+
+#ifndef SPINNAKER_VERSION
+#define SPINNAKER_VERSION
+#endif
+#include "CameraController.h"	// pointer to access custom interface with camera and images
+
 #include "SLMController.h"		// pointer to access custom interface with slm
 #include "Timing.h"				// contains time keeping functions
 #include "ImageScaler.h"		// changes size of image to fit slm

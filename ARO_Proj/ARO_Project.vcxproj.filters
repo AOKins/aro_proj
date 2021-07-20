@@ -54,6 +54,9 @@
     <ClInclude Include="Population.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="SGA_Optimization.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -106,6 +109,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CameraControllerPICam.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageControllerPICam.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
