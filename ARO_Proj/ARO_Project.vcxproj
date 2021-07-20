@@ -281,6 +281,7 @@
   <ItemGroup>
     <ClInclude Include="AOIControlDialog.h" />
     <ClInclude Include="ARO_App.h" />
+    <ClInclude Include="BetterRandom.h" />
     <ClInclude Include="BruteForce_Optimization.h" />
     <ClInclude Include="CameraControlDialog.h" />
     <ClInclude Include="CameraController.h" />
