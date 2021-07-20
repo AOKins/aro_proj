@@ -20,7 +20,6 @@ public:
 	bool isBlinkSuccess = true;		//TRUE -> if SLM control wrapper was constructed correctly
 	//Board parameters
 	unsigned int numBoards = 0;		//Number of boards populated after creation of the SDK
-	unsigned short trueFrames = 3;	//3 -> non-overdrive operation, 5 -> overdrive operation (assign correct one)
 
 	//Board references
 	std::vector<SLM_Board*> boards;
@@ -29,27 +28,37 @@ public:
 	// Destructor
 	~SLMController();
 
+	// Setup performed at start of controller
 	// Input:
 	//  repopulateBoardList - boolean if true will reset the board list
 	//	boardIDx - index for SLM (0 based)
-	bool setupSLM(bool repopulateBoardList, int boardIdx = 0);
+	bool setupSLM(int boardIdx);
+
+	// Repopulate the array of boards with what is currently connected and with some default values
+	bool repopulateBoardList();
 
 	/* LoadSequence: This function will load a series of two images to the PCIe board memory.
-	*               The first image is written to the first frame of memory in the hardware,
-	*  			 and the second image is written to the second frame.
+	*                The first image is written to the first frame of memory in the hardware,
+	*  				 and the second image is written to the second frame.
 	*
 	* Modifications: Might need to change how we get a handle to the board, how we access
-	*				  PhaseCompensationData, SystemCompensationData, FrameOne, and FrameTwo.
+	*				  PhaseCompensationData and SystemCompensationData.
 	*				  Once we're using Overdrive, I think it'll be easier because the
 	*				  construction of the sdk includes a correction file, and even in the
 	*  			  old code used the same correction file. */
 	void LoadSequence();
+
 	void setBoardImage(int boardIdx = 0);
 
 	void addBoard(SLM_Board* board);
 	void removeBoard(int boardIdx);
 
 	bool IsAnyNematic();
+
+	// Update the framerate for the boards according to the GUI to match camera setting
+	// Returns true if no errors, false if error occurs
+	bool updateFramerateFromGUI();
+
 
 	// Assign and load LUT file
 	// Input:

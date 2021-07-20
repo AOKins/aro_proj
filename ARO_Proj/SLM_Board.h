@@ -15,7 +15,7 @@ public:
 	unsigned char * PhaseCompensationData;
 	unsigned char * SystemPhaseCompensationData;
 	// LUT file data
-	unsigned char * LUT;
+	//unsigned char * LUT; // Commented out as doesn't seem to be used for anything
 	// Filepath to LUT file being used
 	std::string LUTFileName;
 	// Filepath to phase compensation file being used

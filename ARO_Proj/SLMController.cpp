@@ -15,80 +15,75 @@
 #include <string>
 #include <fstream>	// used to export information to file 
 
+// Constructor
 SLMController::SLMController() {
 	unsigned int bits_per_pixel = 8U;			 //8 -> small SLM, 16 -> large SLM
 	bool is_LC_Nematic = true;					 //HUGE TODO: perform this setup on evey board not just the beginning
 	bool RAM_write_enable = true;
 	bool use_GPU_if_available = true;
 	size_t max_transiet_frames = 20U;
-	const char* static_regional_lut_file = NULL; //NULL -> no overdrive, actual LUT file -> yes overdrive
+	const char* static_regional_lut_file = NULL; // NULL -> no overdrive, actual LUT file -> yes overdrive
 
 	// Create the sdk that lets control the board(s)
 	blink_sdk = new Blink_SDK(bits_per_pixel, &numBoards, &isBlinkSuccess, is_LC_Nematic, RAM_write_enable, use_GPU_if_available, max_transiet_frames, NULL);
 	// Perform initial board info retrival and settings setup
-	setupSLM(true);
+	repopulateBoardList();
+
+	for (int i = 0; i < this->boards.size(); i++) {
+		setupSLM(i);
+	}
+	// Set the framerate for the boards (this function should be called again at start of optimization to capture changes in GUI)
+	updateFramerateFromGUI();
+
 	// Load up the image arrays to each board (ASK: what this does)
 	LoadSequence();
+
+	//Start with SLMs OFF
+	this->setBoardPowerALL(false);
 }
 
+// Setup performed at start of controller
 // Input:
 //  repopulateBoardList - boolean if true will reset the board list
 //	boardIDx - index for SLM (0 based)
-bool SLMController::setupSLM(bool repopulateBoardList, int boardIdx) {
-	boards.clear();
-
-	//Create all board references
-	if (repopulateBoardList) {
-		for (unsigned int i = 1; i <= numBoards; i++) {
-			SLM_Board *curBoard = new SLM_Board(true, blink_sdk->Get_image_width(i), blink_sdk->Get_image_height(i));
-			int boardArea = blink_sdk->Get_image_width(i) * blink_sdk->Get_image_height(i);
-			//Build paths to the calibrations for this SLM -- regional LUT included in Blink_SDK(), but need to pass NULL to that param to disable ODP. Might need to make a class.
-			std::string SLMSerialNum = "linear";
-			std::string SLMSerialNumphase = "slm929_8bit";
-			curBoard->LUTFileName = SLMSerialNum + ".LUT";
-			curBoard->PhaseCompensationFileName = SLMSerialNumphase + ".bmp";
-			curBoard->SystemPhaseCompensationFileName = "Blank.bmp";
-			curBoard->LUT = new unsigned char[256];
-			curBoard->PhaseCompensationData = new unsigned char[boardArea];
-			curBoard->SystemPhaseCompensationData = new unsigned char[boardArea];
-
-			//Add board info to board list
-			boards.push_back(curBoard);
-		}
-	}
+bool SLMController::setupSLM(int boardIdx = 0) {
 	//Check if board is avaliable
-	if (boards.size() >= boardIdx) {
+	if (this->boards.size() >= boardIdx || boardIdx < 0) {
 		return false;
 	}
 
 	//Read default LUT File into the SLM board so it is applied to images automatically by the hardware, doesn't check for errors
 	if (!AssignLUTFile(boardIdx, "")) {
 		Utility::printLine("WARNING: Failure to assign default LUT file for SLM!");
+		return false;
 	}
-
-	float fps;
-	try	{
-		CString path("");
-		dlg->m_cameraControlDlg.m_FramesPerSecond.GetWindowTextW(path);
-		if (path.IsEmpty()) throw new std::exception();
-		fps = float(_tstof(path));
-
-		//IMPORTANT NOTE: if framerate is not thesame framerate that was used in OnInitDialog AND the LC type is FLC 
-		//				  then it is VERY IMPORTANT that true frames be recalculated prior to calling SetTimer such
-		//				  that the FrameRate and TrueFrames are properly related
-		if (!boards[boardIdx]->is_LC_Nematic) {
-			trueFrames = blink_sdk->Compute_TF(float(fps));
-		}
-		blink_sdk->Set_true_frames(trueFrames);
-	}
-	catch (...)	{
-		Utility::printLine("ERROR: Was unable to parse integration radius input feild!");
-	}
-	//Start with SLMs OFF
-	blink_sdk->SLM_power(false);
-
-	return false;
 }
+
+// Repopulate the array of boards with what is currently connected and with some default values
+bool SLMController::repopulateBoardList() {
+	// Clear board data
+	for (int i = 0; i < this->boards.size(); i++) {
+		delete this->boards[i];
+	}
+	this->boards.clear();
+
+	// Go through and generate new board structs with default filenames
+	for (unsigned int i = 1; i <= this->numBoards; i++) {
+		SLM_Board *curBoard = new SLM_Board(true, this->blink_sdk->Get_image_width(i), this->blink_sdk->Get_image_height(i));
+		int boardArea = this->blink_sdk->Get_image_width(i) * this->blink_sdk->Get_image_height(i);
+		//Build paths to the calibrations for this SLM -- regional LUT included in Blink_SDK(), but need to pass NULL to that param to disable ODP. Might need to make a class.
+		curBoard->LUTFileName = "linear.LUT";
+		curBoard->PhaseCompensationFileName = "slm929_8bit.bmp";
+		curBoard->SystemPhaseCompensationFileName = "Blank.bmp";
+		//curBoard->LUT = new unsigned char[256]; // Commented out as doesn't seem to be used for anything
+		curBoard->PhaseCompensationData = new unsigned char[boardArea];
+		curBoard->SystemPhaseCompensationData = new unsigned char[boardArea];
+
+		//Add board info to board list
+		this->boards.push_back(curBoard);
+	}
+}
+
 
 // Assign and load LUT file
 // Input:
@@ -111,8 +106,8 @@ bool SLMController::AssignLUTFile(int boardIdx, std::string path) {
 
 	//Write LUT file to the board
 	try {
-		blink_sdk->Load_LUT_file(boardIdx + 1, LUT_file);
-		boards[boardIdx]->LUTFileName = LUT_file;
+		this->blink_sdk->Load_LUT_file(boardIdx + 1, LUT_file);
+		this->boards[boardIdx]->LUTFileName = LUT_file;
 		// Printing resulting file
 		Utility::printLine("INFO: Loaded LUT file: " + std::string(LUT_file));
 		return true;
@@ -137,9 +132,7 @@ void SLMController::LoadSequence() {
 		Utility::printLine("WARNING: trying to load sequence without dlg reference");
 		return;
 	}
-
-	int i;
-
+		
 	//loop through each PCIe board found, read in the calibrations for that SLM
 	//as well as the images in the wequence list, and store the merged image/calibration
 	//data in an array that will later be referenced
@@ -163,20 +156,19 @@ void SLMController::LoadSequence() {
 		int total;
 		//Superimpose the SLM phase compensation, the system phase compensation, and
 		//the image data. Then store the image in FrameOne
-		for (i = 0; i < boards[h]->GetArea(); i++) {
+		for (int i = 0; i < boards[h]->GetArea(); i++) {
 			total = boards[h]->PhaseCompensationData[i] +
 					boards[h]->SystemPhaseCompensationData[i];
 		}
 
 		//Superimpose the SLM phase compensation, the system phase compensation, and
 		//the image data. Then store the image in FrameTwo
-		for (i = 0; i < boards[h]->GetArea(); i++) {
+		for (int i = 0; i < boards[h]->GetArea(); i++) {
 			total = boards[h]->PhaseCompensationData[i] +
 					boards[h]->SystemPhaseCompensationData[i];
 		}
 	}
 }
-
 
 // [DESTRUCTOR]
 SLMController::~SLMController() {
@@ -308,6 +300,36 @@ bool SLMController::ReadAndScaleBitmap(SLM_Board *board, unsigned char *Image, s
 	delete[]tmpImage;
 
 	return true;
+}
+
+// Update the framerate for the boards according to the GUI to match camera setting
+	// Returns true if no errors, false if error occurs
+bool SLMController::updateFramerateFromGUI() {
+	for (int i = 0; i < this->boards.size(); i++) {
+		float fps;
+		try	{
+			unsigned short trueFrames = 3;	//3 -> non-overdrive operation, 5 -> overdrive operation (assign correct one)
+
+			CString path("");
+			this->dlg->m_cameraControlDlg.m_FramesPerSecond.GetWindowTextW(path);
+			if (path.IsEmpty()) throw new std::exception();
+			fps = float(_tstof(path));
+
+			//IMPORTANT NOTE: if framerate is not the same framerate that was used in OnInitDialog AND the LC type is FLC 
+			//				  then it is VERY IMPORTANT that true frames be recalculated prior to calling SetTimer such
+			//				  that the FrameRate and TrueFrames are properly related
+			if (!boards[i]->is_LC_Nematic) {
+				trueFrames = blink_sdk->Compute_TF(float(fps));
+			}
+			this->blink_sdk->Set_true_frames(trueFrames);
+		}
+		catch (...)	{
+			Utility::printLine("ERROR: Was unable to parse frame rate field for SLMs!");
+			return false;
+		}
+
+	}
+	return true; // no issues!
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -549,20 +571,29 @@ bool SLMController::slmCtrlReady() {
 	return true;
 }
 
+// Getter for board image width
+// Input: boardIdx - index for board getting data from (0 based index)
+// Output: the imageWidth property of the selected board (if invalid index value, returns -1)
 int SLMController::getBoardWidth(int boardIdx) {
-	if (boardIdx >= boards.size()) {
+	if (boardIdx >= this->boards.size() || boardIdx < 0) {
 		return -1;
 	}
-	return boards[boardIdx]->imageWidth;
+	return this->boards[boardIdx]->imageWidth;
 }
 
+// Getter for board image height
+// Input: boardIdx - index for board getting data from (0 based index)
+// Output: the imageHeight property of the selected board (if invalid index value, returns -1)
 int SLMController::getBoardHeight(int boardIdx) {
-	if (boardIdx >= boards.size()) {
+	if (boardIdx >= this->boards.size() || boardIdx < 0) {
 		return -1;
 	}
-	return boards[boardIdx]->imageHeight;
+	return this->boards[boardIdx]->imageHeight;
 }
 
+// Set power to all connected boards
+// Input: isOn - power setting (true = on, false = off)
+// Output: All SLMs available to the SDK are powered on
 void SLMController::setBoardPowerALL(bool isOn) {
 	if (blink_sdk != NULL) {
 		blink_sdk->SLM_power(isOn);
@@ -571,20 +602,23 @@ void SLMController::setBoardPowerALL(bool isOn) {
 		}
 	}
 	else {
-		Utility::printLine("WARNING: SDK not avalible cannot power ON/OFF the boards!");
+		Utility::printLine("WARNING: SDK not avalible to power ON/OFF the boards!");
 	}
 }
 
+// Set the power to a board
+// Input: boardID - index of board being toggled (0 based index)
+//		  isOn - power setting (true = on, false = off)
+// Output: SLM is turned on/off accordingly
 void SLMController::setBoardPower(int boardID, bool isOn) {
 	if (blink_sdk != NULL) {
 		blink_sdk->SLM_power(boardID+1, isOn);
 		this->boards[boardID]->setPower(isOn);
 	}
 	else {
-		Utility::printLine("WARNING: SDK not avalible cannot power ON/OFF the board!");
+		Utility::printLine("WARNING: SDK not avalible to power ON/OFF the board!");
 	}
 }
-
 
 // Write an image to a board
 // Input:

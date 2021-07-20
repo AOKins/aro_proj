@@ -191,7 +191,7 @@ bool Optimization::prepareSoftwareHardware() {
 	}
 	Utility::printLine("INFO: Camera setup complete!");
 
-	if (!this->sc->slmCtrlReady()) {
+	if (!this->sc->slmCtrlReady() && this->sc->updateFramerateFromGUI()) {
 		Utility::printLine("ERROR: SLM setup has failed!");
 		return false;
 	}
@@ -207,6 +207,7 @@ bool Optimization::prepareSoftwareHardware() {
 	// - configure proper UI states
 	this->isWorking = true;
 	this->dlg->disableMainUI(!isWorking);
+
 	return true;
 }
 

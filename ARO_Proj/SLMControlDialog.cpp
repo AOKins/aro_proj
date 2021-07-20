@@ -234,7 +234,7 @@ void SLMControlDialog::OnBnClickedSetlut() {
 bool SLMControlDialog::attemptWFCload(int slmNum, std::string filePath) {
 	bool noErrors = true;
 	if (slmNum >= this->slmCtrl->boards.size() || slmNum < 0) {
-		std::string errMsg = "Failed to assign given WFC file" + filePath + " to board " + std::to_string(slmNum) + " as there is none at this position!";
+		std::string errMsg = "Failed to assign given WFC file " + filePath + " to board " + std::to_string(slmNum) + " as there is none at this position!";
 		noErrors = false;
 		MessageBox(
 			(LPCWSTR)(errMsg.c_str()),
@@ -244,8 +244,8 @@ bool SLMControlDialog::attemptWFCload(int slmNum, std::string filePath) {
 		return noErrors;
 	}
 	SLM_Board * board = slmCtrl->boards[slmNum];
-	if (!slmCtrl->ReadAndScaleBitmap(board, board->PhaseCompensationData, board->PhaseCompensationFileName)) {
-		std::string errMsg = "Failed to assign given WFC file" + filePath + " to board " + std::to_string(slmNum) + "!";
+	if (!slmCtrl->ReadAndScaleBitmap(board, board->PhaseCompensationData, filePath)) {
+		std::string errMsg = "Failed to assign given WFC file " + filePath + " to board " + std::to_string(slmNum) + "!";
 		// Notify user of error in LUT file loading and get response action
 		Utility::printLine("ERROR: " + errMsg);
 		// Resource: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-messagebox
@@ -262,12 +262,13 @@ bool SLMControlDialog::attemptWFCload(int slmNum, std::string filePath) {
 			default: // Cancel or other unknown response will not have try again to make sure not stuck in undesired loop
 				noErrors = true;
 		}
-		CString fileCS(this->slmCtrl->boards[this->slmSelectionID_]->PhaseCompensationFileName.c_str());
-		this->m_LUT_pathDisplay.SetWindowTextW(fileCS);
 	}
 	else { // If no issue update the file name
 		board->PhaseCompensationFileName = filePath;
 	}
+	// Update GUI
+	CString fileCS(board->PhaseCompensationFileName.c_str());
+	this->m_LUT_pathDisplay.SetWindowTextW(fileCS);
 	return noErrors;
 }
 

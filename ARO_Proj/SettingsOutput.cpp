@@ -1,7 +1,7 @@
 ////////////////////
 // Additional source file to export some of the contents of MainDialog.cpp for easier navigation
 // SettingsOutput.cpp - behavior of the Save Settings and Load Settings buttons within MainDialog
-// Last edited: 07/08/2021 by Andrew O'Kins
+// Last edited: 07/15/2021 by Andrew O'Kins
 ////////////////////
 #include "stdafx.h"				// Required in source
 #include "resource.h"
@@ -312,6 +312,7 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	outFile << "multiThreading=";
 	if (this->m_MultiThreadEnable.GetCheck() == BST_CHECKED) { outFile << "true" << std::endl; }
 	else { outFile << "false" << std::endl; }
+
 	// Camera Dialog
 	outFile << "# Camera Settings" << std::endl;
 	this->m_cameraControlDlg.m_FramesPerSecond.GetWindowTextW(tempBuff);
@@ -320,6 +321,7 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	outFile << "initialExposureTime=" << _tstof(tempBuff) << std::endl;
 	this->m_cameraControlDlg.m_gammaValue.GetWindowTextW(tempBuff);
 	outFile << "gamma=" << _tstof(tempBuff) << std::endl;
+
 	// AOI Dialog
 	outFile << "# AOI Settings" << std::endl;
 	this->m_aoiControlDlg.m_leftInput.GetWindowTextW(tempBuff);
@@ -330,6 +332,7 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	outFile << "widthAOI=" << _tstof(tempBuff) << std::endl;
 	this->m_aoiControlDlg.m_heightInput.GetWindowTextW(tempBuff);
 	outFile << "heightAOI=" << _tstof(tempBuff) << std::endl;
+
 	// Optimization Dialog
 	outFile << "# Optimization Settings" << std::endl;
 	this->m_optimizationControlDlg.m_binSize.GetWindowTextW(tempBuff);
@@ -348,29 +351,32 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	outFile << "minGenerations=" << _tstof(tempBuff) << std::endl;
 	this->m_optimizationControlDlg.m_maxGenerations.GetWindowTextW(tempBuff);
 	outFile << "maxGenerations=" << _tstof(tempBuff) << std::endl;
+
 	// SLM Dialog
-	outFile << "# SLM Configuratoin Settings" << std::endl;
+	outFile << "# SLM Configuration Settings" << std::endl;
+	// SLM mode
+	outFile << "phaseCompensation=";
+	if (this->m_slmControlDlg.m_CompensatePhase) { outFile << "true\n"; }
+	else { outFile << "false\n"; }
 	outFile << "slmConfigMode=";
 	if (this->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED) { outFile << "dual\n"; }
 	else if (this->m_slmControlDlg.multiEnable.GetCheck() == BST_CHECKED) { outFile << "multi\n"; }
 	else { outFile << "single\n"; }
 	// Quick Check for SLMs
 	if (this->slmCtrl != NULL) {
-		// Output the LUT file paths being used for every board and PhaseCompensationFile
+		// Output the LUT file paths being used for every board and PhaseCompensationFile as well as if the SLM is powered or not
 		for (int i = 0; i < this->slmCtrl->boards.size(); i++) {
 			outFile << "slmLutFilePath" << std::to_string(i + 1) << "=" << this->slmCtrl->boards[i]->LUTFileName << "\n";
 			outFile << "slmWfcFilePath" << std::to_string(i + 1) << "=" << this->slmCtrl->boards[i]->PhaseCompensationFileName << "\n";
+			outFile << "slmPowered" << std::to_string(i + 1) << "=";
+			if (this->slmCtrl->boards[i]->isPoweredOn()) {outFile << "true\n";}
+			else {outFile << "false\n";}
 		}
 	}
-	outFile << "phaseCompensation=";
-	if (this->m_slmControlDlg.m_CompensatePhase) { outFile << "true\n"; }
-	else { outFile << "false\n"; }
+	outFile << "slmSelect=" << this->m_slmControlDlg.slmSelectionID_;
 
 	// Output Dialog
-	outFile << "saveEliteImage=";
-	if (this->m_outputControlDlg.m_SaveEliteImagesCheck.GetCheck() == BST_CHECKED) {	outFile << "true\n"; }
-	else { outFile << "false\n"; }
-	
+	outFile << "# Output Configuration Settings" << std::endl;
 	outFile << "displayCamera=";
 	if (this->m_outputControlDlg.m_displayCameraCheck.GetCheck() == BST_CHECKED) { outFile << "true\n"; }
 	else { outFile << "false\n"; }
@@ -378,12 +384,38 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	outFile << "displaySLM=";
 	if (this->m_outputControlDlg.m_displaySLM.GetCheck() == BST_CHECKED) { outFile << "true\n"; }
 	else { outFile << "false\n"; }
+
+	this->m_outputControlDlg.m_OutputLocationField.GetWindowTextW(tempBuff);
+	outFile << "outputFolder=" << tempBuff << std::endl;
 	
 	outFile << "logAllFilesEnable=";
 	if (this->m_outputControlDlg.m_logAllFilesCheck.GetCheck() == BST_CHECKED) { outFile << "true\n"; }
 	else { outFile << "false\n"; }
-	this->m_outputControlDlg.m_OutputLocationField.GetWindowTextW(tempBuff);
-	outFile << "outputFolder=" << tempBuff << std::endl;
 
+	outFile << "saveParameters=";
+	if (this->m_outputControlDlg.m_SaveParameters.GetCheck() == BST_CHECKED) { outFile << "true\n"; }
+	else { outFile << "false\n"; }
+
+	outFile << "saveFinalImages=";
+	if (this->m_outputControlDlg.m_SaveFinalImagesCheck.GetCheck() == BST_CHECKED) { outFile << "true\n"; }
+	else { outFile << "false\n"; }
+
+	outFile << "saveTimeVsFitness=";
+	if (this->m_outputControlDlg.m_SaveTimeVFitnessCheck.GetCheck() == BST_CHECKED) { outFile << "true\n"; }
+	else { outFile << "false\n"; }
+
+	outFile << "saveExposureShortening=";
+	if (this->m_outputControlDlg.m_SaveExposureShortCheck.GetCheck() == BST_CHECKED) { outFile << "true\n"; }
+	else { outFile << "false\n"; }
+	
+	outFile << "saveEliteImage=";
+	if (this->m_outputControlDlg.m_SaveEliteImagesCheck.GetCheck() == BST_CHECKED) { outFile << "true\n"; }
+	else { outFile << "false\n"; }
+
+	this->m_outputControlDlg.m_eliteSaveFreq.GetWindowTextW(tempBuff);
+	outFile << "saveEliteFreq=" << _tstoi(tempBuff) << std::endl;
+
+	// Done
+	outFile.close();
 	return true;
 }

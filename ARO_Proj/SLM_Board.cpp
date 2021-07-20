@@ -19,7 +19,7 @@ SLM_Board::SLM_Board(bool isNematic, int width, int height) {
 SLM_Board::~SLM_Board() {
 	delete[] this->PhaseCompensationData;
 	delete[] this->SystemPhaseCompensationData;
-	delete[] this->LUT;
+	//delete[] this->LUT;
 }
 
 // Return area of board image (width*height)

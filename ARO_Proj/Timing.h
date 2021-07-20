@@ -120,19 +120,27 @@ public:
 		QueryPerformanceCounter((LARGE_INTEGER *)&start_time_);
 		QueryPerformanceFrequency((LARGE_INTEGER *)&frequency_);
 	}
-
+	// Return number of seconds that have passed since the generator has been constructed
 	double S_SinceStart() {
 		__int64 currentTime;
 		QueryPerformanceCounter((LARGE_INTEGER *)&currentTime);
 		double seconds = double((currentTime - start_time_) / frequency_);
 		return seconds;
 	}
-
+	// Return number of milliseconds that have passed since the generator has been constructed
 	double MS_SinceStart() {
 		__int64 currentTime;
 		QueryPerformanceCounter((LARGE_INTEGER *)&currentTime);
 		double milliseconds = double((currentTime - start_time_) / (frequency_ / 1000));
 		return milliseconds;
+	}
+
+	// Return number of microseconds that have passed since the generator has been constructed
+	double MicroS_SinceStart() {
+		__int64 currentTime;
+		QueryPerformanceCounter((LARGE_INTEGER *)&currentTime);
+		double microseconds = double((currentTime - start_time_) / (frequency_ / 1000000));
+		return microseconds;
 	}
 };
 #endif
