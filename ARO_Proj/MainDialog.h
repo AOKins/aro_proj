@@ -115,6 +115,7 @@ public:
 	// Tool tips to help inform the user about a control
 	CToolTipCtrl * m_mainToolTips;
 	BOOL virtual PreTranslateMessage(MSG* pMsg);
+	afx_msg void OnBnClickedAboutButton();
 };
 
 // Worker thread process for running optimization while MainDialog continues listening for other input

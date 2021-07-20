@@ -60,6 +60,7 @@ BEGIN_MESSAGE_MAP(MainDialog, CDialog)
 	ON_BN_CLICKED(IDC_LOAD_SETTINGS, &MainDialog::OnBnClickedLoadSettings)
 	ON_BN_CLICKED(IDC_SAVE_SETTINGS, &MainDialog::OnBnClickedSaveSettings)
 	ON_BN_CLICKED(IDC_MULTITHREAD_ENABLE, &MainDialog::OnBnClickedMultiThreadEnable)
+	ON_BN_CLICKED(IDC_ABOUT_BUTTON, &MainDialog::OnBnClickedAboutButton)
 END_MESSAGE_MAP()
 
 //////////////////////////////////////////////////////////////
@@ -507,4 +508,10 @@ void MainDialog::OnBnClickedMultiThreadEnable(){
 	else {
 		Utility::printLine("INFO: Multithreading disabled!");
 	}
+}
+
+// Display About Window as popup from button press
+void MainDialog::OnBnClickedAboutButton() {
+	CDialog aboutBox(IDD_ABOUTBOX);
+	aboutBox.DoModal(); // not interested in response code or anything
 }

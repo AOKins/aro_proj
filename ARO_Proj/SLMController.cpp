@@ -32,8 +32,6 @@ SLMController::SLMController() {
 	for (int i = 0; i < this->boards.size(); i++) {
 		setupSLM(i);
 	}
-	// Set the framerate for the boards (this function should be called again at start of optimization to capture changes in GUI)
-	updateFramerateFromGUI();
 
 	// Load up the image arrays to each board (ASK: what this does)
 	LoadSequence();
@@ -82,6 +80,7 @@ bool SLMController::repopulateBoardList() {
 		//Add board info to board list
 		this->boards.push_back(curBoard);
 	}
+	return true;
 }
 
 // Assign and load LUT file
