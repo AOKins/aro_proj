@@ -84,7 +84,6 @@ bool SLMController::repopulateBoardList() {
 	}
 }
 
-
 // Assign and load LUT file
 // Input:
 //		boardIdx - index for which board (0 based index)
@@ -182,46 +181,6 @@ SLMController::~SLMController() {
 }
 
 // [UTILITY]
-/* AssignLUTFile: 
- * @param LUTBuf - array in which to store  the LUT File info
- * @param LUTPath - the name of the LUT file to read
- * @return TRUE if success, FALSE if failed */
-bool SLMController::ReadLUTFile(unsigned char *LUTBuf, std::string LUTPath) {
-	FILE *stream;
-	int i, seqnum, ReturnVal, tmpLUT;
-	bool errorFlag;
-
-	//set the error flag to indicate that there are no errors so far, and open
-	//the LUT file
-	errorFlag = false;
-
-	//stream = fopen(LUTPath.c_str(), "r"); // Depreceated in VS
-	fopen_s(&stream, LUTPath.c_str(), "r");
-
-	if ((stream != NULL) && (errorFlag == false)) {
-		//read in all 256 values
-		for (i = 0; i < 256; i++) {
-			//ReturnVal = fscanf(stream, "%d %d", &seqnum, &tmpLUT); // Depreceated in VS
-			ReturnVal = fscanf_s(stream, "%d %d", &seqnum, &tmpLUT);
-
-			if (ReturnVal != 2 || seqnum != i || tmpLUT < 0 || tmpLUT > 255) {
-				fclose(stream);
-				errorFlag = true;
-				break;
-			}
-			LUTBuf[i] = (unsigned char)tmpLUT;
-		}
-		fclose(stream);
-	}
-	//if there was an error reading in the LUT, default to a linear LUT
-	if ((stream == NULL) || (errorFlag == true)) {
-		for (i = 0; i < 256; i++)
-			LUTBuf[i] = i;
-		return false;
-	}
-
-	return true;
-}
 
 //////////////////////////////////////////////////////////
 //
@@ -390,169 +349,6 @@ unsigned char* SLMController::ScaleBitmap(unsigned char* InvertedImage, int Bitm
 	return(ScaledImage);
 }
 
-///////////////////////////////////////////////////////////////////////////
-//
-//   ReadZernikeFile()
-//
-//   Inputs: empty array to fill, and the file name to read.
-//
-//   Returns: true if no errors, otherwise false
-//
-//   Purpose: This function will read in Zernike polynomials and generate
-//			  an array f data from those Zernike polynomials
-//
-//   Modifications:
-//
-/////////////////////////////////////////////////////////////////////////////
-#define MAX_ZERNIKE_LINE 300
-bool SLMController::ReadZernikeFile(SLM_Board* board, unsigned char *GeneratedImage, std::string fileName) {
-	char inBuf[MAX_ZERNIKE_LINE];
-	char inputString[MAX_ZERNIKE_LINE];
-	char inputKey[MAX_ZERNIKE_LINE];
-
-	int row, col, Radius;
-	double x, y, divX, divY, total, XSquPlusYSqu, XPYSquSqu, divXSqu, divYSqu;
-	double term1, term2, term3, term4, term5, term6;
-	double term7, term8, term9, term10, term11, term12;
-	double term13, term14, term15, term16, term17, term18;
-	double term25, term36;
-	double Piston, XTilt, YTilt, Power, AstigOne, AstigTwo;
-	double ComaX, ComaY, PrimarySpherical, TrefoilX, TrefoilY, SecondaryAstigX;
-	double SecondaryAstigY, SecondaryComaX, SecondaryComaY, SecondarySpherical;
-	double TetrafoilX, TetrafoilY, TertiarySpherical, QuaternarySpherical;
-
-	//set our image size based on our board spec's if we are downloading the image
-	//the radius can be varied, this is the radius of the cone that is generated
-	//with the zernike polynomial equations. Through testing we determined 300
-	//to be a good number. This means that the edge of the cone does extend
-	//beyond the edge of the SLM, but notquite all the way to the corner of the SLM.
-	//It is a happy medium between getting the cone to reach the corners without
-	//chopping too much off the sides. Basically this is a problem of how you 
-	//force a circle to fit in a square.
-	if (board->imageHeight == 512)
-		Radius = 300;
-	else
-		Radius = 150;
-
-	//open the zernike file to read
-	std::ifstream ZernikeFile(fileName);
-	if (ZernikeFile.is_open()) {
-		while (ZernikeFile.getline(inBuf, MAX_ZERNIKE_LINE, '\n')) {
-			//read in a line from the file
-			//sscanf(inBuf, "%[^= ]%*[= ]%s", inputKey, inputString); // Depreceated in VS
-			sscanf_s(inBuf, "%[^= ]%*[= ]%s", inputKey, inputString);
-			//get the zernikes
-			if (strcmp(inputKey, "Piston") == 0)
-				Piston = atof(inputString);
-			else if (strcmp(inputKey, "XTilt") == 0)
-				XTilt = atof(inputString);
-			else if (strcmp(inputKey, "YTilt") == 0)
-				YTilt = atof(inputString);
-			else if (strcmp(inputKey, "Power") == 0)
-				Power = atof(inputString);
-			else if (strcmp(inputKey, "AstigX") == 0)
-				AstigOne = atof(inputString);
-			else if (strcmp(inputKey, "AstigY") == 0)
-				AstigTwo = atof(inputString);
-			else if (strcmp(inputKey, "ComaX") == 0)
-				ComaX = atof(inputString);
-			else if (strcmp(inputKey, "ComaY") == 0)
-				ComaY = atof(inputString);
-			else if (strcmp(inputKey, "PrimarySpherical") == 0)
-				PrimarySpherical = atof(inputString);
-			else if (strcmp(inputKey, "TrefoilX") == 0)
-				TrefoilX = atof(inputString);
-			else if (strcmp(inputKey, "TrefoilY") == 0)
-				TrefoilY = atof(inputString);
-			else if (strcmp(inputKey, "SecondaryAstigX") == 0)
-				SecondaryAstigX = atof(inputString);
-			else if (strcmp(inputKey, "SecondaryAstigY") == 0)
-				SecondaryAstigY = atof(inputString);
-			else if (strcmp(inputKey, "SecondaryComaX") == 0)
-				SecondaryComaX = atof(inputString);
-			else if (strcmp(inputKey, "SecondaryComaY") == 0)
-				SecondaryComaY = atof(inputString);
-			else if (strcmp(inputKey, "SecondarySpherical") == 0)
-				SecondarySpherical = atof(inputString);
-			else if (strcmp(inputKey, "TetrafoilX") == 0)
-				TetrafoilX = atof(inputString);
-			else if (strcmp(inputKey, "TetrafoilY") == 0)
-				TetrafoilY = atof(inputString);
-			else if (strcmp(inputKey, "TertiarySpherical") == 0)
-				TertiarySpherical = atof(inputString);
-			else if (strcmp(inputKey, "QuaternarySpherical") == 0)
-				QuaternarySpherical = atof(inputString);
-		} //end while getline
-
-		ZernikeFile.close();
-
-		//now generate our image based on our zernike polynomials
-		y = board->imageHeight / 2;
-		for (row = 0; row < board->imageHeight; row++)
-		{
-			//reset x
-			x = (board->imageWidth / 2) * -1;
-			for (col = 0; col < board->imageWidth; col++)
-			{
-				//build some terms that are repeated through the equations
-				divX = x / Radius;
-				divY = y / Radius;
-				XSquPlusYSqu = divX*divX + divY*divY;
-				XPYSquSqu = XSquPlusYSqu*XSquPlusYSqu;
-				divXSqu = divX*divX;
-				divYSqu = divY*divY;
-
-				//figure out what each term in the equation is
-				term1 = (Piston / 2);
-				term2 = (XTilt / 2)*divX;
-				term3 = (YTilt / 2)*divY;
-				term4 = (Power / 2)*(2 * XSquPlusYSqu - 1);
-				term5 = (AstigOne / 2)*(divXSqu - divYSqu);
-				term6 = (AstigTwo / 2)*(2 * divX*divY);
-
-				term7 = (ComaX / 2)*(3 * divX*XSquPlusYSqu - 2 * divX);
-				term8 = (ComaY / 2)*(3 * divY*XSquPlusYSqu - 2 * divY);
-				term9 = (PrimarySpherical / 2)*(1 - 6 * XSquPlusYSqu + 6 * XPYSquSqu);
-				term10 = (TrefoilX / 2)*(divXSqu*divX - 3 * divX*divYSqu);
-				term11 = (TrefoilY / 2)*(3 * divXSqu*divY - divYSqu*divY);
-				term12 = (SecondaryAstigX / 2)*(3 * divYSqu - 3 * divXSqu + 4 * divXSqu * XSquPlusYSqu - 4 * divYSqu * XSquPlusYSqu);
-
-				term13 = (SecondaryAstigY / 2)*(8 * divX*divY*XSquPlusYSqu - 6 * divX*divY);
-				term14 = (SecondaryComaX / 2)*(3 * divX - 12 * divX*XSquPlusYSqu + 10 * divX*XPYSquSqu);
-				term15 = (SecondaryComaY / 2)*(3 * divY - 12 * divY*XSquPlusYSqu + 10 * divY*XPYSquSqu);
-				term16 = (SecondarySpherical / 2)*(12 * XSquPlusYSqu - 1 - 30 * XPYSquSqu + 20 * XSquPlusYSqu*XPYSquSqu);
-				term17 = (TetrafoilX / 2)*(divXSqu*divXSqu - 6 * divXSqu*divYSqu + divYSqu*divYSqu);
-				term18 = (TetrafoilY / 2)*(4 * divXSqu*divX*divY - 4 * divX*divY*divYSqu);
-
-				term25 = (TertiarySpherical / 2)*(1 - 20 * XSquPlusYSqu + 90 * XPYSquSqu - 140 * XSquPlusYSqu*XPYSquSqu + 70 * XPYSquSqu*XPYSquSqu);
-				term36 = (QuaternarySpherical / 2)*(-1 + 30 * XSquPlusYSqu - 210 * XPYSquSqu + 560 * XPYSquSqu*XSquPlusYSqu - 630 * XPYSquSqu*XPYSquSqu + 252 * XPYSquSqu*XPYSquSqu*XSquPlusYSqu);
-
-				//add the terms
-				total = term1 + term2 + term3 + term4 + term5 + term6 +
-					term7 + term8 + term9 + term10 + term11 + term12 +
-					term13 + term14 + term15 + term16 + term17 + term18 +
-					term25 + term36;
-				//now scale it and assign the result to an array
-				if (total > 0)
-					total = total - int(total);
-				else
-					total = total + int(total) + 1;
-				GeneratedImage[row*board->imageWidth + col] = int((total)* 255);
-
-				x++;
-			}//close col loop
-			y--;
-		}//close row loop
-
-		return true;
-	}
-	//if we could not open the zernike file
-	else {
-		memset(GeneratedImage, 0, board->GetArea());
-		return false;
-	}
-}
-
 bool SLMController::IsAnyNematic() {
 	for (int i = 0; 0 < boards.size(); i++) {
 		if (boards[i]->is_LC_Nematic) {
@@ -622,8 +418,8 @@ void SLMController::setBoardPower(int boardID, bool isOn) {
 
 // Write an image to a board
 // Input:
-//		slmNum - index for which board (0 based index)
-//		image - pointer to array of image to assign to board
+//		slmNum - index for board to assing image to (0 based index)
+//		image - pointer to array of image data to assign to board
 // Output: Write image to board at slmNum, using that board's height for the image size
 bool SLMController::writeImageToBoard(int slmNum, unsigned char * image) {
 	if (slmNum < 0 || slmNum >= boards.size()) {

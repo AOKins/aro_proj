@@ -109,29 +109,7 @@ public:
 	bool writeImageToBoard(int slmNum, unsigned char * image);
 
 private:
-	// [UTILITY]
-	/* AssignLUTFile:
-	* @param LUTBuf - array in which to store  the LUT File info
-	* @param LUTPath - the name of the LUT file to read
-	* @return TRUE if success, FALSE if failed */
-	bool ReadLUTFile(unsigned char *LUTBuf, std::string LUTPath);
 
-	///////////////////////////////////////////////////////////////////////////
-	//
-	//   ReadZernikeFile()
-	//
-	//   Inputs: empty array to fill, and the file name to read.
-	//
-	//   Returns: true if no errors, otherwise false
-	//
-	//   Purpose: This function will read in Zernike polynomials and generate
-	//			  an array f data from those Zernike polynomials
-	//
-	//   Modifications:
-	//
-	/////////////////////////////////////////////////////////////////////////////
-	bool ReadZernikeFile(SLM_Board* board, unsigned char *GeneratedImage, std::string fileName);
-	
 	////////////////////////////////////////////////////////////////////////
 	//
 	//   ScaleBitmap()
