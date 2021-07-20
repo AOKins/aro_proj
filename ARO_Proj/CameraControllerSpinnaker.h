@@ -1,9 +1,8 @@
 // Header file for the camera controller to Spinnaker version
-#ifndef CAMERA_CONTROLLER_H_
-#define CAMERA_CONTROLLER_H_
+#ifndef CAMERA_CONTROLLER_SPINNAKER_H_
+#define CAMERA_CONTROLLER_SPINNAKER_H_
 
 #include <string>
-#include <ostream>
 
 #include "Spinnaker.h"
 #include "SpinGenApi\SpinnakerGenApi.h"
@@ -25,23 +24,20 @@ public:
 
 	double gamma = 1.25;
 	int fps = 200;
-	int frameRateMS = 5;
 	double initialExposureTime = 2000;
 	double finalExposureTime = 2000;
-	float msPerFrame;
 
 	int numberOfBinsX = 128;
 	int numberOfBinsY = 128;
 	int binSizeX = 4;
 	int binSizeY = 4;
 
-	//Image target matrix settings
-	int* targetMatrix;
+	//Image target settings
 	int targetRadius = 5;
 
 private:
 	//UI/Equipment reference
-	MainDialog& dlg;
+	MainDialog* dlg;
 	//Camera access using Spinnaker
 	Spinnaker::SystemPtr system;
 	Spinnaker::CameraList camList;
@@ -51,7 +47,7 @@ private:
 	bool isCamCreated = false;
 public:
 
-	CameraController(MainDialog& dlg_);
+	CameraController(MainDialog* dlg_);
 	~CameraController();
 
 	bool setupCamera();

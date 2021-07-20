@@ -318,6 +318,7 @@
     <ClCompile Include="ARO_App.cpp" />
     <ClCompile Include="BruteForce_Optimization.cpp" />
     <ClCompile Include="CameraControlDialog.cpp" />
+    <ClCompile Include="CameraControllerPICam.cpp" />
     <ClCompile Include="CameraControllerSpinnaker.cpp" />
     <ClCompile Include="ImageScaler.cpp" />
     <ClCompile Include="MainDialog.cpp" />

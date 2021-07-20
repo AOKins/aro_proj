@@ -1,8 +1,6 @@
 // Header file for the image handling/controller to Spinnaker version
-#ifndef IMAGE_CONTROLLER_H_
-#define IMAGE_CONTROLLER_H_
-
-#include "Utility.h"
+#ifndef IMAGE_CONTROLLER_SPINNAKER_H_
+#define IMAGE_CONTROLLER_SPINNAKER_H_
 
 #include "Spinnaker.h"
 #include "SpinGenApi\SpinnakerGenApi.h"
@@ -51,6 +49,7 @@ public:
 		return this->image_;
 	}
 
+	// Getter for release (used in copy constructor)
 	const bool getReleaseBool() {
 		return this->needRelease;
 	}

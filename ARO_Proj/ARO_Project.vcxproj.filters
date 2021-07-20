@@ -179,6 +179,9 @@
     <ClCompile Include="CameraControllerSpinnaker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CameraControllerPICam.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ARO_Project.rc">

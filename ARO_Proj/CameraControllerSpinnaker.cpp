@@ -6,8 +6,9 @@
 #include "Utility.h"
 
 // [CONSTRUCTOR(S)]
-CameraController::CameraController(MainDialog& dlg_) : dlg(dlg_) {
+CameraController::CameraController(MainDialog* dlg_) {
 	//Camera access
+	this->dlg = dlg_;
 	UpdateConnectedCameraInfo();
 }
 
@@ -18,7 +19,6 @@ CameraController::~CameraController() {
 		//stopCamera();
 		shutdownCamera();
 	}
-	delete[] this->targetMatrix;
 	Utility::printLine("INFO: Finished shutting down camera!");
 }
 
@@ -173,10 +173,9 @@ bool CameraController::UpdateImageParameters() {
 	// Frames per second
 	try	{
 		CString path("");
-		dlg.m_cameraControlDlg.m_FramesPerSecond.GetWindowTextW(path);
+		dlg->m_cameraControlDlg.m_FramesPerSecond.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
 		fps = _tstoi(path);
-		frameRateMS = 1000 / fps;
 	}
 	catch (...)	{
 		Utility::printLine("ERROR: Was unable to parse the frames per second time input field!");
@@ -185,7 +184,7 @@ bool CameraController::UpdateImageParameters() {
 	// Gamma value
 	try	{
 		CString path("");
-		dlg.m_cameraControlDlg.m_gammaValue.GetWindowTextW(path);
+		dlg->m_cameraControlDlg.m_gammaValue.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
 		gamma = _tstof(path);
 	}
@@ -196,7 +195,7 @@ bool CameraController::UpdateImageParameters() {
 	// Initial exposure time
 	try	{
 		CString path("");
-		dlg.m_cameraControlDlg.m_initialExposureTimeInput.GetWindowTextW(path);
+		dlg->m_cameraControlDlg.m_initialExposureTimeInput.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
 		initialExposureTime = _tstof(path);
 	}
@@ -208,22 +207,22 @@ bool CameraController::UpdateImageParameters() {
 	try	{
 		CString path("");
 		// Left offset
-		dlg.m_aoiControlDlg.m_leftInput.GetWindowTextW(path);
+		dlg->m_aoiControlDlg.m_leftInput.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
 		x0 = _tstoi(path);
 		path = L"";
 		// Top Offset
-		dlg.m_aoiControlDlg.m_rightInput.GetWindowTextW(path);
+		dlg->m_aoiControlDlg.m_rightInput.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
 		y0 = _tstoi(path);
 		path = L"";
 		// Width of AOI
-		dlg.m_aoiControlDlg.m_widthInput.GetWindowTextW(path);
+		dlg->m_aoiControlDlg.m_widthInput.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
 		cameraImageWidth = _tstoi(path);
 		path = L"";
 		// Hieght of AOI
-		dlg.m_aoiControlDlg.m_heightInput.GetWindowTextW(path);
+		dlg->m_aoiControlDlg.m_heightInput.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
 		cameraImageHeight = _tstoi(path);
 	}
@@ -234,7 +233,7 @@ bool CameraController::UpdateImageParameters() {
 	// Number of image bins X and Y (ASK: if actually need to be thesame)
 	try	{
 		CString path("");
-		dlg.m_optimizationControlDlg.m_numberBins.GetWindowTextW(path);
+		dlg->m_optimizationControlDlg.m_numberBins.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
 		numberOfBinsX = _tstoi(path);
 		numberOfBinsY = numberOfBinsX; // Number of bins in Y direction is equal to in X direction (square)
@@ -246,7 +245,7 @@ bool CameraController::UpdateImageParameters() {
 	//Size of bins X and Y (ASK: if actually thesame xy? and isn't stating the # of bins already determine size?)
 	try	{
 		CString path("");
-		dlg.m_optimizationControlDlg.m_binSize.GetWindowTextW(path);
+		dlg->m_optimizationControlDlg.m_binSize.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
 		binSizeX = _tstoi(path);
 		binSizeY = binSizeX; // Square shape in size
@@ -258,7 +257,7 @@ bool CameraController::UpdateImageParameters() {
 	// Integration/target radius
 	try	{
 		CString path("");
-		dlg.m_optimizationControlDlg.m_targetRadius.GetWindowTextW(path);
+		dlg->m_optimizationControlDlg.m_targetRadius.GetWindowTextW(path);
 		if (path.IsEmpty()) throw new std::exception();
 		targetRadius = _tstoi(path);
 	}
@@ -266,10 +265,6 @@ bool CameraController::UpdateImageParameters() {
 		Utility::printLine("ERROR: Was unable to parse integration radius input feild!");
 		result = false;
 	}
-	// Setup target matrix
-	delete[] targetMatrix;
-	targetMatrix = new int[cameraImageHeight*cameraImageWidth];
-	Utility::GenerateTargetMatrix_SinglePoint(targetMatrix, cameraImageWidth, cameraImageHeight, targetRadius);
 
 	return result;
 }
