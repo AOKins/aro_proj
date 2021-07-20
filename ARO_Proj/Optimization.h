@@ -10,9 +10,7 @@
 
 #include "MainDialog.h"			// used for UI reference
 
-#ifndef SPINNAKER_VERSION
-#define SPINNAKER_VERSION
-#endif
+#define USE_SPINNAKER
 #include "CameraController.h"	// pointer to access custom interface with camera and images
 
 #include "SLMController.h"		// pointer to access custom interface with slm

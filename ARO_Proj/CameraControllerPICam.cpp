@@ -7,13 +7,18 @@
 
 CameraController::CameraController(MainDialog* dlg_) {
 	this->dlg = dlg_;
-	if (!Picam_IsLibraryInitialized()) {
+
+	// Initialize library
+	Picam_IsLibraryInitialized(this->libraryInitialized);
+	if (this->libraryInitialized) {
 		Picam_InitializeLibrary();
 	}
 }
 
 CameraController::~CameraController() {
-	if (Picam_IsLibraryInitialized()) {
+	// Deallocate resources from library
+	if (this->libraryInitialized) {
 		Picam_UninitializeLibrary();
 	}
+	delete this->libraryInitialized;
 }

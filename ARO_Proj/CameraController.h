@@ -2,18 +2,18 @@
 // When using camera controller, this header file should be what you include rather than from a specific SDK!
 
 // Spinnaker version
-#ifdef SPINNAKER_VERSION
+#ifdef USE_SPINNAKER
 	#include "CameraControllerSpinnaker.h"
 	#include "ImageControllerSpinnaker.h"
-	#ifdef PICAM_VERSION // Performing additional check to see if other version is also being includes (which would be bad!)
+	#ifdef USE_PICAM// Performing additional check to see if other version is also being includes (which would be bad!)
 		#error "Cannot have Spinnaker and PICam versions in same build!"
 	#endif
 #endif
 // PICam version
-#ifdef PICAM_VERSION
+#ifdef USE_PICAM
 	#include "CameraControllerPICam.h"
 	#include "ImageControllerPICam.h"
-	#ifdef SPINNAKER_VERSION // Performing additional check to see if other version is also being includes (which would be bad!)
+	#ifdef USE_SPINNAKER // Performing additional check to see if other version is also being includes (which would be bad!)
 		#error "Cannot have Spinnaker and PICam versions in same build!"
 	#endif
 #endif

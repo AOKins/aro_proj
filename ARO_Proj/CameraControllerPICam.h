@@ -4,7 +4,9 @@
 
 #include <string>
 
-#include "ImageControllerPICam.h"
+#include "picam.h" // core include for PICam SDK
+
+#include "ImageControllerPICam.h" // Image wrapper
 
 class MainDialog;
 
@@ -33,7 +35,7 @@ private:
 	MainDialog* dlg;
 
 	//Logic control
-	bool isCamCreated = false;
+	pibln * libraryInitialized; // Boolean to give if the library has been initialized or not
 public:
 
 	CameraController(MainDialog* dlg_);
@@ -54,16 +56,18 @@ public:
 
 	// [UTILITY]
 	int PrintDeviceInfo();
-	// Return true if this controller has access to at least one camera
-	bool hasCameras();
-
-	bool SetExposure(double exposureTimeToSet);
-	double GetExposureRatio();
-	void HalfExposureTime();
 
 	// [ACCESSOR(S)/MUTATOR(S)]
 	bool GetCenter(int &x, int &y);
 	bool GetFullImage(int &x, int &y);
+	// Return true if this controller has access to at least one camera
+	bool hasCameras();
+	// Setter for exposure setting
+	bool SetExposure(double exposureTimeToSet);
+	// Get the multiplier for exposure having been halved
+	double GetExposureRatio();
+	// half the current exposure time setting
+	void HalfExposureTime();
 };
 
 #endif

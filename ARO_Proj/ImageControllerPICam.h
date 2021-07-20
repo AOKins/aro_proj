@@ -2,8 +2,12 @@
 #ifndef IMAGE_CONTROLLER_PICAM_H_
 #define IMAGE_CONTROLLER_PICAM_H_
 
-class ImageController {
+#include "picam.h"
 
+class ImageController {
+private:
+
+public:
 
 };
 
