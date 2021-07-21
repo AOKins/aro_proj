@@ -520,7 +520,7 @@ int CameraController::PrintDeviceInfo() {
 	return 0;
 }
 
-/* ConfigureExposureTime: sets the cameras exposure time
+/* ConfigureExposureTime: resets the cameras exposure time
  * @return - TRUE if success, FALSE if failed */
 bool CameraController::ConfigureExposureTime() {
 	finalExposureTime = initialExposureTime;

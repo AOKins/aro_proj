@@ -7,8 +7,6 @@
 class ImageController {
 private:
 
-public:
-
 	bool needRelease;
 public:
 	ImageController() {
@@ -19,7 +17,7 @@ public:
 	// Performs deep copy, original should be safe to release
 	// Input:	setImage - imageptr to copy from
 	//			release - set to true if this image when done with will need to be released from buffer with Release() call
-	ImageController(bool release) {
+	ImageController() {
 	}
 
 	ImageController(ImageController & other) {
