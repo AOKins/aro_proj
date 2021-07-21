@@ -27,8 +27,6 @@ CameraController::~CameraController() {
 // [CAMERA CONTROL]
 // Connect to camera (if not already) and pull info from GUI to configure the camera
 bool CameraController::setupCamera() {
-	Utility::printLine(); // break in output
-	
 	// Connect to the camera if the cam pointer is null
 	if (cam == NULL) {
 		UpdateConnectedCameraInfo();
@@ -56,7 +54,6 @@ bool CameraController::setupCamera() {
 	if (!ConfigureExposureTime()) {
 		return false;
 	}
-	Utility::printLine("INFO: configured exposure setting on camera!");
 
 	isCamCreated = true;
 	return true;
@@ -367,7 +364,7 @@ bool CameraController::ConfigureCustomImageSettings() {
 			Utility::printLine("ERROR: OffsetY not available for initial setup");
 		}
 		//Apply target image width
-		if (cam->Width != NULL && cam->Width.GetAccessMode() == RW && cam->Width.GetInc() != 0 && cam->Width.GetMax() != 0) {
+		if (cam->Width != NULL && cam->Width.GetAccessMode() == RW  && cam->Width.GetInc() != 0 && cam->Width.GetMax() != 0) {
 			cam->Width.SetValue(cameraImageWidth);
 		}
 		else {
@@ -396,9 +393,6 @@ bool CameraController::ConfigureCustomImageSettings() {
 		}
 		INodeMap & nodeMap = cam->GetNodeMap();
 		
-		if (PrintDeviceInfo() == -1) {
-			Utility::printLine("WARNING: Couldn't display camera information!");
-		}
 		//Enable Manual Frame Rate Setting
 		bool setFrameRate = true;
 		Spinnaker::GenApi::CBooleanPtr FrameRateEnablePtr = cam->GetNodeMap().GetNode("AcquisitionFrameRateEnabled");
@@ -467,6 +461,10 @@ bool CameraController::ConfigureCustomImageSettings() {
 		}
 		else {
 			Utility::printLine("ERROR: Unable to set manual gamma enable to true");
+		}
+
+		if (PrintDeviceInfo() == -1) {
+			Utility::printLine("WARNING: Couldn't display camera information!");
 		}
 	}
 	catch (Spinnaker::Exception &e)	{

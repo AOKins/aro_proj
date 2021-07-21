@@ -16,8 +16,10 @@ class MainDialog;
 class CameraController {
 public:
 	//Image parameters (with defaults set)
+	// ROI offset
 	int x0 = 896;				//  Must be a factor of 4 (like 752)
 	int y0 = 568;				//	Must be a factor of 2 (like 752)
+	// ROI dimension
 	int cameraImageWidth = 64;	//	Must be a factor of 32 (like 64)
 	int cameraImageHeight = 64;	//	Must be a factor of 2  (like 64)
 	int populationDensity = 1;
