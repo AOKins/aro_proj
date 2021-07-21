@@ -4,7 +4,6 @@
 #include "stdafx.h"
 #include "afxdialogex.h"
 
-#define USE_SPINNAKER
 #include "CameraController.h"
 #include "AOIControlDialog.h"
 #include "Utility.h"

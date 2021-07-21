@@ -2,11 +2,14 @@
 #ifndef CAMERA_CONTROLLER_PICAM_H_
 #define CAMERA_CONTROLLER_PICAM_H_
 
+#ifdef USE_PICAM
+
 #include <string>
 
 #include "picam.h" // core include for PICam SDK
 
 #include "ImageControllerPICam.h" // Image wrapper
+
 
 class MainDialog;
 
@@ -33,6 +36,8 @@ public:
 	int targetRadius = 5;
 private:
 	MainDialog* dlg;
+
+	PicamHandle* camera_;
 
 	//Logic control
 	pibln * libraryInitialized; // Boolean to give if the library has been initialized or not
@@ -69,5 +74,7 @@ public:
 	// half the current exposure time setting
 	void HalfExposureTime();
 };
+
+#endif
 
 #endif

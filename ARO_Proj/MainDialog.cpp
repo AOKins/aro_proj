@@ -21,7 +21,6 @@
 //	- Helper
 #include "Utility.h"			// Collection of static helper functions
 #include "SLMController.h"		// Wrapper for SLM control
-#define USE_SPINNAKER
 #include "CameraController.h"	// Camera interface wrapper
 
 #define MAX_CFileDialog_FILE_COUNT 99
@@ -149,7 +148,7 @@ BOOL MainDialog::OnInitDialog() {
 	//Show the default tab (optimizations settings)
 	m_pwndShow = &m_optimizationControlDlg;
 
-	this->camCtrl = new CameraController((*this));
+	this->camCtrl = new CameraController(this);
 	if (this->camCtrl != nullptr) {
 		m_aoiControlDlg.SetCameraController(this->camCtrl);
 	}

@@ -2,6 +2,8 @@
 #ifndef CAMERA_CONTROLLER_SPINNAKER_H_
 #define CAMERA_CONTROLLER_SPINNAKER_H_
 
+#ifdef USE_SPINNAKER
+
 #include <string>
 
 #include "Spinnaker.h"
@@ -77,5 +79,7 @@ public:
 	bool GetFullImage(int &x, int &y);
 
 };
+
+#endif
 
 #endif

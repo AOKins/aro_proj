@@ -1,9 +1,11 @@
 // Implementation file for Spinnaker version of CameraController
 
 #include "stdafx.h"				// Required in source
-#include "CameraControllerSpinnaker.h"	// Header file
+#include "CameraController.h"
 #include "MainDialog.h"
 #include "Utility.h"
+
+#ifdef USE_SPINNAKER // Only include this implementation if using Spinnaker
 
 // [CONSTRUCTOR(S)]
 CameraController::CameraController(MainDialog* dlg_) {
@@ -631,3 +633,5 @@ bool CameraController::GetFullImage(int &x, int &y) {
 
 	return true;
 }
+
+#endif

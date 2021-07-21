@@ -181,8 +181,8 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>C:\Program Files\Point Grey Research\Spinnaker2013\lib64\vs2013;C:\opencv\build\x64\vc12\lib;C:\Program Files\Meadowlark Optics\Blink OverDrive Plus\SDK;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Picam32.lib;opencv_core248d.lib;opencv_imgproc248d.lib;opencv_highgui248d.lib;Blink_SDK.lib;Spinnakerd_$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Program Files\Princeton Instruments\PICam\Libraries;C:\Program Files\Point Grey Research\Spinnaker2013\lib64\vs2013;C:\opencv\build\x64\vc12\lib;C:\Program Files\Meadowlark Optics\Blink OverDrive Plus\SDK;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Picam.lib;opencv_core248d.lib;opencv_imgproc248d.lib;opencv_highgui248d.lib;Blink_SDK.lib;Spinnakerd_$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>Yes</GenerateDebugInformation>
     </Link>
     <Midl>

@@ -2,6 +2,8 @@
 #ifndef IMAGE_CONTROLLER_SPINNAKER_H_
 #define IMAGE_CONTROLLER_SPINNAKER_H_
 
+#ifdef USE_SPINNAKER
+
 #include "Spinnaker.h"
 #include "SpinGenApi\SpinnakerGenApi.h"
 using namespace Spinnaker::GenApi;
@@ -75,5 +77,7 @@ public:
 		this->image_->Save(path.c_str(), Spinnaker::ImageFileFormat::FROM_FILE_EXT);
 	}
 };
+
+#endif
 
 #endif
