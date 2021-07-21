@@ -11,17 +11,12 @@ public:
 	int imageHeight;
 	// Track if this board has been powered on or not (default start with false)
 	bool powered_On;
-
+	// Contents of the PhaseCompensation data file to be added to the image being written if enabled
 	unsigned char * PhaseCompensationData;
-	unsigned char * SystemPhaseCompensationData;
-	// LUT file data
-	//unsigned char * LUT; // Commented out as doesn't seem to be used for anything
 	// Filepath to LUT file being used
 	std::string LUTFileName;
 	// Filepath to phase compensation file being used
 	std::string PhaseCompensationFileName;
-	// Filepath to system phas compensation file being used
-	std::string SystemPhaseCompensationFileName;
 
 	// Defualt constructor does not initialize anything
 	SLM_Board(){};

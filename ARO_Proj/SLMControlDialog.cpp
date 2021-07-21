@@ -244,8 +244,9 @@ bool SLMControlDialog::attemptWFCload(int slmNum, std::string filePath) {
 		return noErrors;
 	}
 	SLM_Board * board = slmCtrl->boards[slmNum];
-	if (!slmCtrl->ReadAndScaleBitmap(board, board->PhaseCompensationData, filePath)) {
-		std::string errMsg = "Failed to assign given WFC file " + filePath + " to board " + std::to_string(slmNum) + "!";
+	// Read and assign the image file to PhaseCompensationData
+	if (!slmCtrl->LoadPhaseCompensationData(board, filePath)) {
+		std::string errMsg = "Failed to assign given WFC file '" + filePath + "' to board " + std::to_string(slmNum) + "!";
 		// Notify user of error in LUT file loading and get response action
 		Utility::printLine("ERROR: " + errMsg);
 		// Resource: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-messagebox
@@ -394,18 +395,11 @@ void SLMControlDialog::OnBnClickedSlmDual() {
 //   Returns: none
 //
 //   Purpose: This function is called if the ser clicks on the checkbox labeled "apply phase compensation."
-//			  This will superimpose a phase correction image with the desired image
-//			  being downloaded to the SLM. This option should ony be used if the user
-//			  is driving a nematic SLM using a phase setup (interferometer). Using the
-//			  appropriate phase correction file will compensate for slight imperfections
-//			  (curvature) in the SLM, thus making the SLM appear nearly flat.
+//			  This will enable the usage of the PhaseCompensationData on writing images to the SLMs
 //
 //   Modifications:
 //
 //////////////////////////////////////////////////
 void SLMControlDialog::OnCompensatePhaseCheckbox() {
 	UpdateData(true);
-
-	//Re-load the sequence if apropriate checkbox pressed
-	slmCtrl->LoadSequence();
 }

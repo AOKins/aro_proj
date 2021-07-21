@@ -191,10 +191,11 @@ bool Optimization::prepareSoftwareHardware() {
 	}
 	Utility::printLine("INFO: Camera setup complete!");
 
-	if (!this->sc->slmCtrlReady() && this->sc->updateFramerateFromGUI()) {
+	if (!this->sc->updateFromGUI()) {
 		Utility::printLine("ERROR: SLM setup has failed!");
 		return false;
 	}
+
 	Utility::printLine("INFO: SLM setup complete!");
 
 	// - configure algorithm parameters

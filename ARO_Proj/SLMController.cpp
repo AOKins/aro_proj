@@ -31,10 +31,7 @@ SLMController::SLMController() {
 	for (int i = 0; i < this->boards.size(); i++) {
 		setupSLM(i);
 	}
-
-	// Load up the image arrays to each board (ASK: what this does)
-	LoadSequence();
-
+	
 	//Start with SLMs OFF
 	this->setBoardPowerALL(false);
 }
@@ -68,14 +65,8 @@ bool SLMController::repopulateBoardList() {
 	// Go through and generate new board structs with default filenames
 	for (unsigned int i = 1; i <= this->numBoards; i++) {
 		SLM_Board *curBoard = new SLM_Board(true, this->blink_sdk->Get_image_width(i), this->blink_sdk->Get_image_height(i));
-		int boardArea = this->blink_sdk->Get_image_width(i) * this->blink_sdk->Get_image_height(i);
-		//Build paths to the calibrations for this SLM -- regional LUT included in Blink_SDK(), but need to pass NULL to that param to disable ODP. Might need to make a class.
-		curBoard->LUTFileName = "linear.LUT";
-		curBoard->PhaseCompensationFileName = "slm929_8bit.bmp";
-		curBoard->SystemPhaseCompensationFileName = "Blank.bmp";
-		//curBoard->LUT = new unsigned char[256]; // Commented out as doesn't seem to be used for anything
-		curBoard->PhaseCompensationData = new unsigned char[boardArea];
-		curBoard->SystemPhaseCompensationData = new unsigned char[boardArea];
+		// Load WFC file that is default to the board
+		LoadPhaseCompensationData(curBoard, curBoard->PhaseCompensationFileName);
 
 		//Add board info to board list
 		this->boards.push_back(curBoard);
@@ -116,58 +107,6 @@ bool SLMController::AssignLUTFile(int boardIdx, std::string path) {
 	}
 }
 
-/* LoadSequence: This function will load a series of two images to the PCIe board memory.
- *               The first image is written to the first frame of memory in the hardware,
- *  			 and the second image is written to the second frame.
- *
- * Modifications: Might need to change how we get a handle to the board, how we access
- *				  PhaseCompensationData, SystemCompensationData, FrameOne, and FrameTwo.
- *				  Once we're using Overdrive, I think it'll be easier because the
- *				  construction of the sdk includes a correction file, and even in the 
- *  			  old code used the same correction file. */
-void SLMController::LoadSequence() {
-	if (!dlg) {
-		Utility::printLine("WARNING: trying to load sequence without dlg reference");
-		return;
-	}
-		
-	//loop through each PCIe board found, read in the calibrations for that SLM
-	//as well as the images in the wequence list, and store the merged image/calibration
-	//data in an array that will later be referenced
-	for (int h = 0; h < boards.size(); h++) { // please note: BoardList has a 0-based index, but Blink's index of available boards is 1-based.
-
-		//if the user has a nematic SLM and the user is viewing the SLM through an interferometer, 
-		//then the user has the option to correct for SLM imperfections by applying a predetermined 
-		//phase compensation. BNS calibrates every SLM before shipping, so each SLM ships with its 
-		//own custom phase correction file. This step is either reading in that correction file, or
-		//setting the data in the array to 0 for users that don't want to correct, or for users with
-		//amplitude devies
-		if (dlg->m_slmControlDlg.m_CompensatePhase) {
-			ReadAndScaleBitmap(boards[h], boards[h]->PhaseCompensationData, boards[h]->PhaseCompensationFileName); //save to PhaseCompensationData
-			ReadAndScaleBitmap(boards[h], boards[h]->SystemPhaseCompensationData, boards[h]->SystemPhaseCompensationFileName); //save to SystemPhaseCompensationData
-		}
-		else {
-			memset(boards[h]->PhaseCompensationData, 0, boards[h]->GetArea()); //set PhaseCompensationData to 0
-			memset(boards[h]->SystemPhaseCompensationData, 0, boards[h]->GetArea()); //set SystemPhaseCompensationData to 0
-		}
-
-		int total;
-		//Superimpose the SLM phase compensation, the system phase compensation, and
-		//the image data. Then store the image in FrameOne
-		for (int i = 0; i < boards[h]->GetArea(); i++) {
-			total = boards[h]->PhaseCompensationData[i] +
-					boards[h]->SystemPhaseCompensationData[i];
-		}
-
-		//Superimpose the SLM phase compensation, the system phase compensation, and
-		//the image data. Then store the image in FrameTwo
-		for (int i = 0; i < boards[h]->GetArea(); i++) {
-			total = boards[h]->PhaseCompensationData[i] +
-					boards[h]->SystemPhaseCompensationData[i];
-		}
-	}
-}
-
 // [DESTRUCTOR]
 SLMController::~SLMController() {
 	//Poweroff and deallokate sdk functionality
@@ -197,8 +136,10 @@ SLMController::~SLMController() {
 //   Modifications: 
 //
 //////////////////////////////////////////////////////////
-bool SLMController::ReadAndScaleBitmap(SLM_Board *board, unsigned char *Image, std::string filename) {
+bool SLMController::LoadPhaseCompensationData(SLM_Board *board, std::string filename) {
 	int width, height, bytespixel;
+
+	unsigned char* Image = board->PhaseCompensationData;
 
 	//need a tmpImage because we cannot assume that the bitmap we
 	//read in will be the correct dimensions
@@ -206,9 +147,10 @@ bool SLMController::ReadAndScaleBitmap(SLM_Board *board, unsigned char *Image, s
 
 	//get a handle to our file
 	CFile *pFile = new CFile();
-	if (pFile == NULL)
-		Utility::printLine("ERROR: allocating memory for pFile, ReadAndScaleBitmap");
-
+	if (pFile == NULL) {
+		Utility::printLine("ERROR: allocating memory for pFile, LoadPhaseCompensationData");
+		return false;
+	}
 	//if it is a .bmp file and we can open it
 	CString file = CString(filename.c_str());
 	if (pFile->Open(file, CFile::modeRead | CFile::shareDenyNone, NULL)) {
@@ -244,15 +186,16 @@ bool SLMController::ReadAndScaleBitmap(SLM_Board *board, unsigned char *Image, s
 		//depending on if we are trying to read a bitmap to dowload
 		//or if we are trying to read it for the screen, memset
 		//the array to zero and return false
-		memset(Image, '0', board->GetArea());
+		memset(board->PhaseCompensationData, '0', board->GetArea());
+		Utility::printLine("ERROR: Failed to load compensation file '" + filename+ "'! Populating data with '0'");
 		return false;
 	}
 
-	//scale the bitmap
-	unsigned char* ScaledImage = ScaleBitmap(tmpImage, height, board->imageHeight);
+	//scale the bitmap to fit the board
+	unsigned char* ScaledImage = ScaleBitmap(tmpImage, height, width, board->imageHeight, board->imageWidth);
 
 	//copy the scaled bitmap into the array passed into the function
-	memcpy(Image, ScaledImage, board->GetArea());
+	memcpy(board->PhaseCompensationData, ScaledImage, board->GetArea());
 
 	//delete tmp array to avoid mem leaks
 	delete[]tmpImage;
@@ -260,9 +203,9 @@ bool SLMController::ReadAndScaleBitmap(SLM_Board *board, unsigned char *Image, s
 	return true;
 }
 
-// Update the framerate for the boards according to the GUI to match camera setting
+// Update the framerate and phase toggle for the boards according to the GUI to match camera setting
 	// Returns true if no errors, false if error occurs
-bool SLMController::updateFramerateFromGUI() {
+bool SLMController::updateFromGUI() {
 	for (int i = 0; i < this->boards.size(); i++) {
 		float fps;
 		try	{
@@ -285,8 +228,15 @@ bool SLMController::updateFramerateFromGUI() {
 			Utility::printLine("ERROR: Was unable to parse frame rate field for SLMs!");
 			return false;
 		}
-
 	}
+	// Determine if we will be enabling the usage of the phase compensation
+	if (this->dlg->m_slmControlDlg.m_CompensatePhaseCheckbox.GetCheck() == BST_CHECKED) {
+		this->phaseCompensationToggle = true;
+	}
+	else {
+		this->phaseCompensationToggle = false;
+	}
+
 	return true; // no issues!
 }
 
@@ -307,25 +257,25 @@ bool SLMController::updateFramerateFromGUI() {
 //   Modifications:
 //
 /////////////////////////////////////////////////////////////////////////
-unsigned char* SLMController::ScaleBitmap(unsigned char* InvertedImage, int BitmapSize, int FinalBitmapSize) {
-	int height = BitmapSize;
-	int width = BitmapSize;
+unsigned char* SLMController::ScaleBitmap(unsigned char* InvertedImage, int BitmapSizeHeight, int BitmapSizeWidth, int FinalBitmapSizeHeight, int FinalBitmapSizeWidth) {
+	int height = BitmapSizeHeight;
+	int width = BitmapSizeWidth;
 
 	//make an array to hold the scaled bitmap
-	unsigned char* ScaledImage = new unsigned char[FinalBitmapSize*FinalBitmapSize];
+	unsigned char* ScaledImage = new unsigned char[FinalBitmapSizeHeight*FinalBitmapSizeWidth];
 	if (ScaledImage == NULL)
 		AfxMessageBox(_T("Error allocating memory for CFile,LoadSIFRec"), MB_OK);
 
 	//EXPAND THE IMAGE to FinalBitmapSize
-	if (height < FinalBitmapSize) {
+	if (height < FinalBitmapSizeHeight) {
 		int r, c, row, col, Index; //row and col correspond to InvertedImage
-		int Scale = FinalBitmapSize / height;
+		int Scale = FinalBitmapSizeHeight / height;
 
 		for (row = 0; row < height; row++) {
 			for (col = 0; col < width; col++) {
 				for (r = 0; r < Scale; r++) {
 					for (c = 0; c < Scale; c++)	{
-						Index = ((row*Scale) + r)*FinalBitmapSize + (col*Scale) + c;
+						Index = ((row*Scale) + r)*FinalBitmapSizeHeight + (col*Scale) + c;
 						ScaledImage[Index] = InvertedImage[row*height + col];
 					}
 				}
@@ -333,17 +283,17 @@ unsigned char* SLMController::ScaleBitmap(unsigned char* InvertedImage, int Bitm
 		}
 	}
 	//SHRINK THE IMAGE to FinalBitmapSize
-	else if (height > FinalBitmapSize) {
-		int Scale = height / FinalBitmapSize;
+	else if (height > FinalBitmapSizeHeight) {
+		int Scale = height / FinalBitmapSizeHeight;
 		for (int i = 0; i < height; i += Scale) {
 			for (int j = 0; j < width; j += Scale) {
-				ScaledImage[(i / Scale) + FinalBitmapSize*(j / Scale)] = InvertedImage[i + height*j];
+				ScaledImage[(i / Scale) + FinalBitmapSizeHeight*(j / Scale)] = InvertedImage[i + height*j];
 			}
 		}
 	}
 	//if the image is already the correct size, just copy the array over
 	else {
-		memcpy(ScaledImage, InvertedImage, FinalBitmapSize*FinalBitmapSize);
+		memcpy(ScaledImage, InvertedImage, FinalBitmapSizeHeight*FinalBitmapSizeWidth);
 	}
 	return(ScaledImage);
 }
@@ -425,6 +375,21 @@ bool SLMController::writeImageToBoard(int slmNum, unsigned char * image) {
 		return false;
 	}
 	else {
-		return this->blink_sdk->Write_image(slmNum + 1, image, this->getBoardHeight(slmNum), false, false, 0);
+		if (this->phaseCompensationToggle == true) {
+			SLM_Board * curBoard = this->boards[slmNum];
+			unsigned char * total = new unsigned char[curBoard->GetArea()];
+			// Assign total with sum of the image being written and the board's compensation data (mod 256)
+			for (int i = 0; i < curBoard->GetArea(); i++) {
+				total[i] = (image[i] + curBoard->PhaseCompensationData[i]) % 256;
+			}
+			// Write to board, save result and deallocate the total array before returning the results
+			bool result = this->blink_sdk->Write_image(slmNum + 1, total, this->getBoardHeight(slmNum), false, false, 0);
+			delete[] total;
+			return result;
+		}
+		else {// No phase compensation, write image directly and return results
+			return this->blink_sdk->Write_image(slmNum + 1, image, this->getBoardHeight(slmNum), false, false, 0);
+		}
+		
 	}
 }

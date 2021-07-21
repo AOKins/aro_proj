@@ -13,7 +13,7 @@ class SLMController {
 private:
 	//UI Reference
 	MainDialog* dlg;
-
+	bool phaseCompensationToggle;
 public:
 	//Board control
 	Blink_SDK* blink_sdk;			//Library that controls the SLMs
@@ -37,17 +37,6 @@ public:
 	// Repopulate the array of boards with what is currently connected and with some default values
 	bool repopulateBoardList();
 
-	/* LoadSequence: This function will load a series of two images to the PCIe board memory.
-	*                The first image is written to the first frame of memory in the hardware,
-	*  				 and the second image is written to the second frame.
-	*
-	* Modifications: Might need to change how we get a handle to the board, how we access
-	*				  PhaseCompensationData and SystemCompensationData.
-	*				  Once we're using Overdrive, I think it'll be easier because the
-	*				  construction of the sdk includes a correction file, and even in the
-	*  			  old code used the same correction file. */
-	void LoadSequence();
-
 	void setBoardImage(int boardIdx = 0);
 
 	void addBoard(SLM_Board* board);
@@ -57,7 +46,7 @@ public:
 
 	// Update the framerate for the boards according to the GUI to match camera setting
 	// Returns true if no errors, false if error occurs
-	bool updateFramerateFromGUI();
+	bool updateFromGUI();
 
 
 	// Assign and load LUT file
@@ -72,9 +61,9 @@ public:
 
 	//////////////////////////////////////////////////////////
 	//
-	//   ReadAndScaleBitmap()
+	//   LoadPhaseCompensationData()
 	//
-	//   Inputs: empty array to fill, the file name to read in
+	//   Inputs: board to assign phase compensation data with, the file name to read in
 	//
 	//   Returns: true if no errors, otherwise false
 	//
@@ -86,7 +75,7 @@ public:
 	//   Modifications: 
 	//
 	//////////////////////////////////////////////////////////
-	bool ReadAndScaleBitmap(SLM_Board* board, unsigned char *Image, std::string filename);
+	bool LoadPhaseCompensationData(SLM_Board* board, std::string filename);
 
 	bool slmCtrlReady();
 
@@ -127,7 +116,7 @@ private:
 	//   Modifications:
 	//
 	/////////////////////////////////////////////////////////////////////////
-	unsigned char* ScaleBitmap(unsigned char* InvertedImage, int BitmapSize, int FinalBitmapSize);
+	unsigned char* SLMController::ScaleBitmap(unsigned char* InvertedImage, int BitmapSizeHeight, int BitmapSizeWidth, int FinalBitmapSizeHeight, int FinalBitmapSizeWidth);
 };
 
 #endif
