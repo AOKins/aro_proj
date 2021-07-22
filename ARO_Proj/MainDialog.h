@@ -23,7 +23,6 @@ class CameraController;
 class MainDialog : public CDialog {
 public:
 	// [GLOBAL PARAMETERS]
-	int frameRate = 200; //200 FPS or 200 HZ (valid range 1 - 1000)
 	SLMController* slmCtrl;
 	CameraController* camCtrl;
 	FILE* fp;

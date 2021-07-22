@@ -7,6 +7,7 @@
 
 #include "MainDialog.h"			// Header file for dialog functions
 #include "SLMController.h"		// References to SLM controller for setting LUT files and power
+#include "CameraController.h"   // References which build version
 #include <fstream>				// for file i/o
 
 #include "Utility.h"			// For printLine console output
@@ -106,12 +107,14 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 		return false;
 	}
 	// Camera Dialog
-	else if (name == "framesPerSecond")
-		this->m_cameraControlDlg.m_FramesPerSecond.SetWindowTextW(valueStr);
 	else if (name == "initialExposureTime")
 		this->m_cameraControlDlg.m_initialExposureTimeInput.SetWindowTextW(valueStr);
+#ifdef USE_SPINNAKER
+	else if (name == "framesPerSecond")
+		this->m_cameraControlDlg.m_FramesPerSecond.SetWindowTextW(valueStr);
 	else if (name == "gamma")
 		this->m_cameraControlDlg.m_gammaValue.SetWindowTextW(valueStr);
+#endif
 	// AOI Dialog
 	else if (name == "leftAOI")
 		this->m_aoiControlDlg.m_leftInput.SetWindowTextW(valueStr);
@@ -328,22 +331,32 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	outFile.open(filePath);
 
 	outFile << "# ARO PROJECT CONFIGURATION FILE" << std::endl;
-	// Main Dialog
+	// Give which version (dependent on SDK) the configuration is for
+	outFile << "# For ";
+#ifdef USE_SPINNAKER
+	outFile << "SPINNAKER";
+#elif USE_PICAM
+	outFile << "PICAM";
+#endif
+	outFile << " version" << std::endl;
+
+	// Main Dialog settings
 	outFile << "# Multithreading" << std::endl;
 	outFile << "multiThreading=";
 	if (this->m_MultiThreadEnable.GetCheck() == BST_CHECKED) { outFile << "true" << std::endl; }
 	else { outFile << "false" << std::endl; }
 
-	// Camera Dialog
+	// Camera Dialog settings
 	outFile << "# Camera Settings" << std::endl;
+	outFile << "initialExposureTime=" << _tstof(tempBuff) << std::endl;
+	this->m_cameraControlDlg.m_gammaValue.GetWindowTextW(tempBuff);
+#ifdef USE_SPINNAKER
 	this->m_cameraControlDlg.m_FramesPerSecond.GetWindowTextW(tempBuff);
 	outFile << "framesPerSecond=" << _tstof(tempBuff) << std::endl;
 	this->m_cameraControlDlg.m_initialExposureTimeInput.GetWindowTextW(tempBuff);
-	outFile << "initialExposureTime=" << _tstof(tempBuff) << std::endl;
-	this->m_cameraControlDlg.m_gammaValue.GetWindowTextW(tempBuff);
 	outFile << "gamma=" << _tstof(tempBuff) << std::endl;
-
-	// AOI Dialog
+#endif
+	// AOI Dialog settings
 	outFile << "# AOI Settings" << std::endl;
 	this->m_aoiControlDlg.m_leftInput.GetWindowTextW(tempBuff);
 	outFile << "leftAOI=" << _tstof(tempBuff) << std::endl;
@@ -354,7 +367,7 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	this->m_aoiControlDlg.m_heightInput.GetWindowTextW(tempBuff);
 	outFile << "heightAOI=" << _tstof(tempBuff) << std::endl;
 
-	// Optimization Dialog
+	// Optimization Dialog settings
 	outFile << "# Optimization Settings" << std::endl;
 	this->m_optimizationControlDlg.m_binSize.GetWindowTextW(tempBuff);
 	outFile << "binSize=" << _tstof(tempBuff) << std::endl;
@@ -375,7 +388,8 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	outFile << "skipEliteReeval=";
 	if (this->m_optimizationControlDlg.m_skipEliteReevaluation.GetCheck() == BST_CHECKED) {	outFile << "true" << std::endl;	}
 	else {	outFile << "false" << std::endl; }
-	// SLM Dialog
+
+	// SLM Dialog settings
 	outFile << "# SLM Configuration Settings" << std::endl;
 	// SLM mode
 	outFile << "slmConfigMode=";

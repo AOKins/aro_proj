@@ -170,10 +170,12 @@ BOOL MainDialog::OnInitDialog() {
 void MainDialog::setDefaultUI() {
 	// Multithreading enabled by default
 	this->m_MultiThreadEnable.SetCheck(BST_CHECKED);
-	this->m_cameraControlDlg.m_FramesPerSecond.SetWindowTextW(_T("200"));
 	this->m_cameraControlDlg.m_initialExposureTimeInput.SetWindowTextW(_T("2000"));
+#ifdef USE_SPINNAKER
+	this->m_cameraControlDlg.m_FramesPerSecond.SetWindowTextW(_T("200"));
 	this->m_cameraControlDlg.m_gammaValue.SetWindowTextW(_T("1.00"));
-	
+#endif
+
 	this->m_optimizationControlDlg.m_binSize.SetWindowTextW(_T("16"));
 	this->m_optimizationControlDlg.m_numberBins.SetWindowTextW(_T("32"));
 	this->m_optimizationControlDlg.m_targetRadius.SetWindowTextW(_T("2"));
