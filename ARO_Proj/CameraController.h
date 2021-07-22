@@ -1,10 +1,14 @@
 // CameraController.h - file to determine which CameraController wrapper to include
 // When using camera controller, this header file should be what you include rather than from a specific SDK!
 
+// Forward declarations of the classes to be defined
 class CameraController;
 class ImageController;
 
-#define USE_PICAM
+// Define which version to build with (Spinnaker or PICam?)
+//#define USE_PICAM
+#define USE_SPINNAKER
+
 // Spinnaker version
 #ifdef USE_SPINNAKER
 	#include "CameraControllerSpinnaker.h"

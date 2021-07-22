@@ -182,7 +182,7 @@ bool SGA_Optimization::runIndividual(int indID) {
 				tFileLock.unlock();
 				// Save image
 				std::string curTime = Utility::getCurTime(); // Get current time to use as timeStamp
-				this->cc->saveImage(curImage, std::string(this->outputFolder + curTime + "_SGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite_Camera" + ".jpg"));
+				this->cc->saveImage(curImage, std::string(this->outputFolder + curTime + "_SGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite_Camera" + ".bmp"));
 				scalerLock.lock();
 				for (int popID = 0; popID < this->population.size(); popID++) {
 					scalers[popID]->TranslateImage(this->population[popID]->getGenome(this->population[popID]->getSize() - 1), this->slmScaledImages[popID]);

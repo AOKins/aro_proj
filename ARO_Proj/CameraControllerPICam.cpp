@@ -50,7 +50,7 @@ bool CameraController::setupCamera() {
 // Start acquisition
 bool CameraController::startCamera() {
 	
-	// Begin acquisition management
+	// Begin acquisition management when camera has been configured and is now ready to being acquiring images.
 	
 	return true;
 }
@@ -63,23 +63,25 @@ ImageController* CameraController::AcquireImage() {
 	PicamAvailableData curImageData;
 	PicamAcquisitionErrorsMask errors;
 
-	// Get the stride (size of image)
+	// Get the frame size (size of image data itself in bytes)
 	piint frame_size = 0;
 	Picam_GetParameterIntegerValue(this->camera_, PicamParameter_FrameSize, &frame_size);
-
+	int num_pixels = frame_size / 2; // Number of pixels is half the size in bytes (16 bit depth for each pixel)
 	// Grab an image
 	if (Picam_Acquire(this->camera_, 1, -1, &curImageData, &errors) != PicamError_None) {
 		Utility::printLine("ERROR: Failed to acquire data from camera!");
 		return NULL;
 	}
+
 	// Copy data into ImageController, but be sure to convert from 2 byte elements to 1 byte
-	return new ImageController((int*)curImageData.initial_readout, frame_size / 2, this->cameraImageWidth, this->cameraImageHeight);
+					// Casting pointer as type short (2 byte elements)
+	return new ImageController((short*)curImageData.initial_readout, num_pixels, this->cameraImageWidth, this->cameraImageHeight);
 }
 
 
 bool CameraController::stopCamera() {
 
-	// End acquisition
+	// End acquisition management but still need to have camera online for another run if needed
 
 	return true;
 }
@@ -264,7 +266,7 @@ bool CameraController::ConfigureCustomImageSettings() {
 		return false;
 	}
 	// ROI according to GUI
-	PicamRois* region;
+	const PicamRois* region;
 	/* Get the orinal ROI */
 	if (Picam_GetParameterRoisValue(this->camera_, PicamParameter_Rois, &region) != PicamError_None) {
 		Utility::printLine("ERROR: Failed to receive region");
@@ -301,11 +303,6 @@ bool CameraController::ConfigureCustomImageSettings() {
 	return true;
 }
 
-
-
-
-
-
 // Method of saving an image to a given file path
 bool CameraController::saveImage(ImageController * curImage, std::string path) {
 	if (curImage == NULL || curImage == nullptr) {
@@ -335,15 +332,15 @@ bool CameraController::GetCenter(int &x, int &y) {
 
 bool CameraController::GetFullImage(int &x, int &y) {
 	// Get the ROI constraints
-	PicamRoisConstraint * constraint;
-	PicamError error;
+	const PicamRoisConstraint * constraint;
+
 	if (Picam_GetParameterRoisConstraint(this->camera_, PicamParameter_Rois, PicamConstraintCategory_Required, &constraint) != PicamError_None) {
 		Utility::printLine("ERROR: Failed to get ROI constraints!");
 		return false;
 	}
 	// Set what the max dimensions are
-	x = constraint->width_constraint.maximum;
-	y = constraint->height_constraint.maximum;
+	x = int(constraint->width_constraint.maximum);
+	y = int(constraint->height_constraint.maximum);
 
 	/* Clean up constraints after using them */
 	Picam_DestroyRoisConstraints(constraint);
@@ -355,7 +352,7 @@ bool CameraController::hasCameras() {
 	pibln connected;
 	// Get if the camera is connected
 	Picam_IsCameraConnected(this->camera_, &connected);
-	return connected; 
+	return connected != 0;
 }
 
 // Exposure settings //

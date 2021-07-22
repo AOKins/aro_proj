@@ -264,7 +264,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>opencv_core248.lib;opencv_imgproc248.lib;opencv_highgui248.lib;Blink_SDK.lib;Spinnakerd_$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Picam.lib;opencv_core248.lib;opencv_imgproc248.lib;opencv_highgui248.lib;Blink_SDK.lib;Spinnakerd_$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:\Program Files\Princeton Instruments\PICam\Libraries;C:\Program Files\Point Grey Research\Spinnaker2013\lib64\vs2013;C:\opencv\build\x64\vc12\lib;C:\Program Files\Meadowlark Optics\Blink OverDrive Plus\SDK;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Midl>

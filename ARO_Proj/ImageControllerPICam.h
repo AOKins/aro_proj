@@ -1,16 +1,24 @@
-//TODO: Implement PICam version of ImageController
+////////////////////
+// ImageControllerPICam.h - Header file of ImageController with implementation using PICam SDK
+// Last edited: 07/22/2021 by Andrew O'Kins
+////////////////////
+
 #ifndef IMAGE_CONTROLLER_PICAM_H_
 #define IMAGE_CONTROLLER_PICAM_H_
 
-#include "picam.h"
-#include <fstream> // For save image
+#ifdef USE_PICAM // Only include implementation if building with PICam
+
+#include <opencv2\core\core.hpp> // For saving image
+#include <opencv2\highgui\highgui.hpp>
+
+// Note / TODO: Consider how to handle issue of image size received being larger (16 bit versus 8 bit)
 
 class ImageController {
 private:
-	unsigned char * data_;
-	int width_;
-	int height_;
-	int size_;
+	unsigned char * data_; // Raw data of the image - assuming that the image is 8 bit monochrome format (each element in array is a pixel)
+	int width_;			   // Width of the image in pixels
+	int height_;		   // Height of the image in pixels
+	int size_;			   // Total size of the image in bytes (which should be with current format equal to width*height)
 public:
 	ImageController() {
 		this->data_ = nullptr;
@@ -19,21 +27,27 @@ public:
 
 	// Constructor with set image to assign
 	// Performs deep copy, original should be safe to release
-	// Input:	rawData - pointer to image data
+	// Input:	rawData - pointer to image data (integer format, so needs to be compressed)
 	//			size - number of elements in rawData
-	ImageController(int * rawData, int size, int width, int height) {
-		this->size_;
-
+	//		    width - width of the image in pixels
+	//			height - height of the image in piels
+	ImageController(short * rawData, int size, int width, int height) {
+		this->size_ = size;
 		this->width_ = width;
 		this->height_ = height;
 
 		this->data_ = new unsigned char[size];
 		for (int index = 0; index < size; index++) {
-			this->data_[index] = rawData[index];
+			// Attempting a kind of compression to convert short size value to byte size (1/2 the size) by dividing it down so max of int is reduced to 255 and so on.
+			unsigned char byteData = unsigned char(rawData[index] / 128);
+			this->data_[index] = byteData;
 		}
 	}
 
+	// Copy constructor
 	ImageController(ImageController & other) {
+		this->width_ = other.getWidth();
+		this->height_ = other.getHeight();
 		this->size_ = other.getSize();
 		unsigned char * otherData = other.getRawData<unsigned char>();
 
@@ -43,11 +57,10 @@ public:
 		}
 	}
 
-	// Desturctor - checks if need to call Release()
+	// Desturctor
 	~ImageController() {
 		delete[] this->data_;
 	}
-
 
 	// Getter for release (used in copy constructor)
 	const int getSize() {
@@ -56,8 +69,8 @@ public:
 
 	// Returns pointer to data associated with the image
 	template <typename T>
-	T * getRawData() {
-		return static_cast<T>(this->data_);
+	unsigned char * getRawData() {
+		return this->data_;
 	}
 
 	// Return width of the Image
@@ -70,54 +83,13 @@ public:
 		return this->height_;
 	}
 
-	// Use the SDK's method of saving the image
+	// Output the image with given file path
 	void saveImage(std::string path) {
-		// No provided method in PICam, so attempting to implement personal bitmap image output
-		
-		// Open file
-		std::ofstream outputFile;
-		outputFile.open(path, std::ios::binary);
-
-		unsigned char tempValue;// Byte size variable for temp value to give (making sure it is only 1 byte in size)
-		// Resource: https://en.wikipedia.org/wiki/BMP_file_format & https://web.archive.org/web/20080912171714/http://www.fortunecity.com/skyscraper/windows/364/bmpffrmt.html
-		// File Header info // 
-		tempValue = 66; // B
-		outputFile << tempValue;
-		tempValue = 109; // M
-		outputFile << tempValue; 
-		// Size
-		tempValue = this->size_ * 3 + 55;
-		outputFile << tempValue;
-		// Reserved (can be 0)
-		tempValue = 0;
-		outputFile << tempValue << tempValue << tempValue << tempValue;
-
-		// Offset to start (starting address of the image data) and should take up 10 bytes
-		tempValue = 1078;
-		outputFile << tempValue;
-
-		// Bitmap Info Header
-		tempValue = 40;
-		outputFile << tempValue;
-		tempValue = 100;
-		outputFile << tempValue << tempValue;
-		tempValue = 1;
-		outputFile << tempValue;
-		tempValue = 8;
-		outputFile << tempValue;
-		tempValue = 0;
-		outputFile << tempValue << tempValue << tempValue << tempValue << tempValue << tempValue;
-		
-		// Data itself!
-		for (int i = 0; i < this->size_; i++) {
-			outputFile << this->data_[i]; // R
-			outputFile << this->data_[i]; // G
-			outputFile << this->data_[i]; // B
-		}
-
-		// Closing file, all done
-		outputFile.close();
+		// PICam does not offer it's own method of saving images, so using OpenCV's
+		cv::imwrite(path, cv::Mat(this->height_, this->width_, CV_8UC1, this->data_));
 	}
 };
+
+#endif
 
 #endif

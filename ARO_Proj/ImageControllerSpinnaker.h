@@ -2,7 +2,7 @@
 #ifndef IMAGE_CONTROLLER_SPINNAKER_H_
 #define IMAGE_CONTROLLER_SPINNAKER_H_
 
-#ifdef USE_SPINNAKER
+#ifdef USE_SPINNAKER // Only include implementation if building with Spinnaker
 
 #include "Spinnaker.h"
 #include "SpinGenApi\SpinnakerGenApi.h"
