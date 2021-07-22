@@ -14,11 +14,19 @@ Optimization::Optimization(MainDialog* dlg, CameraController* cc, SLMController*
 	// Read from the output dialog for output parameters
 	prepareOutputSettings();
 
+	// Check if using multithreading
 	if (dlg->m_MultiThreadEnable.GetCheck() == BST_CHECKED) {
 		this->multithreadEnable = true;
 	}
 	else {
 		this->multithreadEnable = false;
+	}
+	// Check if skipping elite
+	if (dlg->m_optimizationControlDlg.m_skipEliteReevaluation.GetCheck() == BST_CHECKED) {
+		this->skipEliteReevaluation = true;
+	}
+	else {
+		this->skipEliteReevaluation = false;
 	}
 }
 

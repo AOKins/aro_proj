@@ -45,6 +45,7 @@ protected:
 	bool saveTimeVSFitness = true;
 	bool saveExposureShorten = true;
 	bool multithreadEnable = true; // TRUE -> use multithreading
+	bool skipEliteReevaluation = false; // TRUE -> Will skip running elite individuals that should already have a fitness value
 
 	//Instance variables (used during optimization process)
 	// Values assigned within setupInstanceVariables(), then if needed cleared in shutdownOptimizationInstance()
