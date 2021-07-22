@@ -18,6 +18,7 @@ private:
 	std::vector<T>* genome_;
 
 	// The fitness of the individual, this must be assigned with set_fitness
+	// default value is -1 (an impossible real fitness value)
 	double fitness_;
 
 public:
@@ -25,6 +26,7 @@ public:
 	// Constructor
 	Individual(){
 		this->genome_ = NULL;
+		this->fitness_ = -1;
 	}
 
 	// Destructor

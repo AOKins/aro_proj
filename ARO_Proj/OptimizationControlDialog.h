@@ -33,4 +33,6 @@ public:
 	// Tool tips to help inform the user about a control
 	CToolTipCtrl * m_mainToolTips;
 	BOOL virtual PreTranslateMessage(MSG* pMsg);
+	// If toggled, will skip the elite individuals that were copied over
+	CButton m_skipEliteReevaluation;
 };

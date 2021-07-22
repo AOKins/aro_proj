@@ -24,6 +24,7 @@ BOOL OptimizationControlDialog::OnInitDialog() {
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_EDIT_TARGET_RADIUS), L"Radius of image to focus for optimizing intensity of");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_MAX_GENERATIONS), L"Maximum number of generations to allow the GA to evaluate (0 indicates indefinite)");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_MAX_SEC_INPUT), L"Maximum time to allow the GA to evaluate (0 indicates indefinite)");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SKIP_ELITE_CHECK), L"Skip individuals in a generation that already have a determined fitness");
 	this->m_mainToolTips->Activate(true);
 	return CDialogEx::OnInitDialog();
 }
@@ -42,6 +43,7 @@ void OptimizationControlDialog::DoDataExchange(CDataExchange* pDX) {
 	DDX_Control(pDX, IDC_EDIT_TARGET_RADIUS, m_targetRadius);
 	DDX_Control(pDX, IDC_MAX_GENERATIONS, m_maxGenerations);
 	DDX_Control(pDX, IDC_MAX_SEC_INPUT, m_maxSeconds);
+	DDX_Control(pDX, IDC_SKIP_ELITE_CHECK, m_skipEliteReevaluation);
 }
 
 

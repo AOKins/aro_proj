@@ -32,14 +32,18 @@ bool SGA_Optimization::runOptimization() {
 		for (this->curr_gen = 0; this->curr_gen < this->maxGenenerations && !this->stopConditionsMetFlag; this->curr_gen++) {
 			// Run each individual, giving them all fitness values as a result of their genome
 			for (int indID = 0; indID < population[0]->getSize(); indID++) {
-				if (this->multithreadEnable == true) {
-					// Lambda function to access this instance of Optimization to perform runIndividual
-					// Input: indID - index location to run individual from in population
-					// Captures: this - pointer to current SGA_Optimization instance
-					this->ind_threads.push_back(std::thread([this](int indID) {	this->runIndividual(indID); }, indID)); // Parallel
-				}
-				else {
-					this->runIndividual(indID); // Serial
+				// If skipping already evaluated toggled and this individual already has a fitness (not initial -1) then skip
+				if (this->skipEliteReevaluation == true && this->population[0]->getFitness(indID) != -1) {
+					// Decide if launching a seperate thread to run the individual or not
+					if (this->multithreadEnable == true) {
+						// Lambda function to access this instance of Optimization to perform runIndividual
+						// Input: indID - index location to run individual from in population
+						// Captures: this - pointer to current SGA_Optimization instance
+						this->ind_threads.push_back(std::thread([this](int indID) {	this->runIndividual(indID); }, indID)); // Parallel
+					}
+					else {
+						this->runIndividual(indID); // Serial
+					}
 				}
 			}
 			Utility::rejoinClear(this->ind_threads);
@@ -149,7 +153,7 @@ bool SGA_Optimization::runIndividual(int indID) {
 		hardwareLock.unlock(); // Now done with the hardware
 
 		// Giving error and ends early if there is no data
-		if (curImage == NULL) { // TODO: I think this is dangerous as Individual does not have default fitness if left unevaluated
+		if (curImage == NULL) {
 			consoleLock.lock();
 			Utility::printLine("ERROR: Image Acquisition has failed!");
 			consoleLock.unlock();
