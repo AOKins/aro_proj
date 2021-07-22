@@ -294,7 +294,7 @@
     <ClInclude Include="ImageScaler.h" />
     <ClInclude Include="MainDialog.h" />
     <ClInclude Include="Blink_SDK.h" />
-    <ClInclude Include="CamDisplay.h" />
+    <ClInclude Include="CameraDisplay.h" />
     <ClInclude Include="cdib.h" />
     <ClInclude Include="Individual.h" />
     <ClInclude Include="Optimization.h" />
@@ -322,7 +322,7 @@
     <ClCompile Include="CameraControllerSpinnaker.cpp" />
     <ClCompile Include="ImageScaler.cpp" />
     <ClCompile Include="MainDialog.cpp" />
-    <ClCompile Include="CamDisplay.cpp" />
+    <ClCompile Include="CameraDisplay.cpp" />
     <ClCompile Include="cdib.cpp" />
     <ClCompile Include="Optimization.cpp" />
     <ClCompile Include="OptimizationControlDialog.cpp" />

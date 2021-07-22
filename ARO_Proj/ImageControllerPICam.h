@@ -31,15 +31,16 @@ public:
 	//			size - number of elements in rawData
 	//		    width - width of the image in pixels
 	//			height - height of the image in piels
-	ImageController(short * rawData, int size, int width, int height) {
+	ImageController(unsigned short * rawData, int size, int width, int height) {
 		this->size_ = size;
 		this->width_ = width;
 		this->height_ = height;
 
 		this->data_ = new unsigned char[size];
 		for (int index = 0; index < size; index++) {
-			// Attempting a kind of compression to convert short size value to byte size (1/2 the size) by dividing it down so max of int is reduced to 255 and so on.
-			unsigned char byteData = unsigned char(rawData[index] / 128);
+			// Attempting a kind of compression to convert short size value to byte size (1/2 the size) by dividing it down so max is reduced to 255 and so on.
+			// Note that this not at all a lossless compression, but should work to having data comparable to Spinnaker's
+			unsigned char byteData = unsigned char(rawData[index] / 257);
 			this->data_[index] = byteData;
 		}
 	}

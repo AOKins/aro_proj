@@ -15,7 +15,7 @@
 #include "SLMController.h"		// pointer to access custom interface with slm
 #include "Timing.h"				// contains time keeping functions
 #include "ImageScaler.h"		// changes size of image to fit slm
-#include "CamDisplay.h"
+#include "CameraDisplay.h"		// display Camera & SLM images to the user in distinct windows
 
 class Optimization {
 protected:

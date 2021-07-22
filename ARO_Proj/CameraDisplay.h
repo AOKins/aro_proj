@@ -22,8 +22,12 @@ public:
 
 	// If display is open, window is destroyed
 	~CameraDisplay();
+	
+	// Open the window display with set window dimensions
+	void OpenDisplay(int window_width, int window_height);
+	// Resize the display with set window dimensions
+	void resizeDisplay(int new_width, int new_height);
 
-	void OpenDisplay();
 	void CloseDisplay();
 
 	// Update the display contents, if display not open it is also opened

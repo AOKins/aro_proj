@@ -20,8 +20,6 @@ CameraController::~CameraController() {
 	this->shutdownCamera();
 }
 
-
-
 // Call all configuration and setups to make sure it is ready before starting
 bool CameraController::setupCamera() {
 	if (this->camera_ == NULL) {
@@ -75,7 +73,7 @@ ImageController* CameraController::AcquireImage() {
 
 	// Copy data into ImageController, but be sure to convert from 2 byte elements to 1 byte
 					// Casting pointer as type short (2 byte elements)
-	return new ImageController((short*)curImageData.initial_readout, num_pixels, this->cameraImageWidth, this->cameraImageHeight);
+	return new ImageController((unsigned short*)curImageData.initial_readout, num_pixels, this->cameraImageWidth, this->cameraImageHeight);
 }
 
 

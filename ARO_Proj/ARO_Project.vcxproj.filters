@@ -27,9 +27,6 @@
     <ClInclude Include="BruteForce_Optimization.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CamDisplay.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="CameraControlDialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -114,6 +111,9 @@
     <ClInclude Include="ImageControllerPICam.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CameraDisplay.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AOIControlDialog.cpp">
@@ -123,9 +123,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BruteForce_Optimization.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CamDisplay.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CameraControlDialog.cpp">
@@ -180,6 +177,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CameraControllerPICam.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CameraDisplay.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
