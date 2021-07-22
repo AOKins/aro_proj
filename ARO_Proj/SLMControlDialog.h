@@ -26,7 +26,6 @@ protected:
 public:
 	afx_msg void OnBnClickedSlmPwrButton();
 	afx_msg void OnBnClickedSetlut();
-	afx_msg void OnBnClickedSetwfc();
 
 	CButton m_SlmPwrButton;
 	SLMController* getSLMCtrl();
@@ -34,8 +33,8 @@ public:
 	afx_msg void OnCbnChangeSlmAll();
 	void populateSLMlist();
 	bool attemptLUTload(int i, std::string filePath);
-	bool attemptWFCload(int i, std::string filePath);
-	// Selection List for current SLM to set LUT and WFC files
+
+	// Selection List for current SLM to set LUT files and power
 	// DON'T USE GetCurSel() with this!  Use this->slmSelectionID_
 	CComboBox slmSelection_;
 	// Current selection according to combo box, use this if you want current selection rather than GetCurSel
@@ -47,17 +46,12 @@ public:
 	// If TRUE then treat all the SLMs as the same rather than distinct
 	CButton SLM_SetALLSame_;
 	afx_msg void OnCbnSelchangeSlmSelect();
-	afx_msg void OnCompensatePhaseCheckbox();
 	CButton dualEnable;
 	afx_msg void OnBnClickedSlmDual();
-	BOOL m_CompensatePhase;
-	CButton m_CompensatePhaseCheckbox;
 
 	// Tool tips to help inform the user about a control
 	CToolTipCtrl * m_mainToolTips;
 	BOOL virtual PreTranslateMessage(MSG* pMsg);
-	// Field to show current WFC for a given board
-	CEdit m_WFC_pathDisplay;
 
 	// Field to show current board's LUT file path
 	CEdit m_LUT_pathDisplay;

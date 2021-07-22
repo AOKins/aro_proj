@@ -14,13 +14,10 @@ SLM_Board::SLM_Board(bool isNematic, int width, int height) {
 	int boardArea = width * height;
 	//Build paths to the calibrations for this SLM -- regional LUT included in Blink_SDK(), but need to pass NULL to that param to disable ODP. Might need to make a class.
 	this->LUTFileName = "linear.LUT";
-	this->PhaseCompensationFileName = "slm929_8bit.bmp";
-	this->PhaseCompensationData = new unsigned char[boardArea];
 }
 
 // Destructor
 SLM_Board::~SLM_Board() {
-	delete[] this->PhaseCompensationData;
 }
 
 // Return area of board image (width*height)

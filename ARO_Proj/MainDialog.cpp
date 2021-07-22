@@ -189,18 +189,6 @@ void MainDialog::setDefaultUI() {
 	this->m_aoiControlDlg.m_heightInput.SetWindowTextW(_T("64"));
 
 	//Use slm control reference to set additional settings
-	// - if the liquid crystal type is nematic, then allow the user the option to
-	//compensate for phase imperfections by applying a phase compensation image
-	if (this->slmCtrl != nullptr)	{
-		if (!this->slmCtrl->IsAnyNematic()) {
-			this->m_slmControlDlg.m_CompensatePhaseCheckbox.ShowWindow(false);
-		} else {
-			this->m_slmControlDlg.m_CompensatePhaseCheckbox.ShowWindow(true);
-		}
-	} else {
-		Utility::printLine("WARNING: SLM Control NULL");
-	}
-
 	this->m_slmControlDlg.populateSLMlist(); // Simple method to setup the list of selections
 	this->m_slmControlDlg.OnCbnSelchangeSlmSelect();
 

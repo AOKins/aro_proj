@@ -65,8 +65,6 @@ bool SLMController::repopulateBoardList() {
 	// Go through and generate new board structs with default filenames
 	for (unsigned int i = 1; i <= this->numBoards; i++) {
 		SLM_Board *curBoard = new SLM_Board(true, this->blink_sdk->Get_image_width(i), this->blink_sdk->Get_image_height(i));
-		// Load WFC file that is default to the board
-		LoadPhaseCompensationData(curBoard, curBoard->PhaseCompensationFileName);
 
 		//Add board info to board list
 		this->boards.push_back(curBoard);
@@ -120,90 +118,7 @@ SLMController::~SLMController() {
 
 // [UTILITY]
 
-//////////////////////////////////////////////////////////
-//
-//   ReadAndScaleBitmap()
-//
-//   Inputs: empty array to fill, the file name to read in
-//
-//   Returns: true if no errors, otherwise false
-//
-//   Purpose: This function will read in the bitmap and x-axis flip it. If there is a 
-//			  problem reading in the bitmap, we fill the array with zeros. This function
-//			  then calls ScaleBitmap so we can scale the bitmap to an image size based on
-//			  the board type.
-//
-//   Modifications: 
-//
-//////////////////////////////////////////////////////////
-bool SLMController::LoadPhaseCompensationData(SLM_Board *board, std::string filename) {
-	int width, height, bytespixel;
-
-	unsigned char* Image = board->PhaseCompensationData;
-
-	//need a tmpImage because we cannot assume that the bitmap we
-	//read in will be the correct dimensions
-	unsigned char* tmpImage;
-
-	//get a handle to our file
-	CFile *pFile = new CFile();
-	if (pFile == NULL) {
-		Utility::printLine("ERROR: allocating memory for pFile, LoadPhaseCompensationData");
-		return false;
-	}
-	//if it is a .bmp file and we can open it
-	CString file = CString(filename.c_str());
-	if (pFile->Open(file, CFile::modeRead | CFile::shareDenyNone, NULL)) {
-		//read in bitmap dimensions
-		CDib dib;
-		dib.Read(pFile);
-		width = dib.GetDimensions().cx;
-		height = dib.GetDimensions().cy;
-		bytespixel = dib.m_lpBMIH->biBitCount;
-		pFile->Close();
-		delete pFile;
-
-		//allocate our tmp array based on the bitmap dimensions
-		tmpImage = new unsigned char[height*width];
-
-		//flip the image right side up (INVERT)
-		for (int i = 0; i < height; i++) {
-			for (int j = 0; j < width; j++) {
-				if (bytespixel == 4)
-					tmpImage[((height - 1) - i)*height + j] = dib.m_lpImage[i*(height / 2) + (j / 2)];
-				if (bytespixel == 8)
-					tmpImage[((height - 1) - i)*height + j] = dib.m_lpImage[i*height + j];
-				if (bytespixel == 16)
-					tmpImage[((height - 1) - i)*height + j] = dib.m_lpImage[i * 2 * height + j * 2];
-				if (bytespixel == 24)
-					tmpImage[((height - 1) - i)*height + j] = dib.m_lpImage[i * 3 * height + j * 3];
-			}
-		}
-		dib.~CDib();
-	}
-	//we could not open the file, or the file was not a .bmp
-	else {
-		//depending on if we are trying to read a bitmap to dowload
-		//or if we are trying to read it for the screen, memset
-		//the array to zero and return false
-		memset(board->PhaseCompensationData, '0', board->GetArea());
-		Utility::printLine("ERROR: Failed to load compensation file '" + filename+ "'! Populating data with '0'");
-		return false;
-	}
-
-	//scale the bitmap to fit the board
-	unsigned char* ScaledImage = ScaleBitmap(tmpImage, height, width, board->imageHeight, board->imageWidth);
-
-	//copy the scaled bitmap into the array passed into the function
-	memcpy(board->PhaseCompensationData, ScaledImage, board->GetArea());
-
-	//delete tmp array to avoid mem leaks
-	delete[]tmpImage;
-
-	return true;
-}
-
-// Update the framerate and phase toggle for the boards according to the GUI to match camera setting
+// Update the framerate for the boards according to the GUI to match camera setting
 	// Returns true if no errors, false if error occurs
 bool SLMController::updateFromGUI() {
 	for (int i = 0; i < this->boards.size(); i++) {
@@ -229,74 +144,10 @@ bool SLMController::updateFromGUI() {
 			return false;
 		}
 	}
-	// Determine if we will be enabling the usage of the phase compensation
-	if (this->dlg->m_slmControlDlg.m_CompensatePhaseCheckbox.GetCheck() == BST_CHECKED) {
-		this->phaseCompensationToggle = true;
-	}
-	else {
-		this->phaseCompensationToggle = false;
-	}
 
 	return true; // no issues!
 }
 
-////////////////////////////////////////////////////////////////////////
-//
-//   ScaleBitmap()
-//
-//   Inputs: the array that holds the image to scale, the current bitmap size, 
-//			 the final bitmap size
-//
-//   Returns: the scaled image
-//
-//   Purpose: This will scale the bitmap from its initial size to a 128x128
-//			  if load is set to false. Otherwise the image is scaled to a 
-//			  512x512 if the board type is set to 512ASLM, or 256x256 if the 
-//			  board type is set to 256ASLM
-//
-//   Modifications:
-//
-/////////////////////////////////////////////////////////////////////////
-unsigned char* SLMController::ScaleBitmap(unsigned char* InvertedImage, int BitmapSizeHeight, int BitmapSizeWidth, int FinalBitmapSizeHeight, int FinalBitmapSizeWidth) {
-	int height = BitmapSizeHeight;
-	int width = BitmapSizeWidth;
-
-	//make an array to hold the scaled bitmap
-	unsigned char* ScaledImage = new unsigned char[FinalBitmapSizeHeight*FinalBitmapSizeWidth];
-	if (ScaledImage == NULL)
-		AfxMessageBox(_T("Error allocating memory for CFile,LoadSIFRec"), MB_OK);
-
-	//EXPAND THE IMAGE to FinalBitmapSize
-	if (height < FinalBitmapSizeHeight) {
-		int r, c, row, col, Index; //row and col correspond to InvertedImage
-		int Scale = FinalBitmapSizeHeight / height;
-
-		for (row = 0; row < height; row++) {
-			for (col = 0; col < width; col++) {
-				for (r = 0; r < Scale; r++) {
-					for (c = 0; c < Scale; c++)	{
-						Index = ((row*Scale) + r)*FinalBitmapSizeHeight + (col*Scale) + c;
-						ScaledImage[Index] = InvertedImage[row*height + col];
-					}
-				}
-			}
-		}
-	}
-	//SHRINK THE IMAGE to FinalBitmapSize
-	else if (height > FinalBitmapSizeHeight) {
-		int Scale = height / FinalBitmapSizeHeight;
-		for (int i = 0; i < height; i += Scale) {
-			for (int j = 0; j < width; j += Scale) {
-				ScaledImage[(i / Scale) + FinalBitmapSizeHeight*(j / Scale)] = InvertedImage[i + height*j];
-			}
-		}
-	}
-	//if the image is already the correct size, just copy the array over
-	else {
-		memcpy(ScaledImage, InvertedImage, FinalBitmapSizeHeight*FinalBitmapSizeWidth);
-	}
-	return(ScaledImage);
-}
 
 bool SLMController::IsAnyNematic() {
 	for (int i = 0; 0 < boards.size(); i++) {
@@ -375,21 +226,6 @@ bool SLMController::writeImageToBoard(int slmNum, unsigned char * image) {
 		return false;
 	}
 	else {
-		if (this->phaseCompensationToggle == true) {
-			SLM_Board * curBoard = this->boards[slmNum];
-			unsigned char * total = new unsigned char[curBoard->GetArea()];
-			// Assign total with sum of the image being written and the board's compensation data (mod 256)
-			for (int i = 0; i < curBoard->GetArea(); i++) {
-				total[i] = (image[i] + curBoard->PhaseCompensationData[i]) % 256;
-			}
-			// Write to board, save result and deallocate the total array before returning the results
-			bool result = this->blink_sdk->Write_image(slmNum + 1, total, this->getBoardHeight(slmNum), false, false, 0);
-			delete[] total;
-			return result;
-		}
-		else {// No phase compensation, write image directly and return results
-			return this->blink_sdk->Write_image(slmNum + 1, image, this->getBoardHeight(slmNum), false, false, 0);
-		}
-		
+		return this->blink_sdk->Write_image(slmNum + 1, image, this->getBoardHeight(slmNum), false, false, 0);
 	}
 }

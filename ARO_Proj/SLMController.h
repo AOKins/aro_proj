@@ -13,7 +13,6 @@ class SLMController {
 private:
 	//UI Reference
 	MainDialog* dlg;
-	bool phaseCompensationToggle;
 public:
 	//Board control
 	Blink_SDK* blink_sdk;			//Library that controls the SLMs
@@ -58,24 +57,6 @@ public:
 	//		returns true if no errors
 	//		returns false if an error occurs while attempting to load LUT file
 	bool AssignLUTFile(int boardIdx, std::string);
-
-	//////////////////////////////////////////////////////////
-	//
-	//   LoadPhaseCompensationData()
-	//
-	//   Inputs: board to assign phase compensation data with, the file name to read in
-	//
-	//   Returns: true if no errors, otherwise false
-	//
-	//   Purpose: This function will read in the bitmap and x-axis flip it. If there is a 
-	//			  problem reading in the bitmap, we fill the array with zeros. This function
-	//			  then calls ScaleBitmap so we can scale the bitmap to an image size based on
-	//			  the board type.
-	//
-	//   Modifications: 
-	//
-	//////////////////////////////////////////////////////////
-	bool LoadPhaseCompensationData(SLM_Board* board, std::string filename);
 
 	bool slmCtrlReady();
 

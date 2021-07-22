@@ -57,9 +57,8 @@ public:
 	}
 
 	// Returns pointer to data associated with the image
-	template <typename T>
-	T * getRawData() {
-		return static_cast<T*>(this->image_->GetData());
+	unsigned char * getRawData() {
+		return static_cast<unsigned char *>(this->image_->GetData());
 	}
 
 	// Return width of the Image

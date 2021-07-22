@@ -59,11 +59,11 @@ bool SGA_Optimization::runOptimization() {
 			Utility::rejoinClear(this->ind_threads);
 			// Update displays with best individual now that they are done
 			if (this->displayCamImage) {
-				this->camDisplay->UpdateDisplay(this->bestImage->getRawData<unsigned char>());
+				this->camDisplay->UpdateDisplay(this->bestImage->getRawData());
 			}
 			if (this->displaySLMImage) {
 				for (int slmID = 0; slmID < this->popCount; slmID++) {
-					this->scalers[slmID]->TranslateImage(this->population[slmID]->getGenome(this->populationSize - 1), this->slmScaledImages[slmID]);
+					this->scalers[slmID]->TranslateImage(this->population[slmID]->getGenome(this->populationSize - 1)->data(), this->slmScaledImages[slmID]);
 					this->slmDisplayVector[slmID]->UpdateDisplay(this->slmScaledImages[slmID]);
 				}
 			}
@@ -140,7 +140,7 @@ bool SGA_Optimization::runIndividual(int indID) {
 		scalerLock.lock();
 		for (int i = 0; i < this->popCount; i++) {
 			// Scale the individual genome to fit SLM
-			this->scalers[i]->TranslateImage(this->population[i]->getGenome(indID), this->slmScaledImages[i]); // Translate the vector genome into char array image
+			this->scalers[i]->TranslateImage(this->population[i]->getGenome(indID)->data(), this->slmScaledImages[i]); // Translate the vector genome into char array image
 			// Write to SLM
 			this->sc->writeImageToBoard(i, this->slmScaledImages[i]);
 		}
@@ -162,7 +162,7 @@ bool SGA_Optimization::runIndividual(int indID) {
 		// Getting the image dimensions and data from resulting image
 		int imgWidth = curImage->getWidth();
 		int imgHeight = curImage->getHeight();
-		unsigned char * camImg = curImage->getRawData<unsigned char>();
+		unsigned char * camImg = curImage->getRawData();
 
 		// Get current exposure setting of camera (relative to initial)
 		double exposureTimesRatio = this->cc->GetExposureRatio();	// needed for proper fitness value across changing exposure time
@@ -189,7 +189,7 @@ bool SGA_Optimization::runIndividual(int indID) {
 				this->cc->saveImage(curImage, std::string(this->outputFolder + curTime + "_SGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite_Camera" + ".bmp"));
 				scalerLock.lock();
 				for (int popID = 0; popID < this->population.size(); popID++) {
-					scalers[popID]->TranslateImage(this->population[popID]->getGenome(this->population[popID]->getSize() - 1), this->slmScaledImages[popID]);
+					scalers[popID]->TranslateImage(this->population[popID]->getGenome(this->population[popID]->getSize() - 1)->data(), this->slmScaledImages[popID]);
 					cv::Mat m_ary = cv::Mat(512, 512, CV_8UC1, this->slmScaledImages[popID]);
 					cv::imwrite(this->outputFolder + curTime + "_SGA_Gen_"+std::to_string(this->curr_gen + 1) +"_Elite_SLM_" + std::to_string(popID) + ".bmp", m_ary);
 				}
@@ -312,7 +312,7 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	// Only save images if not aborting (successful results)
 	if (this->dlg->stopFlag == false && this->saveResultImages) {
 		// Get elite info
-		unsigned char* eliteImage = this->bestImage->getRawData<unsigned char>();
+		unsigned char* eliteImage = this->bestImage->getRawData();
 		int imgHeight = this->bestImage->getHeight();
 		int imgWidth = this->bestImage->getWidth();
 
@@ -321,7 +321,7 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 
 		// Save final (most fit SLM images)
 		for (int popID = 0; popID < this->population.size(); popID++) {
-			scalers[popID]->TranslateImage(this->population[popID]->getGenome(this->population[popID]->getSize() - 1), this->slmScaledImages[popID]);
+			scalers[popID]->TranslateImage(this->population[popID]->getGenome(this->population[popID]->getSize() - 1)->data(), this->slmScaledImages[popID]);
 			cv::Mat m_ary = cv::Mat(512, 512, CV_8UC1, this->slmScaledImages[popID]);
 			cv::imwrite(this->outputFolder + curTime + "_SGA_phaseopt_SLM_" + std::to_string(popID) + ".bmp", m_ary);
 		}

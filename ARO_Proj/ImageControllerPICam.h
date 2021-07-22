@@ -69,7 +69,6 @@ public:
 	}
 
 	// Returns pointer to data associated with the image
-	template <typename T>
 	unsigned char * getRawData() {
 		return this->data_;
 	}

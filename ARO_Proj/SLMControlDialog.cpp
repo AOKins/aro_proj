@@ -34,10 +34,8 @@ BOOL SLMControlDialog::OnInitDialog() {
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_MULTI), L"Optimize all connected boards at the same time");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_ALLSAME), L"Set to ignore select SLM and apply changes in settings to all connected boards");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_DUAL), L"Optimize first two connected boards at the same time");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_CURRENT_WFC_OUT), L"The current wave compensation file being assigned to this SLM");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_CURR_LUT_OUT), L"The current LUT file being assigned to this SLM");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SETLUT), L"Set LUT file for the selected board(s)");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SETWFC), L"Set wavefront compensation file for the selected board(s)");
 	this->m_mainToolTips->Activate(true);
 
 	return CDialogEx::OnInitDialog();
@@ -51,25 +49,20 @@ SLMControlDialog::~SLMControlDialog()
 void SLMControlDialog::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
-	DDX_Check(pDX, IDC_COMPENSATE_PHASE_CHECKBOX, m_CompensatePhase);
-	DDX_Control(pDX, IDC_COMPENSATE_PHASE_CHECKBOX, m_CompensatePhaseCheckbox);
 	DDX_Control(pDX, IDC_SLM_PWR_BUTTON, m_SlmPwrButton);
 	DDX_Control(pDX, ID_SLM_SELECT, slmSelection_);
 	DDX_Control(pDX, IDC_SLM_MULTI, multiEnable);
 	DDX_Control(pDX, IDC_SLM_ALLSAME, SLM_SetALLSame_);
 	DDX_Control(pDX, IDC_SLM_DUAL, dualEnable);
-	DDX_Control(pDX, IDC_CURRENT_WFC_OUT, m_WFC_pathDisplay);
 	DDX_Control(pDX, IDC_CURR_LUT_OUT, m_LUT_pathDisplay);
 }
 
 BEGIN_MESSAGE_MAP(SLMControlDialog, CDialogEx)
 	ON_BN_CLICKED(IDC_SLM_PWR_BUTTON, &SLMControlDialog::OnBnClickedSlmPwrButton)
 	ON_BN_CLICKED(IDC_SETLUT, &SLMControlDialog::OnBnClickedSetlut)
-	ON_BN_CLICKED(IDC_SETWFC, &SLMControlDialog::OnBnClickedSetwfc)
 	ON_BN_CLICKED(IDC_SLM_MULTI, &SLMControlDialog::OnBnClickedMultiSLM)
 	ON_CBN_SELCHANGE(IDC_SLM_ALLSAME, &SLMControlDialog::OnCbnChangeSlmAll)
 	ON_CBN_SELCHANGE(ID_SLM_SELECT, &SLMControlDialog::OnCbnSelchangeSlmSelect)
-	ON_BN_CLICKED(IDC_COMPENSATE_PHASE_CHECKBOX, &SLMControlDialog::OnCompensatePhaseCheckbox)
 	ON_BN_CLICKED(IDC_SLM_DUAL, &SLMControlDialog::OnBnClickedSlmDual)
 END_MESSAGE_MAP()
 
@@ -84,9 +77,6 @@ BOOL SLMControlDialog::PreTranslateMessage(MSG* pMsg) {
 void SLMControlDialog::OnCbnSelchangeSlmSelect() { 
 	// Update current SLM selection
 	this->slmSelectionID_ = this->slmSelection_.GetCurSel();
-	// Update Phase Compensation File path
-	CString WFCpath(this->slmCtrl->boards[this->slmSelectionID_]->PhaseCompensationFileName.c_str());
-	this->m_WFC_pathDisplay.SetWindowTextW(WFCpath);
 	// Update LUT file name
 	CString LUTpath(this->slmCtrl->boards[this->slmSelectionID_]->LUTFileName.c_str());
 	this->m_LUT_pathDisplay.SetWindowTextW(LUTpath);
@@ -225,98 +215,12 @@ void SLMControlDialog::OnBnClickedSetlut() {
 	} while (tryAgain);
 }
 
-// Method for encapsulating the UX of setting WFC file for given board and filepath
-// Input:
-//		slmNum - the board being assigned (0 based index)
-//		filePath - string to path of the LUT file being loaded
-// Output: returns true if error occurs and user does not select retry, false otherwise
-//		When an error occurs in loading LUT file, gives message box with option to retry or cancel
-bool SLMControlDialog::attemptWFCload(int slmNum, std::string filePath) {
-	bool noErrors = true;
-	if (slmNum >= this->slmCtrl->boards.size() || slmNum < 0) {
-		std::string errMsg = "Failed to assign given WFC file " + filePath + " to board " + std::to_string(slmNum) + " as there is none at this position!";
-		noErrors = false;
-		MessageBox(
-			(LPCWSTR)(errMsg.c_str()),
-			(LPCWSTR)L"ERROR in SLM selection!",
-			MB_ICONERROR | MB_OK
-			);
-		return noErrors;
-	}
-	SLM_Board * board = slmCtrl->boards[slmNum];
-	// Read and assign the image file to PhaseCompensationData
-	if (!slmCtrl->LoadPhaseCompensationData(board, filePath)) {
-		std::string errMsg = "Failed to assign given WFC file '" + filePath + "' to board " + std::to_string(slmNum) + "!";
-		// Notify user of error in LUT file loading and get response action
-		Utility::printLine("ERROR: " + errMsg);
-		// Resource: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-messagebox
-		int err_response = MessageBox(
-			(LPCWSTR)(errMsg.c_str()),
-			(LPCWSTR)L"ERROR in file load!",
-			MB_ICONERROR | MB_RETRYCANCEL
-			);
-		// Respond to decision
-		switch (err_response) {
-			case IDRETRY:
-				noErrors = false;
-				break;
-			default: // Cancel or other unknown response will not have try again to make sure not stuck in undesired loop
-				noErrors = true;
-		}
-	}
-	else { // If no issue update the file name
-		board->PhaseCompensationFileName = filePath;
-	}
-	// Update GUI
-	CString fileCS(board->PhaseCompensationFileName.c_str());
-	this->m_LUT_pathDisplay.SetWindowTextW(fileCS);
-	return noErrors;
-}
-
-void SLMControlDialog::OnBnClickedSetwfc() {
-	bool tryAgain;
-	CString fileName;
-	std::string filePath;
-	do {
-		// Attempt to select WFC file
-		tryAgain = false;
-		LPWSTR p = fileName.GetBuffer(FILE_LIST_BUFFER_SIZE);
-		static TCHAR BASED_CODE filterFiles[] = _T("BMP Files (*.bmp)|*.bmp|ALL Files (*.*)|*.*||");
-		// Construct and open standard Windows file dialog box with default filename being "./slm3986_at532_P8.LUT"
-		CFileDialog dlgFile(TRUE, NULL, L"./Blank.bmp", OFN_FILEMUSTEXIST, filterFiles);
-		OPENFILENAME& ofn = dlgFile.GetOFN();
-		ofn.lpstrFile = p;
-		ofn.nMaxFile = FILE_LIST_BUFFER_SIZE;
-
-		if (dlgFile.DoModal() == IDOK)	{
-			fileName = dlgFile.GetPathName();
-			fileName.ReleaseBuffer();
-			filePath = CT2A(fileName);
-			int slmNum;
-			// If not set to set all SLMs, then get current selection and set only that one
-			if (this->SLM_SetALLSame_.GetCheck() == BST_UNCHECKED) {
-				slmNum = this->slmSelection_.GetCurSel(); // NOTE: GetCurSel is index of selection and doesn't refer to "face value" of the selection
-				tryAgain = !attemptWFCload(slmNum, filePath);
-			}
-			else {
-				for (slmNum = 0; slmNum < this->slmCtrl->boards.size() && !tryAgain; slmNum++) {
-					tryAgain = !attemptWFCload(slmNum, filePath);
-				}
-			}
-		}
-		else {
-			Utility::printLine("INFO: Cancelled setting WFC file, no change made.");
-			tryAgain = false;
-		}
-	} while (tryAgain);
-}
-
 SLMController* SLMControlDialog::getSLMCtrl() { return this->slmCtrl; }
 
 void SLMControlDialog::OnCbnChangeSlmAll() {
 	// If ALLSame is enabled, then disable the SLM selection box
 	if (this->SLM_SetALLSame_.GetCheck() == BST_CHECKED) {
-		Utility::printLine("INFO: Set to all SLM being the same! Now when setting LUT/WFC it will apply to all the SLMs!");
+		Utility::printLine("INFO: Set to all SLM being the same! Now when setting LUT/Power it will apply to all the SLMs!");
 		this->slmSelection_.EnableWindow(false);
 	}
 	// If ALLSame is disabled, then enable the SLM selection box
@@ -386,22 +290,4 @@ void SLMControlDialog::OnBnClickedSlmDual() {
 	else {
 		Utility::printLine("INFO: Dual-SLM has been disabled");
 	}
-}
-
-/////////////////////////////////////////////////////
-//
-//   OnCompensatePhaseCheckbox()
-//
-//   Inputs: none
-//
-//   Returns: none
-//
-//   Purpose: This function is called if the ser clicks on the checkbox labeled "apply phase compensation."
-//			  This will enable the usage of the PhaseCompensationData on writing images to the SLMs
-//
-//   Modifications:
-//
-//////////////////////////////////////////////////
-void SLMControlDialog::OnCompensatePhaseCheckbox() {
-	UpdateData(true);
 }

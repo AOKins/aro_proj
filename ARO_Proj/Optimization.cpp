@@ -1,5 +1,6 @@
 #include "stdafx.h"				// Required in source
 #include "Optimization.h"		// Header file
+#include "Utility.h"
 
 Optimization::Optimization(MainDialog* dlg, CameraController* cc, SLMController* sc) {
 	if (cc == nullptr)
@@ -229,9 +230,8 @@ ImageScaler* Optimization::setupScaler(unsigned char *slmImg, int slmNum = 0) {
 	int width = int(sc->getBoardWidth(slmNum));
 	int height = int(sc->getBoardHeight(slmNum));
 
-	ImageScaler* scaler = new ImageScaler(width, height, 1, NULL);
+	ImageScaler* scaler = new ImageScaler(width, height, 1);
 	scaler->SetBinSize(cc->binSizeX, cc->binSizeY);
-	scaler->SetLUT(NULL);
 	scaler->SetUsedBins(cc->numberOfBinsX, cc->numberOfBinsY);
 	scaler->ZeroOutputImage(slmImg); // Initialize the slm image array to be all zeros
 
@@ -272,7 +272,6 @@ void Optimization::saveParameters(std::string time, std::string optType) {
 	paramFile << "Number of Boards being Optimized - " << std::to_string(this->popCount) << std::endl;
 	for (int i = 0; i < int(this->sc->numBoards); i++) {
 		paramFile << "Board #" << i << " LUT filePath - " << this->sc->boards[i]->LUTFileName << std::endl;
-		paramFile << "Board #" << i << " WFC filePath - " << this->sc->boards[i]->PhaseCompensationFileName << std::endl;
 	}
 	paramFile.close();
 }

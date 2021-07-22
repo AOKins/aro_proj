@@ -6,7 +6,7 @@
 #include "stdafx.h"				// Required in source
 
 #include "MainDialog.h"			// Header file for dialog functions
-#include "SLMController.h"		// References to SLM controller for setting LUT and WFC files
+#include "SLMController.h"		// References to SLM controller for setting LUT files and power
 #include <fstream>				// for file i/o
 
 #include "Utility.h"			// For printLine console output
@@ -189,21 +189,6 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 			return false;
 		}
 	}
-	else if (name.substr(0, 14) == "slmWfcFilePath") {
-		// We are dealing with WFC file setting
-		int boardID = std::stoi(name.substr(14, name.length() - 14)) - 1;
-		
-		if (this->slmCtrl != NULL) {
-			if (boardID < this->slmCtrl->boards.size() && boardID >= 0) {
-				// Resource for conversion https://stackoverflow.com/questions/258050/how-do-you-convert-cstring-and-stdstring-stdwstring-to-each-other
-				CT2CA converString(valueStr);
-				this->m_slmControlDlg.attemptWFCload(boardID, std::string(converString));
-			}
-			else {
-				Utility::printLine("WARNING: Load setting attempted to assign WFC file out of bounds!");
-			}
-		}
-	}
 	else if (name.substr(0, 10) == "slmPowered") {
 		int boardID = std::stoi(name.substr(10, name.length() - 10)) - 1;
 
@@ -224,14 +209,9 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 				}
 			}
 			else {
-				Utility::printLine("WARNING: Load setting attempted to assign WFC file out of bounds!");
+				Utility::printLine("WARNING: Load setting attempted to set power to a board out of bounds!");
 			}
 		}
-	}
-
-	else if (name == "phaseCompensation") {
-		if (value == "true") {	this->m_slmControlDlg.m_CompensatePhaseCheckbox.SetCheck(BST_CHECKED);	}
-		else {	this->m_slmControlDlg.m_CompensatePhaseCheckbox.SetCheck(BST_UNCHECKED);	}
 	}
 
 	else if (name == "SLMselectAll") {
@@ -398,9 +378,6 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	// SLM Dialog
 	outFile << "# SLM Configuration Settings" << std::endl;
 	// SLM mode
-	outFile << "phaseCompensation=";
-	if (this->m_slmControlDlg.m_CompensatePhase) { outFile << "true\n"; }
-	else { outFile << "false\n"; }
 	outFile << "slmConfigMode=";
 	if (this->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED) { outFile << "dual\n"; }
 	else if (this->m_slmControlDlg.multiEnable.GetCheck() == BST_CHECKED) { outFile << "multi\n"; }
@@ -409,10 +386,9 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 
 	// Quick Check for SLMs
 	if (this->slmCtrl != NULL) {
-		// Output the LUT file paths being used for every board and PhaseCompensationFile as well as if the SLM is powered or not
+		// Output the LUT file paths being used for every board and if the SLM is powered or not
 		for (int i = 0; i < this->slmCtrl->boards.size(); i++) {
 			outFile << "slmLutFilePath" << std::to_string(i + 1) << "=" << this->slmCtrl->boards[i]->LUTFileName << "\n";
-			outFile << "slmWfcFilePath" << std::to_string(i + 1) << "=" << this->slmCtrl->boards[i]->PhaseCompensationFileName << "\n";
 			outFile << "slmPowered" << std::to_string(i + 1) << "=";
 			if (this->slmCtrl->boards[i]->isPoweredOn()) { outFile << "true\n"; }
 			else { outFile << "false\n"; }

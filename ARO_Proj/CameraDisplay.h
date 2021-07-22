@@ -3,10 +3,8 @@
 
 #include <opencv2\core\core.hpp>
 #include <opencv2\highgui\highgui.hpp>
-#include <opencv2\imgproc\imgproc.hpp>
 
 #include <string>
-#include "Utility.h"
 
 class CameraDisplay {
 private:
@@ -23,8 +21,8 @@ public:
 	// If display is open, window is destroyed
 	~CameraDisplay();
 	
-	// Open the window display with set window dimensions
-	void OpenDisplay(int window_width, int window_height);
+	// Open the window display with set window dimensions (default 240x240)
+	void OpenDisplay(int window_width = 240, int window_height = 240);
 	// Resize the display with set window dimensions
 	void resizeDisplay(int new_width, int new_height);
 
