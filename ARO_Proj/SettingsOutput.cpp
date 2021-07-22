@@ -4,12 +4,12 @@
 // Last edited: 07/15/2021 by Andrew O'Kins
 ////////////////////
 #include "stdafx.h"				// Required in source
-#include "resource.h"
+
 #include "MainDialog.h"			// Header file for dialog functions
 #include "SLMController.h"		// References to SLM controller for setting LUT and WFC files
 #include <fstream>				// for file i/o
 
-#include "Utility.h"			// Collection of static helper functions
+#include "Utility.h"			// For printLine console output
 
 #define MAX_CFileDialog_FILE_COUNT 99
 #define FILE_LIST_BUFFER_SIZE ((MAX_CFileDialog_FILE_COUNT * (MAX_PATH + 1)) + 1)
@@ -61,6 +61,7 @@ void MainDialog::OnBnClickedLoadSettings() {
 }
 
 // Set the UI according to given file path, called from Load Settings
+// Order dependent input from file!
 bool MainDialog::setUIfromFile(std::string filePath) {
 	// Open file
 	std::ifstream inputFile(filePath);
@@ -137,6 +138,13 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 		this->m_optimizationControlDlg.m_minGenerations.SetWindowTextW(valueStr);
 	else if (name == "maxGenerations")
 		this->m_optimizationControlDlg.m_maxGenerations.SetWindowTextW(valueStr);
+	else if (name == "skipEliteReeval") {
+		if (valueStr == "true")
+			this->m_optimizationControlDlg.m_skipEliteReevaluation.SetCheck(BST_CHECKED);
+		else
+			this->m_optimizationControlDlg.m_skipEliteReevaluation.SetCheck(BST_UNCHECKED);
+	}
+
 	// SLM Dialog
 	else if (name == "slmConfigMode") {
 		if (valueStr == "multi") {
@@ -150,6 +158,16 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 		else {
 			this->m_slmControlDlg.multiEnable.SetCheck(BST_UNCHECKED);
 			this->m_slmControlDlg.dualEnable.SetCheck(BST_UNCHECKED);
+		}
+	}
+	else if (name == "slmSelect")  {
+		int selectID = std::stoi(value.c_str()) - 1; // Correct from base 1 index to 0 based
+		if (selectID >= this->slmCtrl->boards.size() || selectID < 0) {
+			Utility::printLine("WARNING: Load setting attempted to set select SLM out of bounds!");
+			return false;
+		}
+		else {
+			this->m_slmControlDlg.slmSelection_.SetCurSel(selectID);
 		}
 	}
 	else if (name.substr(0, 14) == "slmLutFilePath") {
@@ -174,7 +192,7 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 	else if (name.substr(0, 14) == "slmWfcFilePath") {
 		// We are dealing with WFC file setting
 		int boardID = std::stoi(name.substr(14, name.length() - 14)) - 1;
-		Utility::printLine("DEBUG: WFC boardID->" + std::to_string(boardID));
+		
 		if (this->slmCtrl != NULL) {
 			if (boardID < this->slmCtrl->boards.size() && boardID >= 0) {
 				// Resource for conversion https://stackoverflow.com/questions/258050/how-do-you-convert-cstring-and-stdstring-stdwstring-to-each-other
@@ -186,16 +204,39 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 			}
 		}
 	}
+	else if (name.substr(0, 10) == "slmPowered") {
+		int boardID = std::stoi(name.substr(10, name.length() - 10)) - 1;
+
+		if (this->slmCtrl != NULL) {
+			if (boardID < this->slmCtrl->boards.size() && boardID >= 0) {
+				// Resource for conversion https://stackoverflow.com/questions/258050/how-do-you-convert-cstring-and-stdstring-stdwstring-to-each-other
+				CT2CA converString(valueStr);
+				bool power = value == "true";
+				this->slmCtrl->setBoardPower(boardID, power);
+
+				// Update power button label if select is correct
+				if (boardID == this->m_slmControlDlg.slmSelectionID_) {
+					CString settingPowerMsg;
+					if (power) { settingPowerMsg = "Turn power OFF"; }
+					else {       settingPowerMsg = "Turn power ON"; }
+					
+					this->m_slmControlDlg.m_SlmPwrButton.SetWindowTextW(settingPowerMsg);
+				}
+			}
+			else {
+				Utility::printLine("WARNING: Load setting attempted to assign WFC file out of bounds!");
+			}
+		}
+	}
 
 	else if (name == "phaseCompensation") {
-		if (value == "true") {
-			this->m_slmControlDlg.m_CompensatePhaseCheckbox.SetCheck(BST_CHECKED);
-			this->m_slmControlDlg.m_CompensatePhase = true;
-		}
-		else {
-			this->m_slmControlDlg.m_CompensatePhaseCheckbox.SetCheck(BST_UNCHECKED);
-			this->m_slmControlDlg.m_CompensatePhase = false;
-		}
+		if (value == "true") {	this->m_slmControlDlg.m_CompensatePhaseCheckbox.SetCheck(BST_CHECKED);	}
+		else {	this->m_slmControlDlg.m_CompensatePhaseCheckbox.SetCheck(BST_UNCHECKED);	}
+	}
+
+	else if (name == "SLMselectAll") {
+		if (value == "true") {	this->m_slmControlDlg.SLM_SetALLSame_.SetCheck(BST_CHECKED);	}
+		else {	this->m_slmControlDlg.SLM_SetALLSame_.SetCheck(BST_UNCHECKED);	}
 	}
 
 	// Output Controls Dialog variables
@@ -351,7 +392,9 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	outFile << "minGenerations=" << _tstof(tempBuff) << std::endl;
 	this->m_optimizationControlDlg.m_maxGenerations.GetWindowTextW(tempBuff);
 	outFile << "maxGenerations=" << _tstof(tempBuff) << std::endl;
-
+	outFile << "skipEliteReeval=";
+	if (this->m_optimizationControlDlg.m_skipEliteReevaluation.GetCheck() == BST_CHECKED) {	outFile << "true" << std::endl;	}
+	else {	outFile << "false" << std::endl; }
 	// SLM Dialog
 	outFile << "# SLM Configuration Settings" << std::endl;
 	// SLM mode
@@ -362,6 +405,8 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	if (this->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED) { outFile << "dual\n"; }
 	else if (this->m_slmControlDlg.multiEnable.GetCheck() == BST_CHECKED) { outFile << "multi\n"; }
 	else { outFile << "single\n"; }
+	outFile << "slmSelect=" << this->m_slmControlDlg.slmSelectionID_ + 1;
+
 	// Quick Check for SLMs
 	if (this->slmCtrl != NULL) {
 		// Output the LUT file paths being used for every board and PhaseCompensationFile as well as if the SLM is powered or not
@@ -369,11 +414,13 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 			outFile << "slmLutFilePath" << std::to_string(i + 1) << "=" << this->slmCtrl->boards[i]->LUTFileName << "\n";
 			outFile << "slmWfcFilePath" << std::to_string(i + 1) << "=" << this->slmCtrl->boards[i]->PhaseCompensationFileName << "\n";
 			outFile << "slmPowered" << std::to_string(i + 1) << "=";
-			if (this->slmCtrl->boards[i]->isPoweredOn()) {outFile << "true\n";}
-			else {outFile << "false\n";}
+			if (this->slmCtrl->boards[i]->isPoweredOn()) { outFile << "true\n"; }
+			else { outFile << "false\n"; }
 		}
 	}
-	outFile << "slmSelect=" << this->m_slmControlDlg.slmSelectionID_;
+	outFile << "SLMselectAll=";
+	if (this->m_slmControlDlg.SLM_SetALLSame_.GetCheck() == BST_CHECKED) {outFile << "true" << std::endl;}
+	else { outFile << "false" << std::endl; }
 
 	// Output Dialog
 	outFile << "# Output Configuration Settings" << std::endl;

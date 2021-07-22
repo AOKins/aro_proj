@@ -109,17 +109,17 @@ void SLMControlDialog::OnBnClickedSlmPwrButton() {
 
 	// Update SLM power
 	if (this->SLM_SetALLSame_.GetCheck() == BST_CHECKED) {
-		if (!this->slmCtrl->boards[this->slmSelectionID_]->isPoweredOn()) {//the strings are equal, power is off
-			this->slmCtrl->setBoardPowerALL(true); //turn the SLM on
+		if (!this->slmCtrl->boards[this->slmSelectionID_]->isPoweredOn()) {// if this board is not powered on then power on all boards
+			this->slmCtrl->setBoardPowerALL(true); //turn the SLMs on
 			Utility::printLine("INFO: All SLMs were turned ON");
 		}
 		else {
-			this->slmCtrl->setBoardPowerALL(false); //turn the SLM off
+			this->slmCtrl->setBoardPowerALL(false); //turn the SLMs off
 			Utility::printLine("INFO: All SLMs were turned OFF");
 		}
 	}
 	else {
-		if (!this->slmCtrl->boards[this->slmSelectionID_]->isPoweredOn()) {//the strings are equal, power is off
+		if (!this->slmCtrl->boards[this->slmSelectionID_]->isPoweredOn()) {// if not powered on, then turn on
 			this->slmCtrl->setBoardPower(this->slmSelectionID_,true); //turn the SLM on
 			Utility::printLine("INFO: SLM #"+std::to_string(this->slmSelectionID_+1) + " was turned ON");
 		}
@@ -281,7 +281,9 @@ void SLMControlDialog::OnBnClickedSetwfc() {
 		// Attempt to select WFC file
 		tryAgain = false;
 		LPWSTR p = fileName.GetBuffer(FILE_LIST_BUFFER_SIZE);
-		CFileDialog dlgFile(TRUE);
+		static TCHAR BASED_CODE filterFiles[] = _T("BMP Files (*.bmp)|*.bmp|ALL Files (*.*)|*.*||");
+		// Construct and open standard Windows file dialog box with default filename being "./slm3986_at532_P8.LUT"
+		CFileDialog dlgFile(TRUE, NULL, L"./Blank.bmp", OFN_FILEMUSTEXIST, filterFiles);
 		OPENFILENAME& ofn = dlgFile.GetOFN();
 		ofn.lpstrFile = p;
 		ofn.nMaxFile = FILE_LIST_BUFFER_SIZE;
