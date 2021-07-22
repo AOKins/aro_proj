@@ -8,7 +8,7 @@
 
 #ifdef USE_PICAM // Only include implementation if building with PICam
 
-#include <opencv2\core\core.hpp> // For saving image
+#include <opencv2\core\core.hpp> // Using OpenCV to save image info
 #include <opencv2\highgui\highgui.hpp>
 
 // Note / TODO: Consider how to handle issue of image size received being larger (16 bit versus 8 bit)

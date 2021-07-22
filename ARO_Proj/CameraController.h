@@ -1,4 +1,4 @@
-// CameraController.h - file to determine which CameraController wrapper to include
+// CameraController.h - file to determine which CameraController wrapper to include for building
 // When using camera controller, this header file should be what you include rather than from a specific SDK!
 
 // Forward declarations of the classes to be defined
