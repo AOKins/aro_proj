@@ -28,7 +28,7 @@
 
 // [CONSTRUCTOR/COMPONENT EVENTS]
 // Constructor for dialog
-MainDialog::MainDialog(CWnd* pParent) : CDialog(IDD_BLINKPCIESDK_DIALOG, pParent), m_ReadyRunning(_T(""))
+MainDialog::MainDialog(CWnd* pParent) : CDialog(IDD_AROMAIN_DIALOG, pParent), m_ReadyRunning(_T(""))
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -170,10 +170,9 @@ BOOL MainDialog::OnInitDialog() {
 void MainDialog::setDefaultUI() {
 	// Multithreading enabled by default
 	this->m_MultiThreadEnable.SetCheck(BST_CHECKED);
-	this->m_cameraControlDlg.m_FramesPerSecond.SetWindowTextW(_T("200"));
 	this->m_cameraControlDlg.m_initialExposureTimeInput.SetWindowTextW(_T("2000"));
+	this->m_cameraControlDlg.m_FramesPerSecond.SetWindowTextW(_T("200"));
 	this->m_cameraControlDlg.m_gammaValue.SetWindowTextW(_T("1.00"));
-	
 	this->m_optimizationControlDlg.m_binSize.SetWindowTextW(_T("16"));
 	this->m_optimizationControlDlg.m_numberBins.SetWindowTextW(_T("32"));
 	this->m_optimizationControlDlg.m_targetRadius.SetWindowTextW(_T("2"));

@@ -2,6 +2,7 @@
 // Optimization handler methods implementation for micro-genetic algorithm
 // Last edited: 07/23/2021 by Andrew O'Kins
 ////////////////////
+
 #include "stdafx.h"				// Required in source
 #include "uGA_Optimization.h"	// Header file
 
@@ -9,7 +10,6 @@
 // Output: returns true if successful ran without error, false if error occurs
 bool uGA_Optimization::runOptimization() {
 	Utility::printLine("INFO: Starting uGA Optimization!");
-
 	//Setup before optimization (see base class for implementation)
 	if (!prepareSoftwareHardware()) {
 		Utility::printLine("ERROR: Failed to prepare software or/and hardware for UGA Optimization");
@@ -133,7 +133,7 @@ bool uGA_Optimization::runIndividual(int indID) {
 		// Write translated image to SLM boards, assumes there are at least as many boards as populations
 		// Multi SLM engaged -> should write to every board (popCount = # of boards)
 		// Single SLM -> should only write to board 0 (popCount = 1)
-		scalerLock.lock();
+		scalerLock.lock(); // Scaler lock as the scaler is closely used with the slm
 		for (int i = 0; i < this->popCount; i++) {
 			// Scale the individual genome to fit SLMs
 			this->scalers[i]->TranslateImage(this->population[i]->getGenome(indID)->data(), this->slmScaledImages[i]); // Translate the vector genome into char array image
@@ -142,7 +142,7 @@ bool uGA_Optimization::runIndividual(int indID) {
 		}
 		scalerLock.unlock();
 
-		// Acquire image // - take image
+		// Acquire image
 		curImage = this->cc->AcquireImage();
 
 		this->usingHardware = false;
@@ -155,15 +155,12 @@ bool uGA_Optimization::runIndividual(int indID) {
 			consoleLock.unlock();
 			return false;
 		}
-		// Getting the image dimensions and data from resulting image
-		int imgWidth = curImage->getWidth();
-		int imgHeight = curImage->getHeight();
+		// Getting the image data from resulting image
 		unsigned char * camImg = curImage->getRawData();
-
-		// Get current exposure setting of camera (relative to initial)
-		double exposureTimesRatio = this->cc->GetExposureRatio();	// needed for proper fitness value across changing exposure time	// Determine the fitness by intensity of the image within circle of target radius
 		// Determine the fitness by intensity of the image within circle of target radius
-		double fitness = Utility::FindAverageValue(camImg, imgWidth, imgHeight, this->cc->targetRadius);
+		double fitness = Utility::FindAverageValue(camImg, curImage->getWidth(), curImage->getHeight(), this->cc->targetRadius);
+		// Get current exposure setting of camera (relative to initial)
+		double exposureTimesRatio = this->cc->GetExposureRatio();	// needed for proper fitness value across changing exposure time
 
 		// Record files
 		if (this->logAllFiles || this->saveTimeVSFitness) {
@@ -186,7 +183,7 @@ bool uGA_Optimization::runIndividual(int indID) {
 				scalerLock.lock();
 				for (int popID = 0; popID < this->population.size(); popID++) {
 					scalers[popID]->TranslateImage(this->population[popID]->getGenome(this->population[popID]->getSize() - 1)->data(), this->slmScaledImages[popID]);
-					cv::Mat m_ary = cv::Mat(512, 512, CV_8UC1, this->slmScaledImages[popID]);
+					cv::Mat m_ary = cv::Mat(this->sc->getBoardWidth(popID), this->sc->getBoardHeight(popID), CV_8UC1, this->slmScaledImages[popID]);
 					cv::imwrite(this->outputFolder + curTime + "_uGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite_SLM_" + std::to_string(popID) + ".bmp", m_ary);
 				}
 				scalerLock.unlock();

@@ -18,31 +18,30 @@
 IMPLEMENT_DYNAMIC(SLMControlDialog, CDialogEx)
 
 SLMControlDialog::SLMControlDialog(CWnd* pParent /*=NULL*/)
-: CDialogEx(SLMControlDialog::IDD, pParent)
-{
+: CDialogEx(SLMControlDialog::IDD, pParent) {
 	this->slmCtrl = new SLMController();
-	this->slmSelectionID_ = 0;
 	this->m_mainToolTips = new CToolTipCtrl();
+	this->slmSelectionID_ = 0;
 }
 
 BOOL SLMControlDialog::OnInitDialog() {
 	// Setup tool tips for SLM dialog window
-	
 	this->m_mainToolTips->Create(this);
+
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_PWR_BUTTON), L"Set currently selected SLM's power on or off");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(ID_SLM_SELECT), L"Select SLM to assign LUT and wavefront compensation files to and turn on/off");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_MULTI), L"Optimize all connected boards at the same time");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_ALLSAME), L"Set to ignore select SLM and apply changes in settings to all connected boards");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_DUAL), L"Optimize first two connected boards at the same time");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_CURR_LUT_OUT), L"The current LUT file being assigned to this SLM");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SETLUT), L"Set LUT file for the selected board(s)");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(ID_SLM_SELECT),		L"Select SLM to assign LUT and wavefront compensation files to and turn on/off");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_MULTI),		L"Optimize all connected boards at the same time");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_ALLSAME),	L"Set to ignore select SLM and apply changes in settings to all connected boards");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_DUAL),		L"Optimize first two connected boards at the same time");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_CURR_LUT_OUT),	L"The current LUT file being assigned to this SLM");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SETLUT),			L"Set LUT file for the selected board(s)");
+	
 	this->m_mainToolTips->Activate(true);
 
 	return CDialogEx::OnInitDialog();
 }
 
-SLMControlDialog::~SLMControlDialog()
-{
+SLMControlDialog::~SLMControlDialog() {
 	delete this->m_mainToolTips;
 }
 

@@ -1,17 +1,14 @@
 #ifndef OPTIMIZATION_H_
 #define OPTIMIZATION_H_
 
-#include <string> // used in saveParameters()
+#include <string> // outputFolder property
 #include <fstream>// used to export information to file for debugging
 #include <vector> // For managing ind_threads
-#include <chrono> // Will be used for tracking time elapsed during optimizations
 #include <thread> // For ind_threads used in runOptimization
 #include <mutex>  // Mutexes to protect identified critical sections
 
 #include "MainDialog.h"			// used for UI reference
-
 #include "CameraController.h"	// pointer to access custom interface with camera and images
-
 #include "SLMController.h"		// pointer to access custom interface with slm
 #include "Timing.h"				// contains time keeping functions
 #include "ImageScaler.h"		// changes size of image to fit slm
@@ -24,9 +21,9 @@ protected:
 	CameraController* cc;	// Interface with camera hardware
 	SLMController* sc;		// Interface with SLM hardware
 	//Base algorithm parameters
-	double acceptedSimilarity = .97; // images considered the same when reach this threshold (has to be less than 1)
-	double maxFitnessValue = 200; // max allowed fitness value - when reached exposure is halved (TODO: check this feature)
-	double maxGenenerations = 3000; // max number of generations to perform
+	double acceptedSimilarity = .97;  // images considered the same when reach this threshold (has to be less than 1)
+	double maxFitnessValue    = 200;  // max allowed fitness value - when reached exposure is halved (TODO: check this feature)
+	double maxGenenerations   = 3000; // max number of generations to perform
 
 	//Base algorithm stop conditions
 	double fitnessToStop = 0;
@@ -35,16 +32,16 @@ protected:
 	double genEvalToStop = 0; // minimum number of generations to do
 
 	//Preference-type parameters
-	bool displayCamImage = true;    // TRUE -> opens a window showing the camera image
-	bool displaySLMImage = false;   // TODO: only first SLM right now - add functionality to display any or all boards
-	bool logAllFiles = true; // TRUE -> output all logging files to record performance
-	bool saveEliteImages = false;		// TRUE -> save images of the fittest individual of each gen
-	int saveEliteFrequency = 1; // How often per generation to save elite images if enabled
-	bool saveResultImages = true;
-	bool saveParametersPref = true;
-	bool saveTimeVSFitness = true;
-	bool saveExposureShorten = true;
-	bool multithreadEnable = true; // TRUE -> use multithreading
+	bool displayCamImage	= true;  // TRUE -> opens a window showing the camera image
+	bool displaySLMImage	= false; // TODO: only first SLM right now - add functionality to display any or all boards
+	bool logAllFiles		= true;	 // TRUE -> output all logging files to record performance
+	bool saveEliteImages	= false; // TRUE -> save images of the fittest individual of each gen
+	int  saveEliteFrequency = 1;	 // How often per generation to save elite images if enabled
+	bool saveResultImages   = true;	 // TRUE -> Will save results
+	bool saveParametersPref = true;  // TRUE -> Output parameters used
+	bool saveTimeVSFitness  = true;	 // TRUE -> Output timing performance
+	bool saveExposureShorten = true; // TRUE -> Output when exposure is shortened
+	bool multithreadEnable  = true;  // TRUE -> use multithreading
 	bool skipEliteReevaluation = false; // TRUE -> Will skip running elite individuals that should already have a fitness value
 
 	//Instance variables (used during optimization process)

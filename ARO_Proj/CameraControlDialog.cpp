@@ -18,9 +18,9 @@ CameraControlDialog::CameraControlDialog(CWnd* pParent /*=NULL*/)
 
 BOOL CameraControlDialog::OnInitDialog() {
 	this->m_mainToolTips->Create(this);
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_EXPOSURE_TIME_INPUT), L"The intial exposure used, when intensity is too high the exposure will be halved each time during optimization");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_FPS_INPUT), L"The rate at which images are acquired, this is framerate is also attempted to be applied to the SLMs to match");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_GMMA_VALUE_INPUT), L"Gamma setting for the camera");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_EXPOSURE_TIME_INPUT),L"The intial exposure used, when intensity is too high the exposure will be halved each time during optimization");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_FPS_INPUT),			L"The rate at which images are acquired, this is also attempted to be applied to the SLMs");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_GMMA_VALUE_INPUT),	L"Gamma setting for the camera");
 	this->m_mainToolTips->Activate(true);
 	return CDialogEx::OnInitDialog();
 }

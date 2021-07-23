@@ -4,6 +4,8 @@
 #include "stdafx.h"
 #include "SLM_Board.h"
 
+SLM_Board::SLM_Board() {};
+
 // Constructor
 SLM_Board::SLM_Board(bool isNematic, int width, int height) {
 	this->is_LC_Nematic = isNematic;
@@ -14,10 +16,6 @@ SLM_Board::SLM_Board(bool isNematic, int width, int height) {
 	int boardArea = width * height;
 	//Build paths to the calibrations for this SLM -- regional LUT included in Blink_SDK(), but need to pass NULL to that param to disable ODP. Might need to make a class.
 	this->LUTFileName = "linear.LUT";
-}
-
-// Destructor
-SLM_Board::~SLM_Board() {
 }
 
 // Return area of board image (width*height)

@@ -1,4 +1,4 @@
-// TODO: Implement PICam version
+// Header file for the camera controller to PICam version
 #ifndef CAMERA_CONTROLLER_PICAM_H_
 #define CAMERA_CONTROLLER_PICAM_H_
 
@@ -7,9 +7,7 @@
 #include <string>
 
 #include "picam.h" // core include for PICam SDK
-
 #include "ImageControllerPICam.h" // Image wrapper
-
 
 class MainDialog;
 
@@ -37,12 +35,12 @@ public:
 	//Image target settings
 	int targetRadius = 5;
 private:
-	MainDialog* dlg;
+	MainDialog* dlg; // Pointer to GUI instance to access parameters with
 
-	PicamHandle* camera_;
+	PicamHandle* camera_; // The connected camera to use
 
 	//Logic control
-	pibln * libraryInitialized; // Boolean to give if the library has been initialized or not
+	pibln * libraryInitialized; // library has been initialized or not
 public:
 
 	CameraController(MainDialog* dlg_);

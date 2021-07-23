@@ -54,7 +54,7 @@ public:
 
 // DIALOG DATA
 #ifdef AFX_DESIGN_TIME
-	enum { IDD = IDD_BLINKPCIESDK_DIALOG };
+	enum { IDD = IDD_AROMAIN_DIALOG };
 #endif
 
 protected:

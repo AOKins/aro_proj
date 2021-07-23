@@ -6,8 +6,8 @@ class CameraController;
 class ImageController;
 
 // Define which version to build with (Spinnaker or PICam?)
-//#define USE_PICAM
-#define USE_SPINNAKER
+#define USE_PICAM
+//#define USE_SPINNAKER
 
 // Spinnaker version
 #ifdef USE_SPINNAKER

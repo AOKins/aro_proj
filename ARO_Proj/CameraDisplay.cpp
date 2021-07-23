@@ -13,19 +13,19 @@ CameraDisplay::CameraDisplay(int input_image_height, int input_image_width, std:
 
 // If display is open, window is destroyed
 CameraDisplay::~CameraDisplay() {
-	if (_isOpened) {
+	if (this->_isOpened) {
 		cv::destroyWindow(this->display_name_);
 	}
 }
 
 void CameraDisplay::OpenDisplay(int window_width, int window_height) {
-	if (!_isOpened)	{
+	if (!this->_isOpened)	{
 		cv::namedWindow(this->display_name_, CV_WINDOW_NORMAL); //Create a window for the display
 		cv::resizeWindow(this->display_name_, window_width, window_height); // Setting window to be statically 240x240
-		imshow(display_name_, display_matrix_);
+		this->_isOpened = true;
+		imshow(this->display_name_, this->display_matrix_); // Setting window with current display content
 		cv::waitKey(1);
-		_isOpened = true;
-		Utility::printLine("INFO: a display has been opened with name - " + display_name_);
+		Utility::printLine("INFO: a display has been opened with name - " + this->display_name_);
 	}
 }
 
@@ -36,9 +36,9 @@ void CameraDisplay::resizeDisplay(int new_width, int new_height) {
 }
 
 void CameraDisplay::CloseDisplay() {
-	if (_isOpened) {
-		cv::destroyWindow(display_name_);
-		_isOpened = false;
+	if (this->_isOpened) {
+		cv::destroyWindow(this->display_name_);
+		this->_isOpened = false;
 	}
 }
 
@@ -54,12 +54,9 @@ void CameraDisplay::UpdateDisplay(unsigned char* image) {
 			(this->display_matrix_.data[i+2]) = image[i/3]; // B
 		}
 	}
-
-	if (!_isOpened)	{
+	if (!this->_isOpened)	{
 		OpenDisplay(240,240);
 	}
-	else {
-		cv::imshow(this->display_name_, this->display_matrix_);
-		cv::waitKey(1);
-	}
+	cv::imshow(this->display_name_, this->display_matrix_);
+	cv::waitKey(1);
 }

@@ -15,8 +15,6 @@ namespace Utility {
 	void print(std::string msg);
 
 	// [LOGIC]
-	// Returns true if the two strings are equal
-	bool areEqual(std::string a, std::string b);
 	// Check if button's text is equal to provided string
 	// Input: 
 	//	btn - button that contains a window text

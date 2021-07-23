@@ -16,11 +16,9 @@ public:
 	std::string LUTFileName;
 
 	// Defualt constructor does not initialize anything
-	SLM_Board(){};
+	SLM_Board();
 	// Constructor
 	SLM_Board(bool isNematic, int width, int height);
-	// Destructor
-	~SLM_Board();
 	// Getter for area (image's width*height)
 	int GetArea();
 	// Getter for if powered

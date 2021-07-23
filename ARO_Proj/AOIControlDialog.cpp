@@ -14,8 +14,7 @@
 IMPLEMENT_DYNAMIC(AOIControlDialog, CDialogEx)
 
 AOIControlDialog::AOIControlDialog(CWnd* pParent /*=NULL*/)
-	: CDialogEx(AOIControlDialog::IDD, pParent)
-{
+	: CDialogEx(AOIControlDialog::IDD, pParent) {
 	this->m_mainToolTips = new CToolTipCtrl();
 }
 
@@ -120,8 +119,7 @@ void AOIControlDialog::OnBnClickedCenterAoiButton()
 }
 
 //[ACCESSOR(S)/MUTATORS]
-void AOIControlDialog::SetCameraController(CameraController* cc)
-{
+void AOIControlDialog::SetCameraController(CameraController* cc) {
 	this->cc = cc;
 }
 
@@ -143,8 +141,7 @@ void AOIControlDialog::SetAOIFeilds(int x, int y, int width, int height)
 	m_heightInput.SetWindowTextW(hStrW.c_str());
 }
 
-void AOIControlDialog::OnBnClickedMaxImageSizeButton()
-{
+void AOIControlDialog::OnBnClickedMaxImageSizeButton() {
 	int finalWidth;
 	int finalHeight;
 

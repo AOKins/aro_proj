@@ -295,7 +295,6 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 	}
 	else if (name == "saveEliteFreq") {
 		this->m_outputControlDlg.m_eliteSaveFreq.SetWindowTextW(valueStr);
-
 	}
 	else if (name == "multiThreading") {
 		if (value == "true") {this->m_MultiThreadEnable.SetCheck(BST_CHECKED);}
@@ -379,7 +378,7 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	// Camera Dialog
 	outFile << "# Camera Settings" << std::endl;
 	this->m_cameraControlDlg.m_FramesPerSecond.GetWindowTextW(tempBuff);
-	outFile << "framesPerSecond=" << _tstof(tempBuff) << std::endl;
+	outFile << "framesPerSecond=" << _tstof(tempBuff) << std::endl;;
 	this->m_cameraControlDlg.m_initialExposureTimeInput.GetWindowTextW(tempBuff);
 	outFile << "initialExposureTime=" << _tstof(tempBuff) << std::endl;
 	this->m_cameraControlDlg.m_gammaValue.GetWindowTextW(tempBuff);

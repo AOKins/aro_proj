@@ -1,12 +1,14 @@
 #include "stdafx.h"				// Required in source
 #include "Optimization.h"		// Header file
-#include "Utility.h"
+#include "Utility.h"			// use printLine()
 
 Optimization::Optimization(MainDialog* dlg, CameraController* cc, SLMController* sc) {
-	if (cc == nullptr)
+	if (cc == nullptr) {
 		Utility::printLine("WARNING: invalid camera controller passed to optimization!");
-	if (sc == nullptr)
+	}
+	if (sc == nullptr) {
 		Utility::printLine("WARNING: invalid SLM controller passed to optimization!");
+	}
 	this->cc = cc;
 	this->sc = sc;
 	this->dlg = dlg;
@@ -16,14 +18,14 @@ Optimization::Optimization(MainDialog* dlg, CameraController* cc, SLMController*
 	prepareOutputSettings();
 
 	// Check if using multithreading
-	if (dlg->m_MultiThreadEnable.GetCheck() == BST_CHECKED) {
+	if (this->dlg->m_MultiThreadEnable.GetCheck() == BST_CHECKED) {
 		this->multithreadEnable = true;
 	}
 	else {
 		this->multithreadEnable = false;
 	}
 	// Check if skipping elite
-	if (dlg->m_optimizationControlDlg.m_skipEliteReevaluation.GetCheck() == BST_CHECKED) {
+	if (this->dlg->m_optimizationControlDlg.m_skipEliteReevaluation.GetCheck() == BST_CHECKED) {
 		this->skipEliteReevaluation = true;
 	}
 	else {
