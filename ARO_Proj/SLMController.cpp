@@ -93,7 +93,10 @@ bool SLMController::AssignLUTFile(int boardIdx, std::string path) {
 
 	//Write LUT file to the board
 	try {
-		this->blink_sdk->Load_LUT_file(boardIdx + 1, LUT_file);
+		if (!this->blink_sdk->Load_LUT_file(boardIdx + 1, LUT_file)) {
+			Utility::printLine("INFO: Failed to Load LUT file: " + std::string(LUT_file));
+			return false;
+		}
 		this->boards[boardIdx]->LUTFileName = LUT_file;
 		// Printing resulting file
 		Utility::printLine("INFO: Loaded LUT file: " + std::string(LUT_file));

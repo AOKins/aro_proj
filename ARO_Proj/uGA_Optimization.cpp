@@ -1,13 +1,9 @@
 ////////////////////
 // Optimization handler methods implementation for micro-genetic algorithm
-// Last edited: 07/15/2021 by Andrew O'Kins
+// Last edited: 07/23/2021 by Andrew O'Kins
 ////////////////////
 #include "stdafx.h"				// Required in source
 #include "uGA_Optimization.h"	// Header file
-
-////
-// TODOs:	Properly Address how to handle if image acquisition failed (currently just moves on to next individual without assigning a default fitness value)
-//			send final scaled image to the SLM //ASK needed?
 
 // Method for executing the optimization
 // Output: returns true if successful ran without error, false if error occurs
@@ -33,7 +29,7 @@ bool uGA_Optimization::runOptimization() {
 			// Run each individual, giving them all fitness values as a result of their genome
 			for (int indID = 0; indID < this->population[0]->getSize(); indID++) {
 				// If skipping already evaluated toggled and this individual already has a fitness (not initial -1) then skip
-				if (this->skipEliteReevaluation == true && this->population[0]->getFitness(indID) != -1) {
+				if (this->skipEliteReevaluation == false || (this->skipEliteReevaluation == true && this->population[0]->getFitness(indID) == -1)) {
 					// Decide if launching a seperate thread to run the individual or not
 					if (this->multithreadEnable == true) {
 						// Lambda function to access this instance of Optimization to perform runIndividual
@@ -265,14 +261,14 @@ bool uGA_Optimization::setupInstanceVariables() {
 	// Open displays if preference is set
 	if (this->displayCamImage) {
 		this->camDisplay = new CameraDisplay(this->cc->cameraImageHeight, this->cc->cameraImageWidth, "Camera Display");
-		this->camDisplay->OpenDisplay();
+		this->camDisplay->OpenDisplay(240, 240);
 	}
 	this->slmDisplayVector.clear();
 	if (this->displaySLMImage) {
 		this->slmDisplayVector.push_back(new CameraDisplay(this->sc->getBoardHeight(0), this->sc->getBoardWidth(0), "SLM Display 1"));
 		for (int displayNum = 1; displayNum < this->popCount; displayNum++) {
 			this->slmDisplayVector.push_back(new CameraDisplay(this->sc->getBoardHeight(displayNum), this->sc->getBoardWidth(displayNum), ("SLM Display " + std::to_string(displayNum + 1)).c_str()));
-			this->slmDisplayVector[displayNum]->OpenDisplay();
+			this->slmDisplayVector[displayNum]->OpenDisplay(240, 240);
 		}
 	}
 	// Scaler Setup (using base class)

@@ -50,7 +50,7 @@ public:
 		this->width_ = other.getWidth();
 		this->height_ = other.getHeight();
 		this->size_ = other.getSize();
-		unsigned char * otherData = other.getRawData<unsigned char>();
+		unsigned char * otherData = other.getRawData();
 
 		this->data_ = new unsigned char[this->size_];
 		for (int index = 0; index < this->size_; index++) {

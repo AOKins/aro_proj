@@ -136,10 +136,10 @@ void SLMControlDialog::OnBnClickedSlmPwrButton() {
 bool SLMControlDialog::attemptLUTload(int slmNum, std::string filePath) {
 	bool noErrors = true;
 	if (slmNum < 0 || slmNum >= this->slmCtrl->boards.size()) {
-		std::string errMsg = "Failed to assign given LUT file" + filePath + " to board " + std::to_string(slmNum) + " as there is none at this position!";
+		std::string errMsg = "Failed to assign given LUT file '" + filePath + "' to board " + std::to_string(slmNum) + " as there is none at this position!";
 		noErrors = false;
 		MessageBox(
-			(LPCWSTR)(errMsg.c_str()),
+			(LPCWSTR)LPCSTR(errMsg.c_str()),
 			(LPCWSTR)L"ERROR in SLM selection!",
 			MB_ICONERROR | MB_OK
 		);
@@ -147,12 +147,13 @@ bool SLMControlDialog::attemptLUTload(int slmNum, std::string filePath) {
 	}
 	// Assigning LUT file with given file path, and if error give message box to try again
 	if (!this->slmCtrl->AssignLUTFile(slmNum, filePath)) {
-		std::string errMsg = "Failed to assign given LUT file" + filePath + " to board " + std::to_string(slmNum) + "!";
+		std::string errMsg = "Failed to assign given LUT file '" + filePath + "' to board " + std::to_string(slmNum) + "!";
 		// Notify user of error in LUT file loading and get response action
 		Utility::printLine("ERROR: " + errMsg);
 		// Resource: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-messagebox
+		CString errMsgStr = CString(errMsg.c_str());
 		int err_response = MessageBox(
-			(LPCWSTR)(errMsg.c_str()),
+			(LPCWSTR)(errMsgStr),
 			(LPCWSTR)L"ERROR in file load!",
 			MB_ICONERROR | MB_RETRYCANCEL
 		);
@@ -166,7 +167,7 @@ bool SLMControlDialog::attemptLUTload(int slmNum, std::string filePath) {
 		}
 	}
 	else {
-		Utility::printLine("INFO: Assigned the following file to board " + std::to_string(slmNum) + ": " + filePath);
+		Utility::printLine("INFO: Assigned LUT file to board " + std::to_string(slmNum) + ": " + filePath);
 	}
 	return noErrors;
 }
