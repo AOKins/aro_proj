@@ -14,36 +14,34 @@
 IMPLEMENT_DYNAMIC(OutputControlDialog, CDialogEx)
 
 OutputControlDialog::OutputControlDialog(CWnd* pParent /*=NULL*/)
-	: CDialogEx(OutputControlDialog::IDD, pParent)
-{
+	: CDialogEx(OutputControlDialog::IDD, pParent) {
 	this->m_mainToolTips = new CToolTipCtrl();
 }
 
 BOOL OutputControlDialog::OnInitDialog() {
 	this->m_mainToolTips->Create(this);
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_LOGALL_FILES), L"Enable all outputs");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_OUTPUT_PARAMETERS), L"Save current settings in both loadable and readable files for reference");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SAVE_ELITEIMAGE), L"Save elite results across generations during optimization");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SAVE_FINALIMAGE), L"Save final optimized results");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SAVE_TIMEVFIT), L"Record time performances");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_DISPLAY_CAM), L"Display the camera as the optimization runs");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_DISPLAY_SLM), L"Display the SLMs being optimized as the optimization runs");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_OUTPUT_LOCATION), L"Directory where the outputs will be stored");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_EXPOSURE_FILE), L"Record when the exposure is changed during optimization");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_ELITE_SAVE_FREQ), L"How frequent to save elite results (units of generation)");
+
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_LOGALL_FILES),		L"Enable all outputs");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_OUTPUT_PARAMETERS),	L"Save current settings in both loadable and readable files for reference");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SAVE_ELITEIMAGE),	L"Save elite results across generations during optimization");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SAVE_FINALIMAGE),	L"Save final optimized results");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SAVE_TIMEVFIT),		L"Record time performances");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_DISPLAY_CAM),		L"Display the camera as the optimization runs");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_DISPLAY_SLM),		L"Display the SLMs being optimized as the optimization runs");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_OUTPUT_LOCATION),	L"Directory where the outputs will be stored");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_EXPOSURE_FILE),		L"Record when the exposure is changed during optimization");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_ELITE_SAVE_FREQ),	L"How frequent to save elite results (units of generation)");
 
 	this->m_mainToolTips->Activate(true);
 
 	return CDialogEx::OnInitDialog();
 }
 
-OutputControlDialog::~OutputControlDialog()
-{
+OutputControlDialog::~OutputControlDialog() {
 	delete this->m_mainToolTips;
 }
 
-void OutputControlDialog::DoDataExchange(CDataExchange* pDX)
-{
+void OutputControlDialog::DoDataExchange(CDataExchange* pDX) {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_DISPLAY_CAM, m_displayCameraCheck);
 	DDX_Control(pDX, IDC_DISPLAY_SLM, m_displaySLM);
@@ -67,8 +65,7 @@ END_MESSAGE_MAP()
 
 // OutputControlDialog message handlers
 
-void OutputControlDialog::OnBnClickedOutputLocationButton()
-{
+void OutputControlDialog::OnBnClickedOutputLocationButton() {
 	bool tryAgain;
 	CString folderInput;
 	do {
@@ -111,8 +108,7 @@ BOOL OutputControlDialog::PreTranslateMessage(MSG* pMsg) {
 }
 
 
-void OutputControlDialog::OnBnClickedSaveEliteimage()
-{
+void OutputControlDialog::OnBnClickedSaveEliteimage() {
 	bool enabled = this->m_SaveEliteImagesCheck.GetCheck() == BST_CHECKED || this->m_logAllFilesCheck.GetCheck() == BST_CHECKED;
 	this->m_eliteSaveFreq.EnableWindow(enabled);
 }

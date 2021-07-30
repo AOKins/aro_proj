@@ -28,7 +28,7 @@
 
 // [CONSTRUCTOR/COMPONENT EVENTS]
 // Constructor for dialog
-MainDialog::MainDialog(CWnd* pParent) : CDialog(IDD_BLINKPCIESDK_DIALOG, pParent), m_ReadyRunning(_T(""))
+MainDialog::MainDialog(CWnd* pParent) : CDialog(IDD_AROMAIN_DIALOG, pParent), m_ReadyRunning(_T(""))
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -175,7 +175,8 @@ void MainDialog::setDefaultUI() {
 	this->m_cameraControlDlg.m_FramesPerSecond.SetWindowTextW(_T("200"));
 	this->m_cameraControlDlg.m_gammaValue.SetWindowTextW(_T("1.00"));
 #endif
-
+	this->m_cameraControlDlg.m_FramesPerSecond.SetWindowTextW(_T("200"));
+	this->m_cameraControlDlg.m_gammaValue.SetWindowTextW(_T("1.00"));
 	this->m_optimizationControlDlg.m_binSize.SetWindowTextW(_T("16"));
 	this->m_optimizationControlDlg.m_numberBins.SetWindowTextW(_T("32"));
 	this->m_optimizationControlDlg.m_targetRadius.SetWindowTextW(_T("2"));
@@ -480,6 +481,7 @@ UINT __cdecl optThreadMethod(LPVOID instance) {
 		Utility::printLine("ERROR: Optimization failed!");
 		MessageBox(NULL, (LPCWSTR)L"An error had occurred while running the optimization.", (LPCWSTR)L"Error!", MB_ICONERROR | MB_OK);
 	}
+
 	// Change label of this button to START now that the optimization is over
 	dlg->m_StartStopButton.SetWindowTextW(L"Start Optimization");
 	// Update UI

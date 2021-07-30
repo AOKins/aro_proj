@@ -23,22 +23,11 @@ void Utility::printLine(std::string msg, bool isDebug) {
 }
 
 void Utility::print(std::string msg) {
-	//std::cout << msg;
-
 	const char * dimMsgC = msg.c_str();
 	_cprintf(dimMsgC);
 }
 
 // [LOGIC]
-bool Utility::areEqual(std::string a, std::string b) {
-	if (a == b) {
-		return true;
-	}
-	else {
-		return false;
-	}
-}
-
 bool Utility::IsButtonText(CButton& btn, std::string text) {
 	CString PowerState;
 	btn.GetWindowTextW(PowerState);

@@ -42,10 +42,10 @@ public:
 		// Lambda function to be used for generating new individual
 		// Input: i - index for new individual
 		// Captures:
-		//		temp - pointer to array of individuals to store current new individual at temp[i]
+		//		temp			- pointer to array of individuals to store current new individual at temp[i]
 		//		parent_selector - RNG machine captured by reference
-		//		divisor - used in proportionate selection
-		//		individuals_ access population genomes
+		//		divisor			- used in proportionate selection
+		//		individuals_	- access population genomes
 		// Output: temp[i] is set a new genome using crossover algorithm and mutation enabled
 		auto genInd = [temp, &parent_selector, divisor, same_check, this](int i) {
 			same_check[i] = true;

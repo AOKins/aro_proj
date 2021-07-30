@@ -53,6 +53,9 @@ void MainDialog::OnBnClickedLoadSettings() {
 					tryAgain = false;
 				}
 			}
+			else {
+				Utility::printLine("INFO: Successfully loaded settings from " + filePath);
+			}
 		}
 		else {
 			tryAgain = false;
@@ -67,8 +70,7 @@ bool MainDialog::setUIfromFile(std::string filePath) {
 	// Open file
 	std::ifstream inputFile(filePath);
 	std::string lineBuffer;
-	try {
-		// Read each line
+	try {// Read each line
 		while (std::getline(inputFile, lineBuffer)) {
 			// If not empty and not a commented out line
 			if (lineBuffer != "" && (lineBuffer.find("#") != 0)) {
@@ -142,10 +144,8 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 	else if (name == "maxGenerations")
 		this->m_optimizationControlDlg.m_maxGenerations.SetWindowTextW(valueStr);
 	else if (name == "skipEliteReeval") {
-		if (valueStr == "true")
-			this->m_optimizationControlDlg.m_skipEliteReevaluation.SetCheck(BST_CHECKED);
-		else
-			this->m_optimizationControlDlg.m_skipEliteReevaluation.SetCheck(BST_UNCHECKED);
+		if (valueStr == "true") {this->m_optimizationControlDlg.m_skipEliteReevaluation.SetCheck(BST_CHECKED);}
+		else {this->m_optimizationControlDlg.m_skipEliteReevaluation.SetCheck(BST_UNCHECKED);}
 	}
 
 	// SLM Dialog
@@ -176,13 +176,53 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 	else if (name.substr(0, 14) == "slmLutFilePath") {
 		// We are dealing with LUT file setting
 		int boardID = std::stoi(name.substr(14, name.length()-14)) - 1;
-		Utility::printLine("DEBUG: LUT boardID->" + std::to_string(boardID));
 		if (this->slmCtrl != NULL) {
 			if (boardID < this->slmCtrl->boards.size() && boardID >= 0) {
 				// Resource for conversion https://stackoverflow.com/questions/258050/how-do-you-convert-cstring-and-stdstring-stdwstring-to-each-other
 				CT2CA converString(valueStr);
-				this->m_slmControlDlg.attemptLUTload(boardID, std::string(converString));
+				// Make an initial attempt using what was read by the file
+				bool tryAgain = !this->m_slmControlDlg.attemptLUTload(boardID, std::string(converString));
+				do {
+					// If the assignment from the file failed, notify the user and allow them to set the LUT file
+					if (tryAgain) {
+						CString fileName;
+						std::string filePath;
+						LPWSTR p = fileName.GetBuffer(FILE_LIST_BUFFER_SIZE);
+						// Initially only show LUT files (end in .LUT extension) but also provide option to show all files
+						static TCHAR BASED_CODE filterFiles[] = _T("LUT Files (*.LUT)|*.LUT|ALL Files (*.*)|*.*||");
+						// Construct and open standard Windows file dialog box with default filename being "./slm3986_at532_P8.LUT"
+						CFileDialog dlgFile(TRUE, NULL, L"", OFN_FILEMUSTEXIST, filterFiles);
+
+						OPENFILENAME& ofn = dlgFile.GetOFN();
+						ofn.lpstrFile = p;
+						ofn.nMaxFile = FILE_LIST_BUFFER_SIZE;
+
+						if (dlgFile.DoModal() == IDOK) {
+							fileName = dlgFile.GetPathName();
+							fileName.ReleaseBuffer();
+							filePath = CT2A(fileName);
+
+							if (this->m_slmControlDlg.SLM_SetALLSame_.GetCheck() == BST_UNCHECKED) {
+								// Get the SLM being assinged the LUT file, asssumes the index poistion of the selection is consistent with board selection
+								//		for example if the user selects 1 (out of 2) the value should be 0.  This is done currently (June 15th as a shortcut instead of parsing text of selection)
+								tryAgain = !this->m_slmControlDlg.attemptLUTload(this->m_slmControlDlg.slmSelectionID_, filePath);
+							}
+							else {
+								// SLM set all setting is checked, so assign the same LUT file to all the boards
+								for (int slmNum = 0; slmNum < this->slmCtrl->boards.size() && !tryAgain; slmNum++) {
+									tryAgain = !this->m_slmControlDlg.attemptLUTload(slmNum, filePath);
+								}
+							}
+							CString fileCS(this->slmCtrl->boards[this->m_slmControlDlg.slmSelectionID_]->LUTFileName.c_str());
+							this->m_slmControlDlg.m_LUT_pathDisplay.SetWindowTextW(fileCS);
+						}
+						else {
+							tryAgain = false;
+						}
+					}
+				} while (tryAgain); // End of assigning LUT to board
 			}
+			// Out of bounds
 			else {
 				Utility::printLine("WARNING: Load setting attempted to assign LUT file out of bounds!");
 				return false;
@@ -224,44 +264,44 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 
 	// Output Controls Dialog variables
 	else if (name == "saveEliteImage") {
-		if (value == "true") {
-			this->m_outputControlDlg.m_SaveEliteImagesCheck.SetCheck(BST_CHECKED);
-		}
-		else {
-			this->m_outputControlDlg.m_SaveEliteImagesCheck.SetCheck(BST_UNCHECKED);
-		}
+		if (value == "true") {this->m_outputControlDlg.m_SaveEliteImagesCheck.SetCheck(BST_CHECKED);}
+		else {this->m_outputControlDlg.m_SaveEliteImagesCheck.SetCheck(BST_UNCHECKED);}
 	}
 	else if (name == "displayCamera") {
 		if (value == "true") {
-			this->m_outputControlDlg.m_displayCameraCheck.SetCheck(BST_CHECKED);
-		}
-		else {
-			this->m_outputControlDlg.m_displayCameraCheck.SetCheck(BST_UNCHECKED);
-		}
+			this->m_outputControlDlg.m_displayCameraCheck.SetCheck(BST_CHECKED);}
+		else {	this->m_outputControlDlg.m_displayCameraCheck.SetCheck(BST_UNCHECKED);}
 	}
 	else if (name == "displaySLM") {
-		if (value == "true") {
-			this->m_outputControlDlg.m_displaySLM.SetCheck(BST_CHECKED);
-		}
-		else {
-			this->m_outputControlDlg.m_displaySLM.SetCheck(BST_UNCHECKED);
-		}
+		if (value == "true") {	this->m_outputControlDlg.m_displaySLM.SetCheck(BST_CHECKED);}
+		else {	this->m_outputControlDlg.m_displaySLM.SetCheck(BST_UNCHECKED);}
 	}
-	else if (name == "logFilesEnable") {
-		if (value == "true") {
-			this->m_outputControlDlg.m_logAllFilesCheck.SetCheck(BST_CHECKED);
-		}
-		else {
-			this->m_outputControlDlg.m_logAllFilesCheck.SetCheck(BST_UNCHECKED);
-		}
+	else if (name == "logAllFilesEnable") {
+		if (value == "true") {this->m_outputControlDlg.m_logAllFilesCheck.SetCheck(BST_CHECKED);}
+		else {this->m_outputControlDlg.m_logAllFilesCheck.SetCheck(BST_UNCHECKED);}
+	}
+	else if (name == "saveParameters") {
+		if (value == "true") {this->m_outputControlDlg.m_SaveParameters.SetCheck(BST_CHECKED);}
+		else {this->m_outputControlDlg.m_SaveParameters.SetCheck(BST_UNCHECKED);}
+	}
+	else if (name == "saveFinalImages") {
+		if (value == "true") {this->m_outputControlDlg.m_SaveFinalImagesCheck.SetCheck(BST_CHECKED);}
+		else {this->m_outputControlDlg.m_SaveFinalImagesCheck.SetCheck(BST_UNCHECKED);}
+	}
+	else if (name == "saveTimeVsFitness") {
+		if (value == "true") { this->m_outputControlDlg.m_SaveTimeVFitnessCheck.SetCheck(BST_CHECKED); }
+		else { this->m_outputControlDlg.m_SaveTimeVFitnessCheck.SetCheck(BST_UNCHECKED);  }
+	}
+	else if (name == "saveExposureShortening") {
+		if (value == "true") { this->m_outputControlDlg.m_SaveExposureShortCheck.SetCheck(BST_CHECKED); }
+		else { this->m_outputControlDlg.m_SaveExposureShortCheck.SetCheck(BST_UNCHECKED); }
+	}
+	else if (name == "saveEliteFreq") {
+		this->m_outputControlDlg.m_eliteSaveFreq.SetWindowTextW(valueStr);
 	}
 	else if (name == "multiThreading") {
-		if (value == "true") {
-			this->m_MultiThreadEnable.SetCheck(BST_CHECKED);
-		}
-		else {
-			this->m_MultiThreadEnable.SetCheck(BST_UNCHECKED);
-		}
+		if (value == "true") {this->m_MultiThreadEnable.SetCheck(BST_CHECKED);}
+		else {this->m_MultiThreadEnable.SetCheck(BST_UNCHECKED);}
 	}
 	else if (name == "outputFolder") {
 		this->m_outputControlDlg.m_OutputLocationField.SetWindowTextW(valueStr);
@@ -310,6 +350,7 @@ void MainDialog::OnBnClickedSaveSettings() {
 				}
 			}
 			else {// Give success message when no issues
+				Utility::printLine("INFO: Successfully saved settings to " + filePath);
 				MessageBox((LPCWSTR)L"Successfully saved settings.",
 					(LPCWSTR)L"Success!",
 					MB_ICONINFORMATION | MB_OK);
@@ -352,7 +393,7 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	this->m_cameraControlDlg.m_gammaValue.GetWindowTextW(tempBuff);
 #ifdef USE_SPINNAKER
 	this->m_cameraControlDlg.m_FramesPerSecond.GetWindowTextW(tempBuff);
-	outFile << "framesPerSecond=" << _tstof(tempBuff) << std::endl;
+	outFile << "framesPerSecond=" << _tstof(tempBuff) << std::endl;;
 	this->m_cameraControlDlg.m_initialExposureTimeInput.GetWindowTextW(tempBuff);
 	outFile << "gamma=" << _tstof(tempBuff) << std::endl;
 #endif
@@ -396,7 +437,7 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	if (this->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED) { outFile << "dual\n"; }
 	else if (this->m_slmControlDlg.multiEnable.GetCheck() == BST_CHECKED) { outFile << "multi\n"; }
 	else { outFile << "single\n"; }
-	outFile << "slmSelect=" << this->m_slmControlDlg.slmSelectionID_ + 1;
+	outFile << "slmSelect=" << this->m_slmControlDlg.slmSelectionID_ + 1 << std::endl;
 
 	// Quick Check for SLMs
 	if (this->slmCtrl != NULL) {
@@ -423,7 +464,8 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	else { outFile << "false\n"; }
 
 	this->m_outputControlDlg.m_OutputLocationField.GetWindowTextW(tempBuff);
-	outFile << "outputFolder=" << tempBuff << std::endl;
+	std::string buffStr = CT2A(tempBuff);
+	outFile << "outputFolder=" << buffStr << std::endl;
 	
 	outFile << "logAllFilesEnable=";
 	if (this->m_outputControlDlg.m_logAllFilesCheck.GetCheck() == BST_CHECKED) { outFile << "true\n"; }

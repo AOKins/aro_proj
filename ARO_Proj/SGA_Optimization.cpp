@@ -1,19 +1,15 @@
 ////////////////////
-// Optimization handler methods implementation for simple genetic algorithm
-// Last edited: 07/15/2021 by Andrew O'Kins
+// SGA_Optimization.cpp - Optimization handler methods implementation for simple genetic algorithm
+// Last edited: 07/23/2021 by Andrew O'Kins
 ////////////////////
+
 #include "stdafx.h"				// Required in source
 #include "SGA_Optimization.h"	// Header file
-
-////
-// TODOs:	Properly Address how to handle if image acquisition failed (currently just moves on to next individual without assigning a default fitness value)
-//			send final scaled image to the SLM //ASK needed?
 
 // Method for executing the optimization
 // Output: returns true if successful ran without error, false if error occurs
 bool SGA_Optimization::runOptimization() {
 	Utility::printLine("INFO: Starting SGA Optimization!");
-
 	//Setup before optimization (see base class for implementation)
 	if (!prepareSoftwareHardware()) {
 		Utility::printLine("ERROR: Failed to prepare software or/and hardware for SGA Optimization");
@@ -31,9 +27,9 @@ bool SGA_Optimization::runOptimization() {
 		// Optimization loop for each generation
 		for (this->curr_gen = 0; this->curr_gen < this->maxGenenerations && !this->stopConditionsMetFlag; this->curr_gen++) {
 			// Run each individual, giving them all fitness values as a result of their genome
-			for (int indID = 0; indID < population[0]->getSize(); indID++) {
-				// If skipping already evaluated toggled and this individual already has a fitness (not initial -1) then skip
-				if (this->skipEliteReevaluation == true && this->population[0]->getFitness(indID) != -1) {
+			for (int indID = 0; indID < this->population[0]->getSize(); indID++) {
+				// If skipping already evaluated toggled and this individual already has a fitness (not initial assignment -1) then skip
+				if (this->skipEliteReevaluation == false || (this->skipEliteReevaluation == true && this->population[0]->getFitness(indID) == -1)) {
 					// Decide if launching a seperate thread to run the individual or not
 					if (this->multithreadEnable == true) {
 						// Lambda function to access this instance of Optimization to perform runIndividual
@@ -46,7 +42,7 @@ bool SGA_Optimization::runOptimization() {
 					}
 				}
 			}
-			Utility::rejoinClear(this->ind_threads);
+			Utility::rejoinClear(this->ind_threads); // Clear threads that may have been launched
 			// Perform GA crossover/breeding to produce next generation
 			for (int popID = 0; popID < population.size(); popID++) {
 				if (this->multithreadEnable == true) {
@@ -56,7 +52,7 @@ bool SGA_Optimization::runOptimization() {
 					this->population[popID]->nextGeneration(); // Serial
 				}
 			}
-			Utility::rejoinClear(this->ind_threads);
+			Utility::rejoinClear(this->ind_threads); // Clear threads that may have been launched
 			// Update displays with best individual now that they are done
 			if (this->displayCamImage) {
 				this->camDisplay->UpdateDisplay(this->bestImage->getRawData());
@@ -79,7 +75,8 @@ bool SGA_Optimization::runOptimization() {
 			if (this->curr_gen % 10 == 0) {
 				Utility::printLine("INFO: Finished generation #" + std::to_string(this->curr_gen) + " with a fitness of " + std::to_string(this->population[0]->getFitness(this->populationSize - 1)));
 			}
-			if (this->saveTimeVSFitness) {
+			// Record the time it took to perform this generation
+			if (this->logAllFiles || this->saveTimeVSFitness) {
 				end = this->timestamp->MS_SinceStart();
 				this->timePerGenFile << this->curr_gen << "," << end - start << std::endl;
 				start = end;
@@ -113,7 +110,7 @@ bool SGA_Optimization::runOptimization() {
 bool SGA_Optimization::runIndividual(int indID) {
 	try {
 		ImageController * curImage = NULL;
-
+		// Setting up mutex locks
 		std::unique_lock<std::mutex> consoleLock(this->consoleMutex, std::defer_lock);
 		std::unique_lock<std::mutex> hardwareLock(this->hardwareMutex, std::defer_lock);
 		std::unique_lock<std::mutex> scalerLock(this->slmScalersMutex, std::defer_lock);
@@ -137,7 +134,7 @@ bool SGA_Optimization::runIndividual(int indID) {
 		// Write translated image to SLM boards, assumes there are at least as many boards as populations
 		// Multi SLM engaged -> should write to every board (popCount = # of boards)
 		// Single SLM -> should only write to board 0 (popCount = 1)
-		scalerLock.lock();
+		scalerLock.lock(); // Scaler lock as the scaler is closely used with the slm
 		for (int i = 0; i < this->popCount; i++) {
 			// Scale the individual genome to fit SLM
 			this->scalers[i]->TranslateImage(this->population[i]->getGenome(indID)->data(), this->slmScaledImages[i]); // Translate the vector genome into char array image
@@ -146,7 +143,7 @@ bool SGA_Optimization::runIndividual(int indID) {
 		}
 		scalerLock.unlock();
 
-		// Acquire image // - take image
+		// Acquire image
 		curImage = this->cc->AcquireImage();
 
 		this->usingHardware = false;
@@ -159,15 +156,12 @@ bool SGA_Optimization::runIndividual(int indID) {
 			consoleLock.unlock();
 			return false;
 		}
-		// Getting the image dimensions and data from resulting image
-		int imgWidth = curImage->getWidth();
-		int imgHeight = curImage->getHeight();
+		// Getting the image data from resulting image
 		unsigned char * camImg = curImage->getRawData();
-
+		// Determine the fitness by intensity of the image within circle of target radius
+		double fitness = Utility::FindAverageValue(camImg, curImage->getWidth(), curImage->getHeight(), this->cc->targetRadius);
 		// Get current exposure setting of camera (relative to initial)
 		double exposureTimesRatio = this->cc->GetExposureRatio();	// needed for proper fitness value across changing exposure time
-		// Determine the fitness by intensity of the image within circle of target radius
-		double fitness = Utility::FindAverageValue(camImg, imgWidth, imgHeight, this->cc->targetRadius);
 
 		// Record files
 		if (this->logAllFiles || this->saveTimeVSFitness) {
@@ -190,7 +184,7 @@ bool SGA_Optimization::runIndividual(int indID) {
 				scalerLock.lock();
 				for (int popID = 0; popID < this->population.size(); popID++) {
 					scalers[popID]->TranslateImage(this->population[popID]->getGenome(this->population[popID]->getSize() - 1)->data(), this->slmScaledImages[popID]);
-					cv::Mat m_ary = cv::Mat(512, 512, CV_8UC1, this->slmScaledImages[popID]);
+					cv::Mat m_ary = cv::Mat(this->sc->getBoardWidth(popID), this->sc->getBoardHeight(popID), CV_8UC1, this->slmScaledImages[popID]);
 					cv::imwrite(this->outputFolder + curTime + "_SGA_Gen_"+std::to_string(this->curr_gen + 1) +"_Elite_SLM_" + std::to_string(popID) + ".bmp", m_ary);
 				}
 				scalerLock.unlock();
@@ -265,13 +259,13 @@ bool SGA_Optimization::setupInstanceVariables() {
 	// Open displays if preference is set
 	if (this->displayCamImage) {
 		this->camDisplay = new CameraDisplay(this->cc->cameraImageHeight, this->cc->cameraImageWidth, "Camera Display");
-		this->camDisplay->OpenDisplay();
+		this->camDisplay->OpenDisplay(240, 240);
 	}
 	this->slmDisplayVector.clear();
 	if (this->displaySLMImage) {
 		for (int displayNum = 0; displayNum < this->popCount; displayNum++) {
 			this->slmDisplayVector.push_back(new CameraDisplay(this->sc->getBoardHeight(displayNum), this->sc->getBoardWidth(displayNum), ("SLM Display " + std::to_string(displayNum + 1)).c_str()));
-			this->slmDisplayVector[displayNum]->OpenDisplay();
+			this->slmDisplayVector[displayNum]->OpenDisplay(240, 240);
 		}
 	}
 	// Scaler Setup (using base class)
@@ -344,6 +338,11 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	}
 	if (this->logAllFiles || this->saveParametersPref) {
 		saveParameters(curTime, "SGA");
+		CString buff;
+		dlg->m_outputControlDlg.m_OutputLocationField.GetWindowTextW(buff);
+		std::string path = CT2A(buff);
+		path += curTime + "_SGA_savedParameters.cfg";
+		dlg->saveUItoFile(path);
 	}
 
 	// - image displays

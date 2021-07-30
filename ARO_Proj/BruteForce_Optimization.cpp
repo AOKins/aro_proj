@@ -4,8 +4,8 @@
 ////////////////////
 #include "stdafx.h"						// Required in source
 #include "BruteForce_Optimization.h"	// Header file
+#include "Utility.h"					// Utility methods
 
-#include <string>
 #include <chrono>
 #include <string>
 
@@ -105,7 +105,7 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 						Utility::printLine("ERROR: Image Acquisition has failed!");
 						continue;
 					}
-					unsigned char* camImg = curImage->getRawData<unsigned char>();
+					unsigned char* camImg = curImage->getRawData();
 					// Display cam image
 					if (this->displayCamImage) {
 						this->camDisplay->UpdateDisplay(camImg);
@@ -190,11 +190,11 @@ bool BruteForce_Optimization::setupInstanceVariables() {
 	// Setup displays
 	if (this->displayCamImage) {
 		this->camDisplay = new CameraDisplay(this->cc->cameraImageHeight, this->cc->cameraImageWidth, "Camera Display");
-		this->camDisplay->OpenDisplay();
+		this->camDisplay->OpenDisplay(240, 240);
 	}
 	if (this->displaySLMImage) {
 		this->slmDisplayVector.push_back(new CameraDisplay(this->sc->getBoardHeight(0), this->sc->getBoardWidth(0), "SLM Display"));
-		this->slmDisplayVector[0]->OpenDisplay();
+		this->slmDisplayVector[0]->OpenDisplay(240, 240);
 	}
 
 	// Scaler Setup (using base class)
@@ -221,28 +221,36 @@ bool BruteForce_Optimization::setupInstanceVariables() {
 bool BruteForce_Optimization::shutdownOptimizationInstance() {
 	// - log files close
 	if (this->logAllFiles) {
-		this->timeVsFitnessFile.close();
-		this->tfile.close();
 		this->lmaxfile.close();
 		this->rtime.close();
 	}
 	std::string curTime = Utility::getCurTime();
 	// Generic file renaming to include time stamps
-	if (this->logAllFiles){
+	if (this->logAllFiles || this->saveTimeVSFitness) {
+		this->timeVsFitnessFile.close();
+		this->tfile.close();
 		std::rename((this->outputFolder + "Opt_functionEvals_vs_fitness.txt").c_str(), (this->outputFolder + curTime + "_OPT5_functionEvals_vs_fitness.txt").c_str());
 		std::rename((this->outputFolder + "Opt_time_vs_fitness.txt").c_str(), (this->outputFolder + curTime + "_OPT5_time_vs_fitness.txt").c_str());
 		std::rename((this->outputFolder + "lmax.txt").c_str(), (this->outputFolder + curTime + "_OPT5_lmax.txt").c_str());
 		std::rename((this->outputFolder + "Opt_rtime.txt").c_str(), (this->outputFolder + curTime + "_OPT5_rtime.txt").c_str());
-		saveParameters(curTime, "OPT5");
-
 		//Record total time taken for optimization
 		std::ofstream tfile2(this->outputFolder + curTime + "_OPT5_time.txt");
 		tfile2 << this->timestamp->MS_SinceStart() << std::endl;
 		tfile2.close();
 	}
+
+	if (this->logAllFiles || this->saveParametersPref) {
+		saveParameters(curTime, "OPT5");
+		CString buff;
+		dlg->m_outputControlDlg.m_OutputLocationField.GetWindowTextW(buff);
+		std::string path = CT2A(buff);
+		path += curTime + "_OPT5_savedParameters.cfg";
+		dlg->saveUItoFile(path);
+	}
+
 	// Save how final optimization looks through camera
 	if (this->bestImage != NULL && this->saveResultImages) {
-		unsigned char* camImg = this->bestImage->getRawData<unsigned char>();
+		unsigned char* camImg = this->bestImage->getRawData();
 		cv::Mat Opt_ary = cv::Mat(this->bestImage->getHeight(), this->bestImage->getWidth(), CV_8UC1, camImg);
 		cv::imwrite(this->outputFolder + curTime + "_OPT5_Optimized.bmp", Opt_ary);
 	}

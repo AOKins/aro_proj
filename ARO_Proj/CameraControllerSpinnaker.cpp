@@ -498,10 +498,10 @@ int CameraController::PrintDeviceInfo() {
 				CValuePtr pValue = (CValuePtr)pfeatureNode;
 				if (IsReadable(pValue))	{
 					std::string value(pValue->ToString().c_str());
-					Utility::print(value);
+					Utility::printLine(value);
 				}
 				else
-					Utility::print("Node not readable");
+					Utility::printLine("Node not readable");
 			}
 		}
 		else {
