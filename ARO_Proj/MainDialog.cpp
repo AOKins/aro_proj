@@ -477,6 +477,7 @@ UINT __cdecl optThreadMethod(LPVOID instance) {
 		Utility::printLine("ERROR: Optimization failed!");
 		MessageBox(NULL, (LPCWSTR)L"An error had occurred while running the optimization.", (LPCWSTR)L"Error!", MB_ICONERROR | MB_OK);
 	}
+
 	// Change label of this button to START now that the optimization is over
 	dlg->m_StartStopButton.SetWindowTextW(L"Start Optimization");
 	// Update UI

@@ -221,25 +221,33 @@ bool BruteForce_Optimization::setupInstanceVariables() {
 bool BruteForce_Optimization::shutdownOptimizationInstance() {
 	// - log files close
 	if (this->logAllFiles) {
-		this->timeVsFitnessFile.close();
-		this->tfile.close();
 		this->lmaxfile.close();
 		this->rtime.close();
 	}
 	std::string curTime = Utility::getCurTime();
 	// Generic file renaming to include time stamps
-	if (this->logAllFiles){
+	if (this->logAllFiles || this->saveTimeVSFitness) {
+		this->timeVsFitnessFile.close();
+		this->tfile.close();
 		std::rename((this->outputFolder + "Opt_functionEvals_vs_fitness.txt").c_str(), (this->outputFolder + curTime + "_OPT5_functionEvals_vs_fitness.txt").c_str());
 		std::rename((this->outputFolder + "Opt_time_vs_fitness.txt").c_str(), (this->outputFolder + curTime + "_OPT5_time_vs_fitness.txt").c_str());
 		std::rename((this->outputFolder + "lmax.txt").c_str(), (this->outputFolder + curTime + "_OPT5_lmax.txt").c_str());
 		std::rename((this->outputFolder + "Opt_rtime.txt").c_str(), (this->outputFolder + curTime + "_OPT5_rtime.txt").c_str());
-		saveParameters(curTime, "OPT5");
-
 		//Record total time taken for optimization
 		std::ofstream tfile2(this->outputFolder + curTime + "_OPT5_time.txt");
 		tfile2 << this->timestamp->MS_SinceStart() << std::endl;
 		tfile2.close();
 	}
+
+	if (this->logAllFiles || this->saveParametersPref) {
+		saveParameters(curTime, "OPT5");
+		CString buff;
+		dlg->m_outputControlDlg.m_OutputLocationField.GetWindowTextW(buff);
+		std::string path = CT2A(buff);
+		path += curTime + "_OPT5_savedParameters.cfg";
+		dlg->saveUItoFile(path);
+	}
+
 	// Save how final optimization looks through camera
 	if (this->bestImage != NULL && this->saveResultImages) {
 		unsigned char* camImg = this->bestImage->getRawData();

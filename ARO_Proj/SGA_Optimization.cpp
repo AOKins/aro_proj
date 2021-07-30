@@ -338,6 +338,11 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	}
 	if (this->logAllFiles || this->saveParametersPref) {
 		saveParameters(curTime, "SGA");
+		CString buff;
+		dlg->m_outputControlDlg.m_OutputLocationField.GetWindowTextW(buff);
+		std::string path = CT2A(buff);
+		path += curTime + "_SGA_savedParameters.cfg";
+		dlg->saveUItoFile(path);
 	}
 
 	// - image displays
