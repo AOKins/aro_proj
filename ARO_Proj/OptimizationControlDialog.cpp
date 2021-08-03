@@ -1,5 +1,7 @@
-// OptimizationControlDialog.cpp : implementation file
-//
+////////////////////
+// OptimizationControlDialog.cpp - implementation for "Optimization Settings" tab window
+// Last edited: 07/23/2021 by Andrew O'Kins
+////////////////////
 
 #include "stdafx.h"
 #include "OptimizationControlDialog.h"

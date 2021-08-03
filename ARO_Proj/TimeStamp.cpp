@@ -1,6 +1,5 @@
 ////////////////////
 // TimeStamp.cpp - implementation file for TimeStamp.h
-// Last edited: 08/02/2021 by Andrew O'Kins
 ////////////////////
 
 #include "stdafx.h"
@@ -24,7 +23,7 @@ double TimeStamp::GetDurationMSec() {
 	return duration;
 }
 
-// Get a string format label
+// Get a string format label with time in milliseconds
 std::string TimeStamp::GetLabel() {
 	//Properly convert interval amount to string
 	std::ostringstream ss;

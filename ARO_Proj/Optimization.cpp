@@ -1,3 +1,8 @@
+////////////////////
+// Optimization.cpp - implementation for the Optimization's base class functions
+// Last edited: 08/02/2021 by Andrew O'Kins
+////////////////////
+
 #include "stdafx.h"				// Required in source
 #include "Optimization.h"		// Header file
 #include "Utility.h"			// use printLine()

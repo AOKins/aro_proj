@@ -1,7 +1,7 @@
 ////////////////////
 // Additional source file to export some of the contents of MainDialog.cpp for easier navigation
 // SettingsOutput.cpp - behavior of the Save Settings and Load Settings buttons within MainDialog
-// Last edited: 07/15/2021 by Andrew O'Kins
+// Last edited: 08/02/2021 by Andrew O'Kins
 ////////////////////
 #include "stdafx.h"				// Required in source
 
@@ -66,6 +66,8 @@ void MainDialog::OnBnClickedLoadSettings() {
 
 // Set the UI according to given file path, called from Load Settings
 // Order dependent input from file!
+// Input: filePath - string to file to load settings from
+// Output: file is read and the identified variables are used to configure the GUI/SLMs
 bool MainDialog::setUIfromFile(std::string filePath) {
 	// Open file
 	std::ifstream inputFile(filePath);

@@ -1,8 +1,8 @@
-///////////////////////////////////////////////////
-//  DTRA2 DVI OPT
+////////////////////
+//  Inividual.h - 
 //  Author(s): Patrick Price, Andrew O'Kins
 //  Company: WSU ISP ASL
-//
+////////////////////
 
 #ifndef INDIVIDUAL_H_
 #define INDIVIDUAL_H_
@@ -16,19 +16,18 @@ private:
 	std::vector<T>* genome_;
 
 	// The fitness of the individual, this must be assigned with set_fitness
-	// default value is -1 (an impossible real fitness value)
+	// default value is -1 (an impossible real fitness value, so used to identify non-evualeted)
 	double fitness_;
 
 public:
-
 	// Constructor, genome is initially null and fitness -1
-	Individual(){
+	Individual() {
 		this->genome_ = NULL;
 		this->fitness_ = -1;
 	}
 
 	// Destructor
-	~Individual(){
+	~Individual() {
 		delete this->genome_;
 	}
 
@@ -38,12 +37,13 @@ public:
 	}
 
 	// Returns the fitness associated with the individual.
-	double fitness(){
+	double fitness() {
 		return this->fitness_;
 	}
 
 	// Sets the genome to be associated with the individual.
-	// @param new_genome -> genome to be associated
+	// Input: new_genome - genome to be set to this individual
+	// Output: new_genome is assigned, old genome is deleted
 	void set_genome(std::vector<T> * new_genome) {
 		if (this->genome_ != NULL) {
 			delete this->genome_;
@@ -51,9 +51,9 @@ public:
 		this->genome_ = new_genome;
 	}
 
-
 	// Sets fitness to be associated with the individual.
-	// @param fitness -> the fitness to be associated.
+	// Input: fitness - the fitness to be associated.
+	// Output: this->fitness is assigned input value
 	void set_fitness(double fitness){
 		this->fitness_ = fitness;
 	}
