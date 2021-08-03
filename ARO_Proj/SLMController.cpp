@@ -1,16 +1,16 @@
-// [INCUDE FILES]
-// - Required
-#include "stdafx.h"				// Required in source
+////////////////////
+// SLMController.cpp - implementation for controller that enacpsulates interactions with the SLMs
+// Last edited: 08/02/2021 by Andrew O'Kins
+////////////////////
 
-//	- External libraries
+#include "stdafx.h"				// Required in source
 #include "cdib.h"				// Used by blink to read in bitmaps
-//	- Custom classes
+
 #include "MainDialog.h"
 #include "ImageScaler.h"
 #include "SLMController.h"		// Header file
-
 #include "Utility.h"
-// - System libraries
+
 #include <string>
 #include <fstream>	// used to export information to file 
 

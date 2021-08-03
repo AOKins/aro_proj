@@ -1,6 +1,6 @@
 // [DESCRIPTION]
 // MainDialog.cpp: implementation file for the main dialog of the program
-// Authors: Benjamin Richardson, Rebecca Tucker, Kostiantyn Makrasnov and More @ ISP ASL
+// Authors: Benjamin Richardson, Rebecca Tucker, Kostiantyn Makrasnov, Andrew O'Kins, and More @ ISP ASL
 
 // [DEFINITIONS/ABRIVIATIONS]
 // MFC - Microsoft Foundation Class library - Used to design UI in C++
@@ -28,14 +28,12 @@
 
 // [CONSTRUCTOR/COMPONENT EVENTS]
 // Constructor for dialog
-MainDialog::MainDialog(CWnd* pParent) : CDialog(IDD_AROMAIN_DIALOG, pParent), m_ReadyRunning(_T(""))
-{
+MainDialog::MainDialog(CWnd* pParent) : CDialog(IDD_AROMAIN_DIALOG, pParent) {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
 // Reference UI components
-void MainDialog::DoDataExchange(CDataExchange* pDX)
-{
+void MainDialog::DoDataExchange(CDataExchange* pDX) {
 	CDialog::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_UGA_BUTTON, m_uGAButton);
 	DDX_Control(pDX, IDC_SGA_BUTTON, m_SGAButton);
@@ -217,7 +215,7 @@ void MainDialog::setDefaultUI() {
 //
 //   Returns: none
 //
-//   Purpose: MFC function that calls the AboutBox dialog
+//   Purpose: MFC function
 //
 //   Modifications: 
 //
@@ -336,7 +334,7 @@ BOOL MainDialog::PreTranslateMessage(MSG* pMsg) {
 	return CDialog::PreTranslateMessage(pMsg);
 }
 
-//OnBnClickedUgaButton: Select the uGA Algorithm Button
+// OnBnClickedUgaButton: Select the uGA Algorithm Button
 void MainDialog::OnBnClickedUgaButton() {
 	this->opt_selection_ = OptType::uGA;
 	Utility::printLine("INFO: uGA optimization selected");
@@ -418,7 +416,7 @@ void MainDialog::disableMainUI(bool isMainEnabled) {
 	this->m_OptButton.EnableWindow(isMainEnabled);
 }
 
-// Start the selected optimization if haven't started, or attempt to stop if already running
+// Start the selected optimization if haven't started, or attempt to stop if already running by setting flag
 void MainDialog::OnBnClickedStartStopButton() {
 	if (this->running_optimization_ == true) {
 		Utility::printLine("INFO: Optimization currently running, attempting to stop safely.");
@@ -451,6 +449,7 @@ void MainDialog::OnBnClickedStartStopButton() {
 
 // Worker thread process for running optimization while MainDialog continues listening for other input
 // Input: instance - pointer to MainDialog instance that called this method (will be cast to MainDialgo*)
+// Output: optimization according to dlg.opt_selection_ is performed
 UINT __cdecl optThreadMethod(LPVOID instance) {
 	MainDialog * dlg = (MainDialog*)instance;
 	dlg->disableMainUI(false); // Disable main UI (except for Start/Stop Button)

@@ -1,5 +1,5 @@
 ////////////////////
-// CameraControllerPICam.cpp - Implementation of CameraController using PICam SDK
+// CameraControllerPICam.cpp - implementation of CameraController using PICam SDK
 // Last edited: 07/21/2021 by Andrew O'Kins
 ////////////////////
 

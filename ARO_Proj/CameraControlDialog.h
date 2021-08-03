@@ -1,3 +1,8 @@
+////////////////////
+// CameraControlDialog.h - dialog for the "Camera Settings" tab window
+// Last edited: 08/02/2021 by Andrew O'Kins
+////////////////////
+
 #pragma once
 
 #include "afxwin.h"
@@ -11,6 +16,11 @@ public:
 	CameraControlDialog(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CameraControlDialog();
 
+	BOOL virtual PreTranslateMessage(MSG* pMsg);
+
+	// Tool tips to help inform the user about a control
+	CToolTipCtrl * m_mainToolTips;
+
 // Dialog Data
 	enum { IDD = IDD_CAMERA_CONTROL };
 
@@ -20,11 +30,8 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 public:
+	// User Input Components //
 	CEdit m_initialExposureTimeInput;
 	CEdit m_FramesPerSecond;
 	CEdit m_gammaValue;
-
-	// Tool tips to help inform the user about a control
-	CToolTipCtrl * m_mainToolTips;
-	BOOL virtual PreTranslateMessage(MSG* pMsg);
 };

@@ -1,4 +1,8 @@
-// Header file for the camera controller to PICam version
+////////////////////
+// CameraControllerPICam.h - Header file for the camera controller to PICam version
+// Last edited: 08/02/2021 by Andrew O'Kins
+////////////////////
+
 #ifndef CAMERA_CONTROLLER_PICAM_H_
 #define CAMERA_CONTROLLER_PICAM_H_
 

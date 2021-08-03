@@ -1,4 +1,8 @@
-// Header file for the camera controller to Spinnaker version
+////////////////////
+// CameraControllerSpinnaker.h - Header file for the camera controller to Spinnaker version
+// Last edited: 08/02/2021 by Andrew O'Kins
+////////////////////
+
 #ifndef CAMERA_CONTROLLER_SPINNAKER_H_
 #define CAMERA_CONTROLLER_SPINNAKER_H_
 

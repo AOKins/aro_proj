@@ -1,4 +1,7 @@
-// Implementation file for Spinnaker version of CameraController
+////////////////////
+// CameraControllerSpinnaker.cpp - implementation of CameraController using Spinnaker SDK
+// Last edited: 07/21/2021 by Andrew O'Kins
+////////////////////
 
 #include "stdafx.h"				// Required in source
 #include "CameraController.h"
@@ -119,7 +122,6 @@ bool CameraController::shutdownCamera() {
 	return true;
 }
 
-// [ACQUISITION]
 // Save an image with template file name
 // Input: curImage - image pointer to save
 //		  path - string to where and name of the image is to be saved
@@ -167,6 +169,7 @@ ImageController * CameraController::AcquireImage() {
 }
 
 // [CAMERA SETUP]
+// Pull camera settings from CameraControlDialog and AOIControlDialog
 bool CameraController::UpdateImageParameters() {
 	bool result = true;
 	// Frames per second
@@ -610,13 +613,6 @@ bool CameraController::GetCenter(int &x, int &y) {
 }
 
 bool CameraController::GetFullImage(int &x, int &y) {
-	//TODO: implement check if camera is currently running an optimization
-	//if (isCamStarted)
-	//{
-	//	Utility::printLine("WARNING: cannot retrive camera info because camera controller is currently in use!");
-	//	return false;
-	//}
-
 	if (cam->IsValid() && cam->IsInitialized()) {
 		CIntegerPtr ptrWidth = cam->GetNodeMap().GetNode("WidthMax");
 		x = int(ptrWidth->GetValue());

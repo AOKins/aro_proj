@@ -1,7 +1,8 @@
 ////////////////////
-// Optimization handler for simple genetic algorithm that inherits from base Optimization class
+// SGA_Optimization.h - handler for simple genetic algorithm that inherits from base Optimization class
 // Last edited: 06/17/2021 by Andrew O'Kins
 ////////////////////
+
 #ifndef SGA_OPTIMIZATION_H_
 #define SGA_OPTIMIZATION_H_
 

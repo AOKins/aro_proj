@@ -1,7 +1,8 @@
 ////////////////////
-// Population handler for simple genetic algorithm that inherits from base Population
+// SGA_Population.h - handler for simple genetic algorithm that inherits from base Population
 // Last edited: 06/21/2021 by Andrew O'Kins
 ////////////////////
+
 #ifndef SGAPOPULATION_H_
 #define SGAPOPULATION_H_
 

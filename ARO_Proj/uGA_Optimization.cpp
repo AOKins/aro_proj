@@ -75,12 +75,13 @@ bool uGA_Optimization::runOptimization() {
 			if (this->curr_gen % 10 == 0) {
 				Utility::printLine("INFO: Finished generation #" + std::to_string(this->curr_gen)+ " with a fitness of " + std::to_string(this->population[0]->getFitness(this->populationSize-1)));
 			}
+			// Record the time it took to perform this generation, then update start to now (for getting duration next generation)
 			if (this->saveTimeVSFitness) {
-				end = this->timestamp->MS_SinceStart();
+				end = this->timestamp->MicroS_SinceStart();
 				this->timePerGenFile << this->curr_gen << "," << end - start << std::endl;
 				start = end;
 			}
-		}
+		} // ... optimization loop
 		// Cleanup & Save resulting instance
 		if (shutdownOptimizationInstance()) {
 			Utility::printLine("INFO: Successfully ended optimization instance and saved results");
@@ -285,7 +286,7 @@ bool uGA_Optimization::setupInstanceVariables() {
 	//Open up files to which progress will be logged
 	if (this->logAllFiles || this->saveTimeVSFitness) {
 		this->timePerGenFile.open(this->outputFolder + "uGA_timePerformance.txt");
-		timePerGenFile << "Generation,Time\n";
+		timePerGenFile << "Generation,Time (microseconds)\n";
 		this->timeVsFitnessFile.open(this->outputFolder + "uGA_time_vs_fitness.txt");
 	}
 	if (this->logAllFiles || this->saveExposureShorten) {

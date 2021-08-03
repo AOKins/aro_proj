@@ -1,5 +1,5 @@
 ////////////////////
-// Base class to encapsulate a population in a genetic algorithm and some of the micro-genetic behaviors
+// Population.h - base class to encapsulate a population in a genetic algorithm and some of the micro-genetic behaviors
 // Last edited: 06/14/2021 by Andrew O'Kins
 ////////////////////
 #ifndef POPULATION_H_

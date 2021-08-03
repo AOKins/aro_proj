@@ -1,19 +1,16 @@
-// CameraControlDialog.cpp : implementation file
-//
+////////////////////
+// CameraControlDialog.cpp - implementation for camera settings tab window
+// Last edited: 07/08/2021 by Andrew O'Kins
+////////////////////
 
 #include "stdafx.h"
 #include "afxdialogex.h"
 #include "CameraController.h"
 #include "CameraControlDialog.h"
 
-
-// CameraControlDialog dialog
-
 IMPLEMENT_DYNAMIC(CameraControlDialog, CDialogEx)
 
-CameraControlDialog::CameraControlDialog(CWnd* pParent /*=NULL*/)
-	: CDialogEx(CameraControlDialog::IDD, pParent)
-{
+CameraControlDialog::CameraControlDialog(CWnd* pParent /*=NULL*/) : CDialogEx(CameraControlDialog::IDD, pParent) {
 	this->m_mainToolTips = new CToolTipCtrl();
 }
 
@@ -28,25 +25,23 @@ BOOL CameraControlDialog::OnInitDialog() {
 	return CDialogEx::OnInitDialog();
 }
 
-CameraControlDialog::~CameraControlDialog()
-{
+CameraControlDialog::~CameraControlDialog() {
 	delete this->m_mainToolTips;
 }
 
-void CameraControlDialog::DoDataExchange(CDataExchange* pDX)
-{
+void CameraControlDialog::DoDataExchange(CDataExchange* pDX) {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_EXPOSURE_TIME_INPUT, m_initialExposureTimeInput);
+
 #ifdef USE_SPINNAKER // Idea is that unless the features are in place, do not include these Spinnaker features in PICam build
 	DDX_Control(pDX, IDC_FPS_INPUT, m_FramesPerSecond);
 	DDX_Control(pDX, IDC_GMMA_VALUE_INPUT, m_gammaValue);
 #endif
-}
 
+}
 
 BEGIN_MESSAGE_MAP(CameraControlDialog, CDialogEx)
 END_MESSAGE_MAP()
-
 
 BOOL CameraControlDialog::PreTranslateMessage(MSG* pMsg) {
 	if (this->m_mainToolTips != NULL) {
@@ -54,4 +49,3 @@ BOOL CameraControlDialog::PreTranslateMessage(MSG* pMsg) {
 	}
 	return CDialog::PreTranslateMessage(pMsg);
 }
-// CameraControlDialog message handlers

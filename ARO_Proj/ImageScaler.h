@@ -1,3 +1,7 @@
+////////////////////
+// ImageScaler.h - Header file of ImageScaler which is used to scale an image from one size to another
+////////////////////
+
 #ifndef IMAGE_SCALER_H_
 #define IMAGE_SCALER_H_
 

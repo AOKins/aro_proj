@@ -1,5 +1,7 @@
-// AOIControlDialog.cpp : implementation file
-//
+////////////////////
+// AOIControlDIalog.cpp - implemetnation for the "AOI Settings" tab window
+// Last edited: 08/02/2021 by Andrew O'Kins
+////////////////////
 
 #include "stdafx.h"
 #include "afxdialogex.h"
@@ -7,8 +9,6 @@
 #include "CameraController.h"
 #include "AOIControlDialog.h"
 #include "Utility.h"
-
-#include <string>
 
 // AOIControlDialog dialog
 IMPLEMENT_DYNAMIC(AOIControlDialog, CDialogEx)
@@ -32,13 +32,11 @@ BOOL AOIControlDialog::OnInitDialog() {
 	return CDialogEx::OnInitDialog();
 }
 
-AOIControlDialog::~AOIControlDialog()
-{
+AOIControlDialog::~AOIControlDialog() {
 	delete this->m_mainToolTips;
 }
 
-void AOIControlDialog::DoDataExchange(CDataExchange* pDX)
-{
+void AOIControlDialog::DoDataExchange(CDataExchange* pDX) {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_AOI_LEFT_INPUT, m_leftInput);
 	DDX_Control(pDX, IDC_AOI_RIGHT_INPUT, m_rightInput);
@@ -47,7 +45,6 @@ void AOIControlDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_MAX_IMAGE_SIZE_BUTTON, m_maxImageSizeBtn);
 	DDX_Control(pDX, IDC_CENTER_AOI_BUTTON, m_centerAOIBtn);
 }
-
 
 BEGIN_MESSAGE_MAP(AOIControlDialog, CDialogEx)
 	ON_BN_CLICKED(IDC_CENTER_AOI_BUTTON, &AOIControlDialog::OnBnClickedCenterAoiButton)
@@ -61,13 +58,11 @@ BOOL AOIControlDialog::PreTranslateMessage(MSG* pMsg) {
 	return CDialog::PreTranslateMessage(pMsg);
 }
 
-// AOIControlDialog message handlers
-void AOIControlDialog::OnBnClickedCenterAoiButton()
-{
-	Utility::printLine("INFO: starting to set AOI to center;");
-
-	int centerX;
-	int centerY;
+// AOIControlDialog handler for AOI button press
+// Input: The text fields for width and height
+// Output: The x,y offsets (and width/height if necessary) to have the AOI be centered within the image
+void AOIControlDialog::OnBnClickedCenterAoiButton() {
+	int centerX, centerY;
 
 	if (this->cc != nullptr) {
 		if (!cc->GetCenter(centerX, centerY))
@@ -116,6 +111,7 @@ void AOIControlDialog::OnBnClickedCenterAoiButton()
 
 	//Set all of the final AOI values to respective feilds
 	SetAOIFeilds(finalX, finalY, finalWidth, finalHeight);
+	Utility::printLine("INFO: Centered AOI");
 }
 
 //[ACCESSOR(S)/MUTATORS]
@@ -123,8 +119,13 @@ void AOIControlDialog::SetCameraController(CameraController* cc) {
 	this->cc = cc;
 }
 
-void AOIControlDialog::SetAOIFeilds(int x, int y, int width, int height)
-{
+// Set the AOI fields
+// Input: x - the horizontal offset in pixels
+//		  y - the vertical offset in pixels
+//	  width - width of the AOI image in pixels
+//	 height - height of the AOI image in pixels
+// Output: The appropriate AOI fields are updated to the inputted values
+void AOIControlDialog::SetAOIFeilds(int x, int y, int width, int height) {
 	std::string xStr = std::to_string(x);
 	std::string yStr = std::to_string(y);
 	std::string wStr = std::to_string(width);
@@ -141,10 +142,11 @@ void AOIControlDialog::SetAOIFeilds(int x, int y, int width, int height)
 	m_heightInput.SetWindowTextW(hStrW.c_str());
 }
 
+// Set the AOI fields to use the entire image of the camera
 void AOIControlDialog::OnBnClickedMaxImageSizeButton() {
-	int finalWidth;
-	int finalHeight;
+	int finalWidth, finalHeight;
 
+	// Get the max image dimensions
 	if (cc != nullptr) {
 		if (!cc->GetFullImage(finalWidth, finalHeight)) {
 			Utility::printLine("ERROR: Cannot retrieve the max image information from camera controller!");
@@ -153,6 +155,6 @@ void AOIControlDialog::OnBnClickedMaxImageSizeButton() {
 	else {
 		Utility::printLine("ERROR: Cannot find the camera controller to center the AOI settings!");
 	}
-
+	// Set with no offsets and full image dimensions
 	SetAOIFeilds(0, 0, finalWidth, finalHeight);
 }

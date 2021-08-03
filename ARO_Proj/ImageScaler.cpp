@@ -1,3 +1,8 @@
+////////////////////
+// CameraDisplay.cpp - implementation of CameraDisplay class
+// Last edited: 08/02/2021 by Andrew O'Kins
+////////////////////
+
 #include "stdafx.h"
 #include "ImageScaler.h"
 
@@ -8,8 +13,7 @@
 // @param output_image_height -> y diminsion size of output image
 // @param output_image_depth -> z diminsion size of output image
 ImageScaler::ImageScaler(int output_image_width, int output_image_height, int output_image_depth) :
-output_image_width_(output_image_width), output_image_height_(output_image_height), output_image_depth_(output_image_depth)
-{
+output_image_width_(output_image_width), output_image_height_(output_image_height), output_image_depth_(output_image_depth) {
 	bin_size_x_ = bin_size_y_ = -1;
 	max_bins_x_ = max_bins_y_ = -1;
 	used_bins_x_ = used_bins_y_ = -1;
@@ -21,8 +25,7 @@ output_image_width_(output_image_width), output_image_height_(output_image_heigh
 // Set bin size
 // @param bin_size_x -> x dimension size of bins
 // @param bin_size_y -> y dimension size of bins
-void ImageScaler::SetBinSize(int bin_size_x, int bin_size_y)
-{
+void ImageScaler::SetBinSize(int bin_size_x, int bin_size_y) {
 	bin_size_x_ = bin_size_x;
 	bin_size_y_ = bin_size_y;
 	max_bins_x_ = output_image_width_ / bin_size_x;
@@ -43,8 +46,7 @@ void ImageScaler::GetMaxBins(int &max_bins_x, int &max_bins_y) {
 // Sets the number of bins that there will be in the x and y dimensions
 // @param used_bins_x -> the number of bins in the x dimension
 // @param used_bins_y -> the number of bins in the y dimension
-void ImageScaler::SetUsedBins(int used_bins_x, int used_bins_y)
-{
+void ImageScaler::SetUsedBins(int used_bins_x, int used_bins_y) {
 	used_bins_x_ = max(0, min(used_bins_x, max_bins_x_));
 	used_bins_y_ = max(0, min(used_bins_y, max_bins_y_));
 	remainder_x_ = (output_image_width_ % bin_size_x_) + ((max_bins_x_ - used_bins_x_) * bin_size_x_);
@@ -70,8 +72,7 @@ void ImageScaler::ZeroOutputImage(unsigned char* output_image) {
 // Takes an array holding values for each bin and fills an image with those values
 // @param input_image -> the array holding all the bin values
 // @param output_image -> the array holding the output image
-void ImageScaler::TranslateImage(int* input_image, unsigned char* output_image)
-{
+void ImageScaler::TranslateImage(int* input_image, unsigned char* output_image) {
 	if (requirement_set_bin_size_ && requirement_set_used_bins_)
 	{	// prevent action if all steps to set up image scaling have not been completed
 		int start_point = top_remainder_y_ + left_remainder_x_;

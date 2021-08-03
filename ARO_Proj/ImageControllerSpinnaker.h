@@ -1,4 +1,8 @@
-// Header file for the image handling/controller to Spinnaker version
+////////////////////
+// ImageControllerSpinnaker.h - Header file for the image handling/controller to Spinnaker version
+// Last edited: 08/02/2021 by Andrew O'Kins
+////////////////////
+
 #ifndef IMAGE_CONTROLLER_SPINNAKER_H_
 #define IMAGE_CONTROLLER_SPINNAKER_H_
 

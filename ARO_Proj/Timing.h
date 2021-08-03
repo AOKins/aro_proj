@@ -1,12 +1,17 @@
+////////////////////
+// Timing.h - header file for IntervalTimer, StopwatchTimer, and TimeStampGenerator
+// Last edited: 08/02/2021 by Andrew O'Kins
+////////////////////
+
 #ifndef TIMING_H_
 #define TIMING_H_
 
 #include <Windows.h>
 
-//Keeps track of time intervals relative to the timer's start time. Pausing
-//will stop the program until the current time interval is finished. This will
-//work well if you must stay in sync with something whose timing is persistent
-//and you don't want variable time function calls throwing you out of sync.
+// Keeps track of time intervals relative to the timer's start time. Pausing
+// will stop the program until the current time interval is finished. This will
+// work well if you must stay in sync with something whose timing is persistent
+// and you don't want variable time function calls throwing you out of sync.
 class IntervalTimer{
 private:
 	__int64 frequency_;
@@ -71,10 +76,10 @@ public:
 	}
 };
 
-//This timer acts like a stopwatch, as it can be started and stopped again.
-//It will take the interval length and, when you pause, make sure you halt
-//until that much time has passed since you started, but will not do anything
-//after that.
+// This timer acts like a stopwatch, as it can be started and stopped again.
+// It will take the interval length and, when you pause, make sure you halt
+// until that much time has passed since you started, but will not do anything
+// after that.
 class StopwatchTimer {
 private:
 	__int64 frequency_;
@@ -110,6 +115,8 @@ public:
 	}
 };
 
+// This timer gives how much time has elapsed since the generator's construction
+// used in the optimization for both timing output and in checking against stop/timeout conditions
 class TimeStampGenerator {
 private:
 	__int64 frequency_;

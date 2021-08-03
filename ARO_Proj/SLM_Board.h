@@ -1,3 +1,8 @@
+////////////////////
+// SLM_Board.h - handler for the properties of a SLM board
+// Last edited: 08/02/2021 by Andrew O'Kins
+////////////////////
+
 #ifndef SLM_BOARD_
 #define SLM_BOARD_
 

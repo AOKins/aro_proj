@@ -62,9 +62,17 @@ BEGIN_MESSAGE_MAP(OutputControlDialog, CDialogEx)
 	ON_BN_CLICKED(IDC_SAVE_ELITEIMAGE, &OutputControlDialog::OnBnClickedSaveEliteimage)
 END_MESSAGE_MAP()
 
+BOOL OutputControlDialog::PreTranslateMessage(MSG* pMsg) {
+	if (this->m_mainToolTips != NULL) {
+		this->m_mainToolTips->RelayEvent(pMsg);
+	}
+	return CDialog::PreTranslateMessage(pMsg);
+}
 
 // OutputControlDialog message handlers
 
+// When the output location button is pressed, open a folder selection window to set new path
+// and update this->m_OutputLocationField accordingly
 void OutputControlDialog::OnBnClickedOutputLocationButton() {
 	bool tryAgain;
 	CString folderInput;
@@ -87,7 +95,8 @@ void OutputControlDialog::OnBnClickedOutputLocationButton() {
 	} while (tryAgain == true);
 }
 
-// If this is enabled, disable all of the other toggles or vice versa
+// When enable all is toggled, disable interactivity with the sub selection options
+// Also calls OnBnClickedSaveEliteimage()
 void OutputControlDialog::OnBnClickedLogallFiles() {
 	bool enable = !(this->m_logAllFilesCheck.GetCheck() == BST_CHECKED);
 	// If enable all is checked, then the sub-options are disabled
@@ -97,17 +106,9 @@ void OutputControlDialog::OnBnClickedLogallFiles() {
 	this->m_SaveExposureShortCheck.EnableWindow(enable);
 	this->m_SaveParameters.EnableWindow(enable);
 	this->OnBnClickedSaveEliteimage();
-
 }
 
-BOOL OutputControlDialog::PreTranslateMessage(MSG* pMsg) {
-	if (this->m_mainToolTips != NULL) {
-		this->m_mainToolTips->RelayEvent(pMsg);
-	}
-	return CDialog::PreTranslateMessage(pMsg);
-}
-
-
+// if the save elite images option is enabled, enable interactivity with the frequency field
 void OutputControlDialog::OnBnClickedSaveEliteimage() {
 	bool enabled = this->m_SaveEliteImagesCheck.GetCheck() == BST_CHECKED || this->m_logAllFilesCheck.GetCheck() == BST_CHECKED;
 	this->m_eliteSaveFreq.EnableWindow(enabled);

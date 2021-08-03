@@ -1,3 +1,8 @@
+////////////////////
+// BruteForce_Optimization.h - header file for BF child class that encapsulates the BF optimization algorithm
+// Last edited: 08/02/2021 by Andrew O'Kins
+////////////////////
+
 #ifndef BRUTE_FORCE_OPTIMIZATION_H_
 #define BRUTE_FORCE_OPTIMIZATION_H_
 
@@ -7,9 +12,13 @@ class BruteForce_Optimization : public Optimization {
 	std::ofstream lmaxfile;
 	std::ofstream rtime;
 
-	std::vector<int*> finalImages_; // Once finished, contains the resulting optimized SLM images for all the boards used
+	// Once finished, contains the resulting optimized SLM images for all the boards used
+	std::vector<int*> finalImages_;
+	// If enabled, optimize all the boards sequentially
 	bool multiEnable_;
+	// If enabled, optimize the second board too
 	bool dualEnable_;
+	// Record of best fitness overall during optimization
 	double allTimeBestFitness;
 public:
 	// Constructor - inherits from base class

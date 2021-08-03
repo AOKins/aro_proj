@@ -1,5 +1,7 @@
-//Implementation file for TimeStamp.h
-//References: To remove trailing zeros from double to string converion: https://thispointer.com/c-convert-double-to-string-and-manage-precision-scientific-notation/
+////////////////////
+// TimeStamp.cpp - implementation file for TimeStamp.h
+// Last edited: 08/02/2021 by Andrew O'Kins
+////////////////////
 
 #include "stdafx.h"
 #include "TimeStamp.h"
@@ -26,6 +28,7 @@ double TimeStamp::GetDurationMSec() {
 std::string TimeStamp::GetLabel() {
 	//Properly convert interval amount to string
 	std::ostringstream ss;
+	// references to remove trailing zeros from double to string converion: https://thispointer.com/c-convert-double-to-string-and-manage-precision-scientific-notation/
 	ss << std::fixed << std::setprecision(4) << duration;
 	std::string curNum = ss.str();
 

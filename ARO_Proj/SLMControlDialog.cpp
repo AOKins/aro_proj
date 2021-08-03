@@ -45,8 +45,7 @@ SLMControlDialog::~SLMControlDialog() {
 	delete this->m_mainToolTips;
 }
 
-void SLMControlDialog::DoDataExchange(CDataExchange* pDX)
-{
+void SLMControlDialog::DoDataExchange(CDataExchange* pDX) {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_SLM_PWR_BUTTON, m_SlmPwrButton);
 	DDX_Control(pDX, ID_SLM_SELECT, slmSelection_);
@@ -72,7 +71,7 @@ BOOL SLMControlDialog::PreTranslateMessage(MSG* pMsg) {
 	return CDialog::PreTranslateMessage(pMsg);
 }
 
-// Update selection ID value and rest of GUI
+// Update selection ID value and the GUI according to the board
 void SLMControlDialog::OnCbnSelchangeSlmSelect() { 
 	// Update current SLM selection
 	this->slmSelectionID_ = this->slmSelection_.GetCurSel();
@@ -90,7 +89,7 @@ void SLMControlDialog::OnCbnSelchangeSlmSelect() {
 	this->m_SlmPwrButton.SetWindowTextW(pwrMsg);
 }
 
-
+// Turn the select SLM's power on/off accordingly
 void SLMControlDialog::OnBnClickedSlmPwrButton() {
 	CString PowerState;
 	m_SlmPwrButton.GetWindowTextW(PowerState);
@@ -171,6 +170,7 @@ bool SLMControlDialog::attemptLUTload(int slmNum, std::string filePath) {
 	return noErrors;
 }
 
+// Open a file selection window to get a file path, if it fails prompt to try again
 void SLMControlDialog::OnBnClickedSetlut() {
 	bool tryAgain;
 	CString fileName;
@@ -231,12 +231,14 @@ void SLMControlDialog::OnCbnChangeSlmAll() {
 }
 
 // Simple method for populating the selection list depending on number of boards connected
+// syntax for each item is "Board #[1 based index]"
 void SLMControlDialog::populateSLMlist() {
 	this->slmSelection_.Clear();
 	int numBoards = int(this->slmCtrl->boards.size());
 	// Populate drop down menu with numbers for each SLM
 	for (int i = 0; i < numBoards; i++) {
-		CString strI(std::to_string(i + 1).c_str());
+		std::string label = "Board #" + std::to_string(i + 1);
+		CString strI(label.c_str());
 		LPCTSTR lpstrI(strI);
 		this->slmSelection_.AddString(lpstrI);
 	}

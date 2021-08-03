@@ -1,3 +1,8 @@
+////////////////////
+// CameraDisplay header - class to wrap the process of displaying image data to the user
+// Last edited: 08/02/2021 by Andrew O'Kins
+////////////////////
+
 #ifndef GRAPHICS_DISPLAY_H_
 #define GRAPHICS_DISPLAY_H_
 
@@ -8,10 +13,14 @@
 
 class CameraDisplay {
 private:
+	// Dimensions of the display window contents
 	int port_height_;
 	int port_width_;
+	// Matrix to display
 	cv::Mat display_matrix_;
+	// Window name (also used in controlling the appropriate window)
 	std::string display_name_;
+	// true if the window has been created
 	bool _isOpened;
 public:
 	// Constructor
@@ -25,7 +34,7 @@ public:
 	void OpenDisplay(int window_width = 240, int window_height = 240);
 	// Resize the display with set window dimensions
 	void resizeDisplay(int new_width, int new_height);
-
+	// Close the window display
 	void CloseDisplay();
 
 	// Update the display contents, if display not open it is also opened

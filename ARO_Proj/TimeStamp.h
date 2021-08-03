@@ -1,4 +1,8 @@
-// Header for TimeStamp class to generate label
+////////////////////
+// TimeStamp.h - header for TimeStamp class to generate label
+// Last edited: 08/02/2021 by Andrew O'Kins
+////////////////////
+
 #ifndef TIME_STAMP
 #define TIME_STAMP
 

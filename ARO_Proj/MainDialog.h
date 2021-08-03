@@ -1,10 +1,11 @@
+////////////////////
+// MainDialog.h - header file for the main dialog of the program
+// Last edited: 08/02/2021 by Andrew O'Kins
+////////////////////
+
 #ifndef MAIN_DIALOG_
 #define MAIN_DIALOG_
 
-// [DESCRIPTION]
-// MainDialog.h : header file for the main dialog of the program
-
-// [INCUDE FILES]
 #include "afxwin.h"
 #include "afxdialogex.h"
 #include "afxcmn.h"
@@ -66,7 +67,24 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
+
+	afx_msg void OnSlmPwrButton();
+	virtual void OnOK();
+	afx_msg void OnClose();
+
+	// Tool tips to help inform the user about a control
+	CToolTipCtrl * m_mainToolTips;
+	BOOL virtual PreTranslateMessage(MSG* pMsg);
 public:
+
+	// Enumeration for type of optimizations to select
+	enum OptType {
+		OPT5,
+		SGA,
+		uGA
+	};
+	OptType opt_selection_; // Current selected optimization algorithm
+
 	CButton m_uGAButton; // Select uGA button
 	CButton m_SGAButton; // Select SGA button
 	CButton m_OptButton; // Select OPT5 (BruteForce) button
@@ -76,18 +94,16 @@ public:
 	// Thread property to run the optimization algorithm through once committed to running
 	CWinThread* runOptThread;
 
+	// OnBnClickedUgaButton: Select the uGA Algorithm Button
 	afx_msg void OnBnClickedUgaButton();
+	//OnBnClickedSgaButton: Select the SGA Algorithm Button
 	afx_msg void OnBnClickedSgaButton();
+	//OnBnClickedOptButton: Select the OPT5 Algorithm Button
 	afx_msg void OnBnClickedOptButton();
 	afx_msg void OnBnClickedMultiThreadEnable();
-protected:
-	afx_msg void OnSlmPwrButton();
-	virtual void OnOK();
-	//afx_msg void OnTimer(UINT_PTR nIDEvent);
-	afx_msg void OnClose();
-private:
-	CString m_ReadyRunning;
-public:
+	// Start the selected optimization if haven't started, or attempt to stop if already running by setting flag
+	afx_msg void OnBnClickedStartStopButton();
+
 	// Sub dialogs
 	OptimizationControlDialog m_optimizationControlDlg;
 	SLMControlDialog m_slmControlDlg;
@@ -98,22 +114,15 @@ public:
 	CWnd* m_pwndShow;
 	CTabCtrl m_TabControl;
 	afx_msg void OnTcnSelchangeTab1(NMHDR *pNMHDR, LRESULT *pResult);
-	afx_msg void OnBnClickedStartStopButton();
 	
+	// boolean variable accessed by the optimization method to determine if it should prematurely stop or not
 	bool stopFlag = false;
+	// boolean to track if the optimization aglorithm is running or not (used in start/stop button to determine action)
 	bool running_optimization_;
+	// Store output of optimization thread so that the gui can access it when finished
 	bool opt_success;
-	// Enumeration for type of optimizations to select
-	enum OptType {
-		OPT5,
-		SGA,
-		uGA
-	};
-	OptType opt_selection_; // Current selected optimization algorithm
-	
-	// Tool tips to help inform the user about a control
-	CToolTipCtrl * m_mainToolTips;
-	BOOL virtual PreTranslateMessage(MSG* pMsg);
+
+	// Display About Window as popup from button press
 	afx_msg void OnBnClickedAboutButton();
 };
 

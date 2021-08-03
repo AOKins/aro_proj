@@ -1,7 +1,8 @@
 ////////////////////
-// Optimization handler for micro genetic algorithm that inherits from base Optimization class
+// uGA_Optimization.h - handler for micro genetic algorithm that inherits from base Optimization class
 // Last edited: 07/01/2021 by Andrew O'Kins
 ////////////////////
+
 #ifndef UGA_OPTIMIZATION_H_
 #define UGA_OPTIMIZATION_H_
 

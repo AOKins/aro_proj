@@ -1,9 +1,10 @@
+////////////////////
+// ARO_Ap.cpp - implementation file for the core of the program, creates MainDialog
+// Last edited: 08/02/2021 by Andrew O'Kins
+////////////////////
 
-// [DESCRIPTION]
-// Implementation file for the core of the program 
 #include "stdafx.h"
 #include "ARO_App.h"
-
 
 // Handles F1 Help Menu
 BEGIN_MESSAGE_MAP(ARO_AppApp, CWinApp)
@@ -15,7 +16,6 @@ ARO_AppApp theApp;
 
 // [CONSTRUCTOR(S)]
 ARO_AppApp::ARO_AppApp() {}
-
 
 // [INITIALIZER]
 BOOL ARO_AppApp::InitInstance() {

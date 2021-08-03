@@ -1,3 +1,8 @@
+////////////////////
+// SLMController.h - header for controller that enacpsulates interactions with the SLMs
+// Last edited: 08/02/2021 by Andrew O'Kins
+////////////////////
+
 #ifndef SLM_CONTROLLER_H_
 #define SLM_CONTROLLER_H_
 
@@ -36,17 +41,11 @@ public:
 	// Repopulate the array of boards with what is currently connected and with some default values
 	bool repopulateBoardList();
 
-	void setBoardImage(int boardIdx = 0);
-
-	void addBoard(SLM_Board* board);
-	void removeBoard(int boardIdx);
-
 	bool IsAnyNematic();
 
 	// Update the framerate for the boards according to the GUI to match camera setting
 	// Returns true if no errors, false if error occurs
 	bool updateFromGUI();
-
 
 	// Assign and load LUT file
 	// Input:
@@ -77,27 +76,6 @@ public:
 	//		image - pointer to array of image to assign to board
 	// Output: Write image to board at slmNum, using that board's height for the image size
 	bool writeImageToBoard(int slmNum, unsigned char * image);
-
-private:
-
-	////////////////////////////////////////////////////////////////////////
-	//
-	//   ScaleBitmap()
-	//
-	//   Inputs: the array that holds the image to scale, the current bitmap size, 
-	//			 the final bitmap size
-	//
-	//   Returns: the scaled image
-	//
-	//   Purpose: This will scale the bitmap from its initial size to a 128x128
-	//			  if load is set to false. Otherwise the image is scaled to a 
-	//			  512x512 if the board type is set to 512ASLM, or 256x256 if the 
-	//			  board type is set to 256ASLM
-	//
-	//   Modifications:
-	//
-	/////////////////////////////////////////////////////////////////////////
-	unsigned char* SLMController::ScaleBitmap(unsigned char* InvertedImage, int BitmapSizeHeight, int BitmapSizeWidth, int FinalBitmapSizeHeight, int FinalBitmapSizeWidth);
 };
 
 #endif

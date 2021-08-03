@@ -1,3 +1,8 @@
+////////////////////
+// Optimization.h - header file for the base optimization class
+// Last edited: 08/02/2021 by Andrew O'Kins
+////////////////////
+
 #ifndef OPTIMIZATION_H_
 #define OPTIMIZATION_H_
 
@@ -63,12 +68,13 @@ protected:
 	std::vector<ImageScaler*> scalers; // Image scalers for each SLM (each SLM may have different dimensions so can't have just one)
 	std::vector<unsigned char*> slmScaledImages; // To easily store the scaled images from individual to what will be written
 	
-	// Logging file streams // TODO at finished state may seek to change/remove these to improve performance while running
+	// Logging file streams
 	std::ofstream tfile;				// Record elite individual progress over generations
 	std::ofstream timePerGenFile;		// Record time it took to perform each generation during optimization
 	std::ofstream timeVsFitnessFile;	// Recording general fitness progress
 	std::ofstream efile;				// Exposure file to record when exposure is shortened
-	std::string outputFolder;
+	std::string outputFolder;	// string containing path to folder to save outputs to
+
 	// Methods for use in runOptimization()
 	// Pull GUI settings to set parameters
 	bool prepareStopConditions();

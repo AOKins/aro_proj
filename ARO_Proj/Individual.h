@@ -1,8 +1,7 @@
 ///////////////////////////////////////////////////
 //  DTRA2 DVI OPT
-//  Author: Patrick Price
+//  Author(s): Patrick Price, Andrew O'Kins
 //  Company: WSU ISP ASL
-//	
 //
 
 #ifndef INDIVIDUAL_H_
@@ -13,7 +12,6 @@
 template <class T>
 class Individual {
 private:
-
 	// The genome associated with the individual.
 	std::vector<T>* genome_;
 
@@ -23,7 +21,7 @@ private:
 
 public:
 
-	// Constructor
+	// Constructor, genome is initially null and fitness -1
 	Individual(){
 		this->genome_ = NULL;
 		this->fitness_ = -1;
@@ -62,6 +60,7 @@ public:
 
 }; // ... class Individual
 
+// Comparative operator
 template <typename T>
 bool operator<(Individual<T> &a, Individual<T> &b) {
 	return a.fitness() < b.fitness();
