@@ -5,6 +5,7 @@
 
 #include "stdafx.h"				// Required in source
 #include "CameraController.h"	// Header file (also will define if using PICam or Spinnaker)
+
 #ifdef USE_PICAM // Only include this implementation content if using PICam
 
 #include "MainDialog.h"
@@ -12,7 +13,7 @@
 
 CameraController::CameraController(MainDialog* dlg_) {
 	this->dlg = dlg_;
-	
+	this->libraryInitialized = false;
 	this->UpdateConnectedCameraInfo();
 }
 
@@ -42,7 +43,7 @@ bool CameraController::setupCamera() {
 		return false;
 	}
 	Utility::printLine("INFO: Camera has been setup!");
-	return false; 
+	return true; 
 }
 
 // Start acquisition
@@ -66,7 +67,8 @@ ImageController* CameraController::AcquireImage() {
 	Picam_GetParameterIntegerValue(this->camera_, PicamParameter_FrameSize, &frame_size);
 	int num_pixels = frame_size / 2; // Number of pixels is half the size in bytes (16 bit depth for each pixel)
 	// Grab an image
-	if (Picam_Acquire(this->camera_, 1, -1, &curImageData, &errors) != PicamError_None) {
+	PicamError result = Picam_Acquire(this->camera_, 1, -1, &curImageData, &errors);
+	if (result != PicamError_None) {
 		Utility::printLine("ERROR: Failed to acquire data from camera!");
 		return NULL;
 	}
@@ -88,12 +90,40 @@ bool CameraController::stopCamera() {
 // [UTILITY]
 int CameraController::PrintDeviceInfo() {
 	// TODO
+	Utility::printLine();
+	Utility::printLine("*** CAMERA INFORMATION ***");
 
-
+	
+	// Display Exposure time and calculated Framerate
+	Utility::printLine("Exposure time: " + std::to_string(getFloatParameterValue(PicamParameter_ExposureTime)) + " milliseconds");
+	Utility::printLine("Calculated framerate: " + std::to_string(getFloatParameterValue(PicamParameter_FrameRateCalculation)) + " frames per second");
 
 	return 0;
 }
 
+piint CameraController::getIntParameterValue(PicamParameter parameter) {
+	piint value;
+	PicamError errmsg = Picam_GetParameterIntegerValue(this->camera_, parameter, &value);
+	if (errmsg == PicamError_None) {
+		return value;
+	}
+	else {
+		Utility::printLine("WARNING: Failed to get an integer parameter! Error code: " + errmsg);
+		return 0;
+	}
+}
+
+piflt CameraController::getFloatParameterValue(PicamParameter parameter) {
+	piflt value;
+	PicamError errmsg = Picam_GetParameterFloatingPointValue(this->camera_, parameter, &value);
+	if (errmsg == PicamError_None) {
+		return value;
+	}
+	else {
+		Utility::printLine("WARNING: Failed to get an integer parameter! Error code: " + errmsg);
+		return 0;
+	}
+}
 
 bool CameraController::shutdownCamera() {
 	Utility::printLine("INFO: Beginning to shutdown camera!");
@@ -221,35 +251,68 @@ bool CameraController::UpdateImageParameters() {
 
 // Reconnect camera
 bool CameraController::UpdateConnectedCameraInfo() {
+	PicamError err;
 	// Initialize library if needed
 	Picam_IsLibraryInitialized(this->libraryInitialized);
-	if (this->libraryInitialized) {
+	if (!this->libraryInitialized) {
 		Picam_InitializeLibrary();
 	}
+
 	pibln connected;
 	
 	// Release if already connected to a camera
-	Picam_IsCameraConnected(this->camera_, &connected);
+	err = Picam_IsCameraConnected(&this->camera_, &connected);
 	if (connected) {
 		Picam_CloseCamera(this->camera_);
 	}
 
 	// Connect this camera to the first available
-	Picam_OpenFirstCamera(this->camera_);
+	if (Picam_OpenFirstCamera(&this->camera_) == PicamError_None) {
+		Utility::printLine("INFO: Connected to first PICam camera");
+	}
+	else {
+		// If no connected camera, will create a demo camera for the purposes of demonstrating the program and debugging
+		// Demo setup is based on provided PICam example within its acquire.cpp source file
+		Utility::printLine("WARNING: Failed to connect to a camera, creating demo camera to demonstrate program");
+		
+		PicamCameraID id;
+		PicamError demoConnectErr = Picam_ConnectDemoCamera(PicamModel_Pixis100B, "12345", &id);
+		if (demoConnectErr == PicamError_None) {
+			Picam_OpenCamera(&id, &this->camera_); // connecting to demo camera
+			Utility::printLine("INFO: Current demo using model Pixis100B, serial number 12345");
+		}
+		else {
+			std::string errMsg = "ERROR: " + std::to_string(demoConnectErr);
+			Utility::printLine(errMsg);
+		}
+	}
 
 	// Check to make sure connected
 	Picam_IsCameraConnected(this->camera_, &connected);
 
-	if (this->camera_ == NULL || !connected) {
+	if (!connected) {
 		Utility::printLine("ERROR: Failed to open camera!");
 		return false;
 	}
-
-	return true; // No errors!
+	return true; // No errors and now connected to camera!
 }
 
 // Set ROI parameters, image format, etc.
 bool CameraController::ConfigureCustomImageSettings() {
+	// Set Pixel format to smallest available size (which is 2 bytes in size, will need to descale when getting images to 1 byte)
+	if (Picam_SetParameterIntegerValue(this->camera_, PicamParameter_PixelFormat, PicamPixelFormat_Monochrome16Bit) != PicamError_None) {
+		Utility::printLine("ERROR: Failed to set pixel format to mono 16 bit!");
+		return false;
+	}
+
+	if (Picam_SetParameterIntegerValue(this->camera_, PicamParameter_ReadoutControlMode, PicamReadoutControlMode_FullFrame) != PicamError_None) {
+		Utility::printLine("ERROR: Failed to set readout control mode to full frame!");
+		return false;
+	}
+
+
+	// ROI according to GUI, implementation approach based on PICam example rois.cpp //
+
 	//XY factor check (axes offsets need to be certain factor to be valid see above)
 	if (this->x0 % 4 != 0) {
 		this->x0 -= this->x0 % 4;
@@ -257,15 +320,20 @@ bool CameraController::ConfigureCustomImageSettings() {
 	if (this->y0 % 2 != 0) {
 		this->y0 -= this->y0 % 2;
 	}
-	
-	// Set Pixel format to smallest available size (which is 2 bytes in size, will need to descale when getting images to 1 byte)
-	if (Picam_SetParameterIntegerValue(this->camera_, PicamParameter_PixelFormat, PicamPixelFormat_Monochrome16Bit) != PicamError_None) {
-		Utility::printLine("ERROR: Failed to set pixel format to mono 16 bit!");
-		return false;
+
+	// Checking if the GUI setup is invalid by checking against max dimensions and if our ROI is going out of bounds
+	int x_max, y_max;
+	this->GetFullImage(x_max, y_max);
+	if (this->x0 + this->cameraImageWidth > x_max || this->y0 + this->cameraImageHeight > y_max) {
+		Utility::printLine("ERROR: Set ROI exceeds the camera constraints!  Defaulting to entire camera image");
+		this->x0 = 0;
+		this->y0 = 0;
+		this->cameraImageWidth = x_max;
+		this->cameraImageHeight = y_max;
 	}
-	// ROI according to GUI
-	const PicamRois* region;
+
 	/* Get the orinal ROI */
+	const PicamRois* region;
 	if (Picam_GetParameterRoisValue(this->camera_, PicamParameter_Rois, &region) != PicamError_None) {
 		Utility::printLine("ERROR: Failed to receive region");
 		return false;
@@ -280,23 +348,40 @@ bool CameraController::ConfigureCustomImageSettings() {
 		region->roi_array[0].y_binning = 1;
 	}
 
-	if (Picam_SetParameterRoisValue(this->camera_, PicamParameter_Rois, region) != PicamError_None) {
+	PicamError errMsg = Picam_SetParameterRoisValue(this->camera_, PicamParameter_Rois, region);
+
+	if (errMsg != PicamError_None) {
 		Utility::printLine("ERROR: Failed to set ROI");
 		return false;
 	}
 	
-
-	if (PrintDeviceInfo() == -1) {
-		Utility::printLine("WARNING: Couldn't display camera information!");
-	}
+	// Setting initial exposure //
+	this->ConfigureExposureTime();
 
 	// TODO: Figure out these two parameters
 	// Set gamma
-		// It may appear that the equivalent to Gamma
+		// Unsure of comparablse setting for PICam
 
 
 	// Set FPS
 		// Unsure if there is a comparable setting for PICam
+
+	const PicamParameter* failed_parameters;
+	piint failed_parameters_count;
+	errMsg = Picam_CommitParameters(this->camera_,	&failed_parameters,	&failed_parameters_count);
+
+	// - print any invalid parameters
+	if (failed_parameters_count > 0) {
+		Utility::printLine("ERROR: invalid following parameters to commit!");
+	}
+
+	// - free picam-allocated resources
+	Picam_DestroyParameters(failed_parameters);
+
+	// Print resulting Device info
+	if (PrintDeviceInfo() == -1) {
+		Utility::printLine("WARNING: Couldn't display camera information!");
+	}
 
 	return true;
 }
@@ -356,8 +441,10 @@ bool CameraController::hasCameras() {
 // Exposure settings //
 
 // Setter for exposure setting
+// Input: exposureTimeToSet - time to set in microseconds
 bool CameraController::SetExposure(double exposureTimeToSet) {
-	if (Picam_SetParameterFloatingPointValue(this->camera_, PicamParameter_ExposureTime, exposureTimeToSet) != PicamError_None) {
+	// PICam deals with exposure time in milliseconds, so need to divide the input by 1000
+	if (Picam_SetParameterFloatingPointValue(this->camera_, PicamParameter_ExposureTime, exposureTimeToSet / 1000) != PicamError_None) {
 		Utility::printLine("ERROR: Failed to set exposure parameter!");
 		return false;
 	}

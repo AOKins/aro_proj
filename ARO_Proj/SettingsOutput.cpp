@@ -113,12 +113,10 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 	// Camera Dialog
 	else if (name == "initialExposureTime")
 		this->m_cameraControlDlg.m_initialExposureTimeInput.SetWindowTextW(valueStr);
-#ifdef USE_SPINNAKER
 	else if (name == "framesPerSecond")
 		this->m_cameraControlDlg.m_FramesPerSecond.SetWindowTextW(valueStr);
 	else if (name == "gamma")
 		this->m_cameraControlDlg.m_gammaValue.SetWindowTextW(valueStr);
-#endif
 	// AOI Dialog
 	else if (name == "leftAOI")
 		this->m_aoiControlDlg.m_leftInput.SetWindowTextW(valueStr);
@@ -378,7 +376,8 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	outFile << "# For ";
 #ifdef USE_SPINNAKER
 	outFile << "SPINNAKER";
-#elif USE_PICAM
+#endif
+#ifdef USE_PICAM
 	outFile << "PICAM";
 #endif
 	outFile << " version" << std::endl;
@@ -393,12 +392,10 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	outFile << "# Camera Settings" << std::endl;
 	outFile << "initialExposureTime=" << _tstof(tempBuff) << std::endl;
 	this->m_cameraControlDlg.m_gammaValue.GetWindowTextW(tempBuff);
-#ifdef USE_SPINNAKER
 	this->m_cameraControlDlg.m_FramesPerSecond.GetWindowTextW(tempBuff);
 	outFile << "framesPerSecond=" << _tstof(tempBuff) << std::endl;;
 	this->m_cameraControlDlg.m_initialExposureTimeInput.GetWindowTextW(tempBuff);
 	outFile << "gamma=" << _tstof(tempBuff) << std::endl;
-#endif
 	// AOI Dialog settings
 	outFile << "# AOI Settings" << std::endl;
 	this->m_aoiControlDlg.m_leftInput.GetWindowTextW(tempBuff);

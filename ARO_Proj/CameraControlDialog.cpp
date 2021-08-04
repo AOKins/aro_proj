@@ -17,10 +17,10 @@ CameraControlDialog::CameraControlDialog(CWnd* pParent /*=NULL*/) : CDialogEx(Ca
 BOOL CameraControlDialog::OnInitDialog() {
 	this->m_mainToolTips->Create(this);
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_EXPOSURE_TIME_INPUT), L"The intial exposure used, when intensity is too high the exposure will be halved each time during optimization");
-#ifdef USE_SPINNAKER // Idea is that unless the features are in place, do not include these Spinnaker features in PICam build of GUI
+
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_FPS_INPUT), L"The rate at which images are acquired, this is framerate is also attempted to be applied to the SLMs to match");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_GMMA_VALUE_INPUT), L"Gamma setting for the camera");
-#endif
+
 	this->m_mainToolTips->Activate(true);
 	return CDialogEx::OnInitDialog();
 }
@@ -32,12 +32,8 @@ CameraControlDialog::~CameraControlDialog() {
 void CameraControlDialog::DoDataExchange(CDataExchange* pDX) {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_EXPOSURE_TIME_INPUT, m_initialExposureTimeInput);
-
-#ifdef USE_SPINNAKER // Idea is that unless the features are in place, do not include these Spinnaker features in PICam build
 	DDX_Control(pDX, IDC_FPS_INPUT, m_FramesPerSecond);
 	DDX_Control(pDX, IDC_GMMA_VALUE_INPUT, m_gammaValue);
-#endif
-
 }
 
 BEGIN_MESSAGE_MAP(CameraControlDialog, CDialogEx)

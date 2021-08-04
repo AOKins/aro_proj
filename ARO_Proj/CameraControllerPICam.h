@@ -41,10 +41,14 @@ public:
 private:
 	MainDialog* dlg; // Pointer to GUI instance to access parameters with
 
-	PicamHandle* camera_; // The connected camera to use
+	PicamHandle camera_; // The connected camera to use
 
-	//Logic control
 	pibln * libraryInitialized; // library has been initialized or not
+
+	// private methods to make easier in getting parameter values
+	piint getIntParameterValue(PicamParameter parameter);
+	piflt getFloatParameterValue(PicamParameter parameter);
+	
 public:
 
 	CameraController(MainDialog* dlg_);
