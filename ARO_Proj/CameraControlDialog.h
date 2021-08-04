@@ -31,6 +31,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	// User Input Components //
+	// Exposure setting in microseconds (us)
 	CEdit m_initialExposureTimeInput;
 	CEdit m_FramesPerSecond;
 	CEdit m_gammaValue;

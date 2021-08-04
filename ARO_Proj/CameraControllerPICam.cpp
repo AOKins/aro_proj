@@ -258,9 +258,8 @@ bool CameraController::UpdateConnectedCameraInfo() {
 		Picam_InitializeLibrary();
 	}
 
-	pibln connected;
-	
 	// Release if already connected to a camera
+	pibln connected;
 	err = Picam_IsCameraConnected(&this->camera_, &connected);
 	if (connected) {
 		Picam_CloseCamera(this->camera_);

@@ -30,7 +30,9 @@ public:
 
 	double gamma = 1.25;
 	int fps = 200;
+	// initial exposure time in microseconds that is set by GUI (us)
 	double initialExposureTime = 2000;
+	// currnet exposure time in microseconds (us)
 	double finalExposureTime = 2000;
 
 	int numberOfBinsX = 128;

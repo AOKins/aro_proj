@@ -41,9 +41,9 @@ std::string Utility::getCurTime() {
 	finalTimeString += timeParts[1] + "-"; // month
 	finalTimeString += timeParts[2] + "-"; // date (day)
 	finalTimeString += timeParts[4] + "_"; // year
-	finalTimeString += std::to_string(std::stoi((std::string(hourMinuteSecondParts[0])))%12) + "-";	//hour
-	finalTimeString += hourMinuteSecondParts[1] + "-";  //minute
-	finalTimeString += hourMinuteSecondParts[2];		//seconds
+	finalTimeString += std::to_string(std::stoi((std::string(hourMinuteSecondParts[0])))%12) + "-";	// hour
+	finalTimeString += hourMinuteSecondParts[1] + "-";  // minute
+	finalTimeString += hourMinuteSecondParts[2];		// seconds
 
 	finalTimeString.erase(std::remove(finalTimeString.begin(), finalTimeString.end(), '\n'), finalTimeString.end());
 
@@ -65,7 +65,7 @@ double Utility::FindAverageValue(void *Image, int width, int height, int r) {
 	sloop = 0;
 	cx = width / 2;
 	cy = height / 2;
-	area = 3.14*pow(r, 2);
+	area = 3.1416*pow(r, 2);
 	ymin = cy - r;
 	ymax = cy + r;
 
