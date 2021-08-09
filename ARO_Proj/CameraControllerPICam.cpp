@@ -14,6 +14,8 @@
 CameraController::CameraController(MainDialog* dlg_) {
 	this->dlg = dlg_;
 	this->libraryInitialized = false;
+	this->buffer = NULL;
+
 	this->UpdateConnectedCameraInfo();
 }
 
@@ -46,11 +48,23 @@ bool CameraController::setupCamera() {
 	return true; 
 }
 
-// Start acquisition
+// Start acquisition process
 bool CameraController::startCamera() {
 	
 	// Begin acquisition management when camera has been configured and is now ready to being acquiring images.
-	
+
+	/*	// Setting readout to 0 for indefinite acquisition
+	if (Picam_SetParameterIntegerValue(this->camera_, PicamParameter_ReadoutCount, 0) != PicamError_None) {
+		Utility::printLine("ERROR: Failed to set readout to continuous!");
+		return false;
+	}
+	*/
+
+
+	/*
+	Picam_StartAcquisition(this->camera_);
+	*/
+
 	return true;
 }
 
@@ -61,27 +75,47 @@ ImageController* CameraController::AcquireImage() {
 
 	PicamAvailableData curImageData;
 	PicamAcquisitionErrorsMask errors;
-
-	// Get the frame size (size of image data itself in bytes)
+	PicamError result;
+	// Get the frame (size of image data itself in bytes) and readout (image and meta data)
 	piint frame_size = 0;
 	Picam_GetParameterIntegerValue(this->camera_, PicamParameter_FrameSize, &frame_size);
-	int num_pixels = frame_size / 2; // Number of pixels is half the size in bytes (16 bit depth for each pixel)
+	piint readout_size = 0;
+	Picam_GetParameterIntegerValue(this->camera_, PicamParameter_ReadoutStride, &readout_size);
+
+	int num_pixels = frame_size / 2; // Number of pixels is half the size in bytes (2-byte depth for each pixel)
+
 	// Grab an image
-	PicamError result = Picam_Acquire(this->camera_, 1, -1, &curImageData, &errors);
+		// Simple, none-advanced way that I think is also slow
+	result = Picam_Acquire(this->camera_, 1, -1, &curImageData, &errors);
+
+		// Attempt for acquisiton that is using (hopefully faster) asynchronous
+	// PicamAcquisitionStatus curr_status;
+	// result = Picam_WaitForAcquisitionUpdate(this->camera_, -1, &curImageData, &curr_status);
+
 	if (result != PicamError_None) {
 		Utility::printLine("ERROR: Failed to acquire data from camera!");
 		return NULL;
 	}
 
+	// Getting a pointer to the most recent frame (our most recent image data) by skipping older readouts (simple method should have readout_count == 1)
+	void * curr_frame = curImageData.initial_readout + readout_size*(curImageData.readout_count - 1);
+
 	// Copy data into ImageController, but be sure to convert from 2 byte elements to 1 byte
-					// Casting pointer as type short (2 byte elements)
-	return new ImageController((unsigned short*)curImageData.initial_readout, num_pixels, this->cameraImageWidth, this->cameraImageHeight);
+	// Casting pointer as type unsigned short (2 byte elements)
+	return new ImageController((unsigned short*)curr_frame, num_pixels, this->cameraImageWidth, this->cameraImageHeight);
 }
 
-
+// Stop acquisition process (but still holds camera instance and other resources)
 bool CameraController::stopCamera() {
 
 	// End acquisition management but still need to have camera online for another run if needed
+//	Picam_StopAcquisition(this->camera_);
+	
+	/*
+	Have to iterate through wait acquisition update until the running bool is false!
+
+
+	*/
 
 	return true;
 }
@@ -303,11 +337,12 @@ bool CameraController::ConfigureCustomImageSettings() {
 		Utility::printLine("ERROR: Failed to set pixel format to mono 16 bit!");
 		return false;
 	}
-
+	// Read one full frame at a time
 	if (Picam_SetParameterIntegerValue(this->camera_, PicamParameter_ReadoutControlMode, PicamReadoutControlMode_FullFrame) != PicamError_None) {
 		Utility::printLine("ERROR: Failed to set readout control mode to full frame!");
 		return false;
 	}
+
 
 
 	// ROI according to GUI, implementation approach based on PICam example rois.cpp //
