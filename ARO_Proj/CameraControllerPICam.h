@@ -11,6 +11,8 @@
 #include <string>
 
 #include "picam.h" // core include for PICam SDK
+#include "picam_advanced.h" // advanced methods (buffer management) for async continuous acquisition for faster rate
+
 #include "ImageControllerPICam.h" // Image wrapper
 
 class MainDialog;
@@ -44,12 +46,15 @@ private:
 	MainDialog* dlg; // Pointer to GUI instance to access parameters with
 
 	PicamHandle camera_; // The connected camera to use
+	PicamAcquisitionBuffer buffer_; // User buffer for asynchronous acquisition
+
 
 	pibln * libraryInitialized; // library has been initialized or not
 
 	// private methods to make easier in getting parameter values
 	piint getIntParameterValue(PicamParameter parameter);
 	piflt getFloatParameterValue(PicamParameter parameter);
+	std::string getStringParameterValue(PicamEnumeratedType type, PicamParameter parameterVal);
 	
 public:
 

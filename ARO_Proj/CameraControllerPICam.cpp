@@ -14,7 +14,7 @@
 CameraController::CameraController(MainDialog* dlg_) {
 	this->dlg = dlg_;
 	this->libraryInitialized = false;
-	this->buffer = NULL;
+	this->buffer_.memory = NULL;
 
 	this->UpdateConnectedCameraInfo();
 }
@@ -50,22 +50,54 @@ bool CameraController::setupCamera() {
 
 // Start acquisition process
 bool CameraController::startCamera() {
-	
 	// Begin acquisition management when camera has been configured and is now ready to being acquiring images.
 
-	/*	// Setting readout to 0 for indefinite acquisition
-	if (Picam_SetParameterIntegerValue(this->camera_, PicamParameter_ReadoutCount, 0) != PicamError_None) {
-		Utility::printLine("ERROR: Failed to set readout to continuous!");
+	PicamError err;
+
+	// Get the size that a readout would be
+	piint readout_size = 0;
+	Picam_GetParameterIntegerValue(this->camera_, PicamParameter_ReadoutStride, &readout_size);
+	
+	delete[] this->buffer_.memory;
+		
+	// Setting up the buffer, making the available memory size equal to ONE readout (as we would be only interested in one image at a time)
+	if (this->buffer_.memory == NULL) {
+		delete [] this->buffer_.memory;
+	}
+	this->buffer_.memory = new char[readout_size*2];
+	this->buffer_.memory_size = readout_size*2;
+
+	
+	// Commiting buffer parameter
+	const PicamParameter* failed_parameters;
+	piint failed_parameters_count;
+	err = Picam_CommitParameters(this->camera_, &failed_parameters, &failed_parameters_count);
+
+	// - print any invalid parameters
+	if (failed_parameters_count > 0) {
+		Utility::printLine("ERROR: invalid following parameters to commit!");
+	}
+
+	// - free picam-allocated resources
+	Picam_DestroyParameters(failed_parameters);
+
+	// Setup acquisition buffer
+	err = PicamAdvanced_SetAcquisitionBuffer(this->camera_, &this->buffer_);
+	if (err != PicamError_None) {
+		Utility::printLine("ERROR: Failed to set buffer for starting camera acquisition!");
 		return false;
 	}
-	*/
 
-
-	/*
-	Picam_StartAcquisition(this->camera_);
-	*/
-
-	return true;
+	// Starting acquisition now that buffer has been setup!
+	err = Picam_StartAcquisition(this->camera_);
+	if (err != PicamError_None) {
+		Utility::printLine("ERROR: Failed to start acquisition!");
+		return false;
+	}
+	else {
+		Utility::printLine("INFO: Successfully started acquisition");
+		return true;
+	}
 }
 
 // Get most recent image
@@ -74,48 +106,64 @@ ImageController* CameraController::AcquireImage() {
 	// Get most recent image and return within ImageController class
 
 	PicamAvailableData curImageData;
-	PicamAcquisitionErrorsMask errors;
+	PicamAcquisitionStatus curr_status;
 	PicamError result;
+
 	// Get the frame (size of image data itself in bytes) and readout (image and meta data)
 	piint frame_size = 0;
 	Picam_GetParameterIntegerValue(this->camera_, PicamParameter_FrameSize, &frame_size);
 	piint readout_size = 0;
 	Picam_GetParameterIntegerValue(this->camera_, PicamParameter_ReadoutStride, &readout_size);
 
-	int num_pixels = frame_size / 2; // Number of pixels is half the size in bytes (2-byte depth for each pixel)
+	int num_pixels = int(frame_size) / 2; // Number of pixels is half the size in bytes (2-byte depth for each pixel)
 
 	// Grab an image
-		// Simple, none-advanced way that I think is also slow
-	result = Picam_Acquire(this->camera_, 1, -1, &curImageData, &errors);
 
-		// Attempt for acquisiton that is using (hopefully faster) asynchronous
-	// PicamAcquisitionStatus curr_status;
-	// result = Picam_WaitForAcquisitionUpdate(this->camera_, -1, &curImageData, &curr_status);
-
-	if (result != PicamError_None) {
+	// Attempt for acquisiton that is using (hopefully faster) asynchronous approach
+	try {
+		result = Picam_WaitForAcquisitionUpdate(this->camera_, -1, &curImageData, &curr_status);
+	}
+	catch (std::exception& e) {
+		Utility::printLine(e.what());
+	}
+	// Doing a check to make sure no issues (no reported errors and that there is at least one readout to get image from)
+	if (result != PicamError_None || curImageData.readout_count < 1 || curr_status.errors != PicamAcquisitionErrorsMask_None) {
 		Utility::printLine("ERROR: Failed to acquire data from camera!");
 		return NULL;
 	}
 
 	// Getting a pointer to the most recent frame (our most recent image data) by skipping older readouts (simple method should have readout_count == 1)
-	void * curr_frame = curImageData.initial_readout + readout_size*(curImageData.readout_count - 1);
+		// Cast to char to offset by bytes
+	unsigned char* curr_frame = (unsigned char*)curImageData.initial_readout;
+	curr_frame = curr_frame + readout_size*(curImageData.readout_count - 1);
 
 	// Copy data into ImageController, but be sure to convert from 2 byte elements to 1 byte
-	// Casting pointer as type unsigned short (2 byte elements)
-	return new ImageController((unsigned short*)curr_frame, num_pixels, this->cameraImageWidth, this->cameraImageHeight);
+		// Casting the frame pointer as type unsigned short (2 byte elements)
+	return new ImageController((unsigned short *)curr_frame, num_pixels, this->cameraImageWidth, this->cameraImageHeight);
 }
 
 // Stop acquisition process (but still holds camera instance and other resources)
 bool CameraController::stopCamera() {
 
 	// End acquisition management but still need to have camera online for another run if needed
-//	Picam_StopAcquisition(this->camera_);
+	Picam_StopAcquisition(this->camera_);
 	
-	/*
-	Have to iterate through wait acquisition update until the running bool is false!
+	// Have to iterate through wait acquisition update until the running bool is false!
+	PicamAvailableData curImageData;
+	PicamAcquisitionStatus curr_status;
+	PicamError result;
+
+	do {
+		result = Picam_WaitForAcquisitionUpdate(this->camera_, -1, &curImageData, &curr_status);
+	} while (curr_status.running == pibln(true));
+
+	// Deallocate the buffer
+	delete[] this->buffer_.memory;
+	this->buffer_.memory = NULL;
+	this->buffer_.memory_size = 0;
 
 
-	*/
+	Utility::printLine("INFO: Stopped acquisition");
 
 	return true;
 }
@@ -123,15 +171,22 @@ bool CameraController::stopCamera() {
 
 // [UTILITY]
 int CameraController::PrintDeviceInfo() {
-	// TODO
 	Utility::printLine();
 	Utility::printLine("*** CAMERA INFORMATION ***");
 
-	
-	// Display Exposure time and calculated Framerate
-	Utility::printLine("Exposure time: " + std::to_string(getFloatParameterValue(PicamParameter_ExposureTime)) + " milliseconds");
-	Utility::printLine("Calculated framerate: " + std::to_string(getFloatParameterValue(PicamParameter_FrameRateCalculation)) + " frames per second");
+	PicamCameraID id;
+	Picam_GetCameraID(this->camera_, &id);
 
+	// Display Exposure time and calculated Framerate
+	Utility::printLine("Camera: " + std::string(id.sensor_name));
+	Utility::printLine("Camera SN: " + std::string(id.serial_number));
+	Utility::printLine("Exposure time: " + std::to_string(getFloatParameterValue(PicamParameter_ExposureTime)) + " milliseconds");
+	Utility::printLine("Calculated readout time: " + std::to_string(getFloatParameterValue(PicamParameter_ReadoutTimeCalculation)) + " milliseconds");
+	Utility::printLine("Calculated frame time: " + std::to_string(float(1000.0f / getFloatParameterValue(PicamParameter_FrameRateCalculation))) + " milliseconds per frame");
+
+	Picam_DestroyCameraIDs(&id);
+
+	Utility::printLine("");
 	return 0;
 }
 
@@ -159,6 +214,15 @@ piflt CameraController::getFloatParameterValue(PicamParameter parameter) {
 	}
 }
 
+std::string CameraController::getStringParameterValue(PicamEnumeratedType type, PicamParameter parameterVal) {
+	const pichar * str_buff;
+	Picam_GetEnumerationString(type, parameterVal, &str_buff);
+	
+	std::string result(str_buff);
+	Picam_DestroyString(str_buff);
+	return result;
+}
+
 bool CameraController::shutdownCamera() {
 	Utility::printLine("INFO: Beginning to shutdown camera!");
 	// Clear out camera
@@ -170,13 +234,15 @@ bool CameraController::shutdownCamera() {
 	}
 
 	// Deallocate resources from library
-	if (this->libraryInitialized) {
-		Picam_UninitializeLibrary();
-	}
+	Picam_UninitializeLibrary();
 
 	delete this->libraryInitialized;
 	Utility::printLine("INFO: Finished shutting down camera!");
-	
+
+	if (this->buffer_.memory != NULL) {
+		delete[] this->buffer_.memory;
+	}
+
 	return true;
 }
 
@@ -290,6 +356,7 @@ bool CameraController::UpdateConnectedCameraInfo() {
 	Picam_IsLibraryInitialized(this->libraryInitialized);
 	if (!this->libraryInitialized) {
 		Picam_InitializeLibrary();
+		Picam_IsLibraryInitialized(this->libraryInitialized);
 	}
 
 	// Release if already connected to a camera
@@ -299,12 +366,19 @@ bool CameraController::UpdateConnectedCameraInfo() {
 		Picam_CloseCamera(this->camera_);
 	}
 
+	const PicamCameraID* id = 0;
+	piint id_count = 0;
+
 	// Connect this camera to the first available
-	if (Picam_OpenFirstCamera(&this->camera_) == PicamError_None) {
-		Utility::printLine("INFO: Connected to first PICam camera");
+	
+	// get the ids of all cameras
+	if (Picam_GetAvailableCameraIDs(&id, &id_count) != PicamError_None) {
+		Utility::printLine("WARNING: Error in getting availabel cameras!");
 	}
-	else {
-		// If no connected camera, will create a demo camera for the purposes of demonstrating the program and debugging
+
+	// Connect to first one if available, if this fails will setup demo camera to debug with
+	if (PicamAdvanced_OpenCameraDevice(id, &this->camera_) != PicamError_None) {
+		// If no successfully connected camera, will create a demo camera for the purposes of demonstrating the program and debugging
 		// Demo setup is based on provided PICam example within its acquire.cpp source file
 		Utility::printLine("WARNING: Failed to connect to a camera, creating demo camera to demonstrate program");
 		
@@ -319,6 +393,12 @@ bool CameraController::UpdateConnectedCameraInfo() {
 			Utility::printLine(errMsg);
 		}
 	}
+	else {
+		Utility::printLine("INFO: Connected to " + std::string(id->sensor_name));
+		
+	}
+	// Free up ids now that we are connected
+	Picam_DestroyCameraIDs(id);
 
 	// Check to make sure connected
 	Picam_IsCameraConnected(this->camera_, &connected);
@@ -343,7 +423,11 @@ bool CameraController::ConfigureCustomImageSettings() {
 		return false;
 	}
 
-
+	// Setting readout to 0 for indefinite acquisition
+	if (Picam_SetParameterLargeIntegerValue(this->camera_, PicamParameter_ReadoutCount, 0) != PicamError_None) {
+		Utility::printLine("ERROR: Failed to set readout to continuous!");
+		return false;
+	}
 
 	// ROI according to GUI, implementation approach based on PICam example rois.cpp //
 
@@ -358,8 +442,8 @@ bool CameraController::ConfigureCustomImageSettings() {
 	// Checking if the GUI setup is invalid by checking against max dimensions and if our ROI is going out of bounds
 	int x_max, y_max;
 	this->GetFullImage(x_max, y_max);
-	if (this->x0 + this->cameraImageWidth > x_max || this->y0 + this->cameraImageHeight > y_max) {
-		Utility::printLine("ERROR: Set ROI exceeds the camera constraints!  Defaulting to entire camera image");
+	if ((this->x0 + this->cameraImageWidth) > x_max || (this->y0 + this->cameraImageHeight) > y_max) {
+		Utility::printLine("ERROR: Set ROI exceeds the camera constraints!  Defaulting to entire window for debug");
 		this->x0 = 0;
 		this->y0 = 0;
 		this->cameraImageWidth = x_max;
@@ -372,26 +456,22 @@ bool CameraController::ConfigureCustomImageSettings() {
 		Utility::printLine("ERROR: Failed to receive region");
 		return false;
 	}
+	// Set the ROI
 	if (region->roi_count == 1) {
-		region->roi_array[0].height = this->cameraImageHeight;
-		region->roi_array[0].width = this->cameraImageWidth;
 		region->roi_array[0].x = this->x0;
 		region->roi_array[0].y = this->y0;
+		region->roi_array[0].height = this->cameraImageHeight;
+		region->roi_array[0].width = this->cameraImageWidth;
 
 		region->roi_array[0].x_binning = 1;
 		region->roi_array[0].y_binning = 1;
 	}
-
 	PicamError errMsg = Picam_SetParameterRoisValue(this->camera_, PicamParameter_Rois, region);
-
 	if (errMsg != PicamError_None) {
 		Utility::printLine("ERROR: Failed to set ROI");
 		return false;
 	}
 	
-	// Setting initial exposure //
-	this->ConfigureExposureTime();
-
 	// TODO: Figure out these two parameters
 	// Set gamma
 		// Unsure of comparablse setting for PICam
@@ -399,18 +479,9 @@ bool CameraController::ConfigureCustomImageSettings() {
 
 	// Set FPS
 		// Unsure if there is a comparable setting for PICam
-
-	const PicamParameter* failed_parameters;
-	piint failed_parameters_count;
-	errMsg = Picam_CommitParameters(this->camera_,	&failed_parameters,	&failed_parameters_count);
-
-	// - print any invalid parameters
-	if (failed_parameters_count > 0) {
-		Utility::printLine("ERROR: invalid following parameters to commit!");
-	}
-
-	// - free picam-allocated resources
-	Picam_DestroyParameters(failed_parameters);
+	
+	// Setting initial exposure and commiting parameters //
+	this->ConfigureExposureTime();
 
 	// Print resulting Device info
 	if (PrintDeviceInfo() == -1) {
@@ -482,6 +553,21 @@ bool CameraController::SetExposure(double exposureTimeToSet) {
 		Utility::printLine("ERROR: Failed to set exposure parameter!");
 		return false;
 	}
+
+	// Commit the change to exposure parameter
+	const PicamParameter* failed_parameters;
+	piint failed_parameters_count;
+	PicamError errMsg = Picam_CommitParameters(this->camera_, &failed_parameters, &failed_parameters_count);
+
+	// - print any invalid parameters
+	if (failed_parameters_count > 0) {
+		Utility::printLine("ERROR: invalid following parameters to commit!");
+	}
+
+	// - free picam-allocated resources
+	Picam_DestroyParameters(failed_parameters);
+
+
 	return true;
 }
 

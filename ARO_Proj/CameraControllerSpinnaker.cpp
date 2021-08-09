@@ -309,7 +309,13 @@ bool CameraController::UpdateConnectedCameraInfo() {
 			Utility::printLine("INFO: Retrieved Camera is Valid!");
 
 		//Initialize camera
-		cam->Init();
+		try {
+			cam->Init();
+		}
+		catch (Spinnaker::Exception &e) {
+			Utility::printLine("ERROR: Spinnaker failure in initialization - " + std::string(e.what()));
+			return false;
+		}
 		if (!cam->IsInitialized())	{
 			Utility::printLine("ERROR: Retrieved Camera could not be initialized!");
 			return false;
