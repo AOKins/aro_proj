@@ -189,7 +189,7 @@ bool Optimization::prepareOutputSettings() {
 }
 
 //[SETUP]
-// Setup camera, verify SLM is ready and prepare stop conditions
+// Setup camera, verify SLM is ready (setting up the board vector) and prepare stop conditions
 bool Optimization::prepareSoftwareHardware() {
 	Utility::printLine("INFO: Preparing equipment and software for optimization!");
 
@@ -212,7 +212,20 @@ bool Optimization::prepareSoftwareHardware() {
 		return false;
 	}
 
+	// Get all the boards that are to be optimized
+	this->optBoards.clear();
+	for (int i = 0; i < this->sc->boards.size(); i++) {
+		if (this->sc->boards[i]->isToBeOptimized()) {
+			this->optBoards.push_back(this->sc->boards[i]);
+		}
+	}
+
 	Utility::printLine("INFO: SLM setup complete!");
+	// Inform the identified boards to optimize
+	Utility::printLine("INFO: Optimizing " + std::to_string(this->optBoards.size()) + " board(s) at");
+	for (int i = 0; i < this->optBoards.size(); i++) {
+		Utility::printLine("INFO:   #" + std::to_string(this->optBoards[i]->board_id));
+	}
 
 	// - configure algorithm parameters
 	if (!prepareStopConditions()) {

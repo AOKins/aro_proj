@@ -14,10 +14,6 @@ class BruteForce_Optimization : public Optimization {
 
 	// Once finished, contains the resulting optimized SLM images for all the boards used
 	std::vector<int*> finalImages_;
-	// If enabled, optimize all the boards sequentially
-	bool multiEnable_;
-	// If enabled, optimize the second board too
-	bool dualEnable_;
 	// Record of best fitness overall during optimization
 	double allTimeBestFitness;
 public:

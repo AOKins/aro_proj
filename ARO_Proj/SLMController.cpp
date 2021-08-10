@@ -64,7 +64,7 @@ bool SLMController::repopulateBoardList() {
 
 	// Go through and generate new board structs with default filenames
 	for (unsigned int i = 1; i <= this->numBoards; i++) {
-		SLM_Board *curBoard = new SLM_Board(true, this->blink_sdk->Get_image_width(i), this->blink_sdk->Get_image_height(i));
+		SLM_Board *curBoard = new SLM_Board(true, this->blink_sdk->Get_image_width(i), this->blink_sdk->Get_image_height(i), i);
 
 		//Add board info to board list
 		this->boards.push_back(curBoard);

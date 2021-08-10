@@ -67,7 +67,9 @@ protected:
 	ImageController * bestImage; // Current camera image found to have best resulting fitness from elite individuals
 	std::vector<ImageScaler*> scalers; // Image scalers for each SLM (each SLM may have different dimensions so can't have just one)
 	std::vector<unsigned char*> slmScaledImages; // To easily store the scaled images from individual to what will be written
-	
+	std::vector<SLM_Board*> optBoards; // Vector to hold pointers of boards taken from SLMController that are to be optimized (do not delete the boards here!)
+
+
 	// Logging file streams
 	std::ofstream tfile;				// Record elite individual progress over generations
 	std::ofstream timePerGenFile;		// Record time it took to perform each generation during optimization

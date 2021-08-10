@@ -56,10 +56,6 @@ public:
 		// Selection List for current SLM to set LUT files and power
 		// DON'T USE GetCurSel() with this!  Use this->slmSelectionID_
 	CComboBox slmSelection_;
-		// SLM Dual Mode checkbox, run optimization with dual SLM configuration
-	CButton dualEnable;
-		// SLM Multi Mode checkbox, run optimization with all SLM configuration
-	CButton multiEnable;
 		// If checked/TRUE then assign all config changes to all the boards (ignoring selection)
 	CButton SLM_SetALLSame_;
 		// Current selection according to combo box, use this if you want current selection rather than GetCurSel
@@ -71,11 +67,11 @@ public:
 	// Open a file selection window to get a file path, if it fails prompt to try again
 	afx_msg void OnBnClickedSetlut();
 
-	afx_msg void OnBnClickedSlmDual();
-	afx_msg void OnBnClickedMultiSLM();
-
 	// Update selection ID value and the GUI according to the board
 	afx_msg void OnCbnSelchangeSlmSelect();
 	afx_msg void OnCbnChangeSlmAll();
 
+	afx_msg void OnBnClickedOptToggle();
+	// If checked, the currently selected board(s) will be set to be included in the optimization
+	CButton m_optBoardCheck;
 };

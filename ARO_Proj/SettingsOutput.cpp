@@ -149,20 +149,6 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 	}
 
 	// SLM Dialog
-	else if (name == "slmConfigMode") {
-		if (valueStr == "multi") {
-			this->m_slmControlDlg.multiEnable.SetCheck(BST_CHECKED);
-			this->m_slmControlDlg.dualEnable.SetCheck(BST_UNCHECKED);
-		}
-		else if (valueStr == "dual") {
-			this->m_slmControlDlg.multiEnable.SetCheck(BST_UNCHECKED);
-			this->m_slmControlDlg.dualEnable.SetCheck(BST_CHECKED);
-		}
-		else {
-			this->m_slmControlDlg.multiEnable.SetCheck(BST_UNCHECKED);
-			this->m_slmControlDlg.dualEnable.SetCheck(BST_UNCHECKED);
-		}
-	}
 	else if (name == "slmSelect")  {
 		int selectID = std::stoi(value.c_str()) - 1; // Correct from base 1 index to 0 based
 		if (selectID >= this->slmCtrl->boards.size() || selectID < 0) {
@@ -239,7 +225,7 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 			if (boardID < this->slmCtrl->boards.size() && boardID >= 0) {
 				// Resource for conversion https://stackoverflow.com/questions/258050/how-do-you-convert-cstring-and-stdstring-stdwstring-to-each-other
 				CT2CA converString(valueStr);
-				bool power = value == "true";
+				bool power = (value == "true");
 				this->slmCtrl->setBoardPower(boardID, power);
 
 				// Update power button label if select is correct
@@ -256,52 +242,61 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 			}
 		}
 	}
+	else if (name.substr(0, 11) == "slmOptimize") {
+		int boardID = std::stoi(name.substr(11, name.length() - 11)) - 1;
+
+		if (this->slmCtrl != NULL) {
+			if (boardID < this->slmCtrl->boards.size() && boardID >= 0) {
+				// Resource for conversion https://stackoverflow.com/questions/258050/how-do-you-convert-cstring-and-stdstring-stdwstring-to-each-other
+				CT2CA converString(valueStr);
+				bool opt = (value == "true");
+				this->slmCtrl->boards[boardID]->setOptimize(opt);
+
+				// Update opt toggle button if current select is optimized
+				if (boardID == this->m_slmControlDlg.slmSelectionID_) {
+					this->m_slmControlDlg.m_optBoardCheck.SetCheck(boardID == this->m_slmControlDlg.slmSelectionID_);
+				}
+			}
+			else {
+				Utility::printLine("ERROR: A board set to be optimized is not connected!  If this is not intended then you are missing boards!");
+			}
+		}
+	}
 
 	else if (name == "SLMselectAll") {
-		if (value == "true") {	this->m_slmControlDlg.SLM_SetALLSame_.SetCheck(BST_CHECKED);	}
-		else {	this->m_slmControlDlg.SLM_SetALLSame_.SetCheck(BST_UNCHECKED);	}
+		this->m_slmControlDlg.SLM_SetALLSame_.SetCheck(value == "true");
 	}
 
 	// Output Controls Dialog variables
 	else if (name == "saveEliteImage") {
-		if (value == "true") {this->m_outputControlDlg.m_SaveEliteImagesCheck.SetCheck(BST_CHECKED);}
-		else {this->m_outputControlDlg.m_SaveEliteImagesCheck.SetCheck(BST_UNCHECKED);}
+		this->m_outputControlDlg.m_SaveEliteImagesCheck.SetCheck(value == "true");
 	}
 	else if (name == "displayCamera") {
-		if (value == "true") {
-			this->m_outputControlDlg.m_displayCameraCheck.SetCheck(BST_CHECKED);}
-		else {	this->m_outputControlDlg.m_displayCameraCheck.SetCheck(BST_UNCHECKED);}
+		this->m_outputControlDlg.m_displayCameraCheck.SetCheck(value == "true");
 	}
 	else if (name == "displaySLM") {
-		if (value == "true") {	this->m_outputControlDlg.m_displaySLM.SetCheck(BST_CHECKED);}
-		else {	this->m_outputControlDlg.m_displaySLM.SetCheck(BST_UNCHECKED);}
+		this->m_outputControlDlg.m_displaySLM.SetCheck(value == "true");
 	}
 	else if (name == "logAllFilesEnable") {
-		if (value == "true") {this->m_outputControlDlg.m_logAllFilesCheck.SetCheck(BST_CHECKED);}
-		else {this->m_outputControlDlg.m_logAllFilesCheck.SetCheck(BST_UNCHECKED);}
+		this->m_outputControlDlg.m_logAllFilesCheck.SetCheck(value == "true");
 	}
 	else if (name == "saveParameters") {
-		if (value == "true") {this->m_outputControlDlg.m_SaveParameters.SetCheck(BST_CHECKED);}
-		else {this->m_outputControlDlg.m_SaveParameters.SetCheck(BST_UNCHECKED);}
+		this->m_outputControlDlg.m_SaveParameters.SetCheck(value == "true");
 	}
 	else if (name == "saveFinalImages") {
-		if (value == "true") {this->m_outputControlDlg.m_SaveFinalImagesCheck.SetCheck(BST_CHECKED);}
-		else {this->m_outputControlDlg.m_SaveFinalImagesCheck.SetCheck(BST_UNCHECKED);}
+		this->m_outputControlDlg.m_SaveFinalImagesCheck.SetCheck(value == "true");
 	}
 	else if (name == "saveTimeVsFitness") {
-		if (value == "true") { this->m_outputControlDlg.m_SaveTimeVFitnessCheck.SetCheck(BST_CHECKED); }
-		else { this->m_outputControlDlg.m_SaveTimeVFitnessCheck.SetCheck(BST_UNCHECKED);  }
+		this->m_outputControlDlg.m_SaveTimeVFitnessCheck.SetCheck(value == "true");
 	}
 	else if (name == "saveExposureShortening") {
-		if (value == "true") { this->m_outputControlDlg.m_SaveExposureShortCheck.SetCheck(BST_CHECKED); }
-		else { this->m_outputControlDlg.m_SaveExposureShortCheck.SetCheck(BST_UNCHECKED); }
+		this->m_outputControlDlg.m_SaveExposureShortCheck.SetCheck(value == "true");
 	}
 	else if (name == "saveEliteFreq") {
 		this->m_outputControlDlg.m_eliteSaveFreq.SetWindowTextW(valueStr);
 	}
 	else if (name == "multiThreading") {
-		if (value == "true") {this->m_MultiThreadEnable.SetCheck(BST_CHECKED);}
-		else {this->m_MultiThreadEnable.SetCheck(BST_UNCHECKED);}
+		this->m_MultiThreadEnable.SetCheck(value == "true");
 	}
 	else if (name == "outputFolder") {
 		this->m_outputControlDlg.m_OutputLocationField.SetWindowTextW(valueStr);
@@ -431,20 +426,19 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 
 	// SLM Dialog settings
 	outFile << "# SLM Configuration Settings" << std::endl;
-	// SLM mode
-	outFile << "slmConfigMode=";
-	if (this->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED) { outFile << "dual\n"; }
-	else if (this->m_slmControlDlg.multiEnable.GetCheck() == BST_CHECKED) { outFile << "multi\n"; }
-	else { outFile << "single\n"; }
+	// SLM actively selected
 	outFile << "slmSelect=" << this->m_slmControlDlg.slmSelectionID_ + 1 << std::endl;
 
 	// Quick Check for SLMs
 	if (this->slmCtrl != NULL) {
-		// Output the LUT file paths being used for every board and if the SLM is powered or not
+		// Output the LUT file paths being used for every board, if the SLM is powered or not, and if they are to be optimized
 		for (int i = 0; i < this->slmCtrl->boards.size(); i++) {
 			outFile << "slmLutFilePath" << std::to_string(i + 1) << "=" << this->slmCtrl->boards[i]->LUTFileName << "\n";
 			outFile << "slmPowered" << std::to_string(i + 1) << "=";
 			if (this->slmCtrl->boards[i]->isPoweredOn()) { outFile << "true\n"; }
+			else { outFile << "false\n"; }
+			outFile << "slmOptimize" << std::to_string(i + 1) << "=";
+			if (this->slmCtrl->boards[i]->isToBeOptimized()) { outFile << "true\n"; }
 			else { outFile << "false\n"; }
 		}
 	}

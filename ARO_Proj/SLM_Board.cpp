@@ -7,11 +7,13 @@
 SLM_Board::SLM_Board() {};
 
 // Constructor
-SLM_Board::SLM_Board(bool isNematic, int width, int height) {
+SLM_Board::SLM_Board(bool isNematic, int width, int height, int boardID) {
 	this->is_LC_Nematic = isNematic;
 	this->imageWidth = width;
 	this->imageHeight = height;
 	this->powered_On = false;
+	this->board_id = boardID;
+	this->to_be_optimized_ = false;
 
 	int boardArea = width * height;
 	//Build paths to the calibrations for this SLM -- regional LUT included in Blink_SDK(), but need to pass NULL to that param to disable ODP. Might need to make a class.
@@ -29,4 +31,8 @@ bool SLM_Board::isPoweredOn() {
 
 void SLM_Board::setPower(bool status) {
 	this->powered_On = status;
+}
+
+void SLM_Board::setOptimize(bool optimized) {
+	this->to_be_optimized_ = optimized;
 }

@@ -30,9 +30,8 @@ BOOL SLMControlDialog::OnInitDialog() {
 
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_PWR_BUTTON), L"Set currently selected SLM's power on or off");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(ID_SLM_SELECT),		L"Select SLM to assign LUT and wavefront compensation files to and turn on/off");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_MULTI),		L"Optimize all connected boards at the same time");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_ALLSAME),	L"Set to ignore select SLM and apply changes in settings to all connected boards");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_DUAL),		L"Optimize first two connected boards at the same time");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_OPT_TOGGLE),		L"Toggle the currently selected board(s) to be included in the optimization or ignored");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_CURR_LUT_OUT),	L"The current LUT file being assigned to this SLM");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SETLUT),			L"Set LUT file for the selected board(s)");
 	
@@ -49,19 +48,17 @@ void SLMControlDialog::DoDataExchange(CDataExchange* pDX) {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_SLM_PWR_BUTTON, m_SlmPwrButton);
 	DDX_Control(pDX, ID_SLM_SELECT, slmSelection_);
-	DDX_Control(pDX, IDC_SLM_MULTI, multiEnable);
 	DDX_Control(pDX, IDC_SLM_ALLSAME, SLM_SetALLSame_);
-	DDX_Control(pDX, IDC_SLM_DUAL, dualEnable);
 	DDX_Control(pDX, IDC_CURR_LUT_OUT, m_LUT_pathDisplay);
+	DDX_Control(pDX, IDC_OPT_TOGGLE, m_optBoardCheck);
 }
 
 BEGIN_MESSAGE_MAP(SLMControlDialog, CDialogEx)
 	ON_BN_CLICKED(IDC_SLM_PWR_BUTTON, &SLMControlDialog::OnBnClickedSlmPwrButton)
 	ON_BN_CLICKED(IDC_SETLUT, &SLMControlDialog::OnBnClickedSetlut)
-	ON_BN_CLICKED(IDC_SLM_MULTI, &SLMControlDialog::OnBnClickedMultiSLM)
 	ON_CBN_SELCHANGE(IDC_SLM_ALLSAME, &SLMControlDialog::OnCbnChangeSlmAll)
 	ON_CBN_SELCHANGE(ID_SLM_SELECT, &SLMControlDialog::OnCbnSelchangeSlmSelect)
-	ON_BN_CLICKED(IDC_SLM_DUAL, &SLMControlDialog::OnBnClickedSlmDual)
+	ON_BN_CLICKED(IDC_OPT_TOGGLE, &SLMControlDialog::OnBnClickedOptToggle)
 END_MESSAGE_MAP()
 
 BOOL SLMControlDialog::PreTranslateMessage(MSG* pMsg) {
@@ -87,6 +84,9 @@ void SLMControlDialog::OnCbnSelchangeSlmSelect() {
 		pwrMsg = "Turn power ON";
 	}
 	this->m_SlmPwrButton.SetWindowTextW(pwrMsg);
+
+	// Update "to be optimized" toggle according to the now selected board's status
+	this->m_optBoardCheck.SetCheck(this->slmCtrl->boards[this->slmSelectionID_]->isToBeOptimized());
 }
 
 // Turn the select SLM's power on/off accordingly
@@ -245,51 +245,22 @@ void SLMControlDialog::populateSLMlist() {
 	// If there is at least one board, default to board 0 for selection
 	if (numBoards > 0) {
 		this->slmSelection_.SetCurSel(0);
+	// Default to having the first board be optimized!
+		this->slmCtrl->boards[0]->setOptimize(true);
 	}
 }
 
-void SLMControlDialog::OnBnClickedMultiSLM() {
-	// When attempting to enable Multi SLM setup, will confirm that there are enough boards
-	if (this->multiEnable.GetCheck() == BST_CHECKED) {
-		if (this->slmCtrl->boards.size() < 2) {
-			// If not possible, will give warning in console and window along with undoing the selection
-			Utility::printLine("WARNING: Multi-SLM was enabled but there are 1 or fewer boards! Disabling check.");
-			MessageBox(
-				(LPCWSTR)L"Multi SLM ERROR",
-				(LPCWSTR)L"You have attempted to enable Multi SLM but not enough boards were found (1 or fewer)! Disabling selection.",
-				MB_ICONWARNING | MB_OK
-				);
-			this->multiEnable.SetCheck(BST_UNCHECKED);
-		}
-		else {
-			Utility::printLine("INFO: Multi-SLM has been enabled");
-			this->dualEnable.SetCheck(BST_UNCHECKED);
+// When clicked, update the currently selected board(s) to be optimized or not
+void SLMControlDialog::OnBnClickedOptToggle() {
+	bool optimize_board = this->m_optBoardCheck.GetCheck() == BST_CHECKED;
+	if (this->SLM_SetALLSame_.GetCheck() == BST_CHECKED) {
+		// Set to optimize all the boards
+		for (int i = 0; i < this->slmCtrl->boards.size(); i++) {
+			this->slmCtrl->boards[i]->setOptimize(optimize_board);
 		}
 	}
 	else {
-		Utility::printLine("INFO: Multi-SLM has been disabled");
-	}
-}
-
-void SLMControlDialog::OnBnClickedSlmDual() {
-	// When attempting to enable Multi SLM setup, will confirm that there are enough boards
-	if (this->dualEnable.GetCheck() == BST_CHECKED) {
-		if (this->slmCtrl->boards.size() < 2) {
-			// If not possible, will give warning in console and window along with undoing the selection
-			Utility::printLine("WARNING: Dual-SLM was enabled but there are 1 or fewer boards! Disabling check.");
-			MessageBox(
-				(LPCWSTR)L"Dual SLM ERROR",
-				(LPCWSTR)L"You have attempted to enable Dual SLM but not enough boards were found (1 or fewer)! Disabling selection.",
-				MB_ICONWARNING | MB_OK
-				);
-			this->dualEnable.SetCheck(BST_UNCHECKED);
-		}
-		else {
-			Utility::printLine("INFO: Dual-SLM has been enabled");
-			this->multiEnable.SetCheck(BST_UNCHECKED);
-		}
-	}
-	else {
-		Utility::printLine("INFO: Dual-SLM has been disabled");
+		// Set the currently seelcted one
+		this->slmCtrl->boards[this->slmSelectionID_]->setOptimize(optimize_board);
 	}
 }
