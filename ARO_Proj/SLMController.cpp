@@ -161,6 +161,15 @@ bool SLMController::IsAnyNematic() {
 	return false;
 }
 
+bool SLMController::optimizeAny() {
+	for (int i = 0; 0 < boards.size(); i++) {
+		if (boards[i]->isToBeOptimized()) {
+			return true;
+		}
+	}
+	return false;
+}
+
 bool SLMController::slmCtrlReady() {
 	if (blink_sdk == NULL || blink_sdk == nullptr) {
 		return false;

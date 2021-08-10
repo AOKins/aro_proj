@@ -42,6 +42,8 @@ public:
 	bool repopulateBoardList();
 
 	bool IsAnyNematic();
+	// Return true if at least one board is set to be optimized
+	bool optimizeAny();
 
 	// Update the framerate for the boards according to the GUI to match camera setting
 	// Returns true if no errors, false if error occurs
