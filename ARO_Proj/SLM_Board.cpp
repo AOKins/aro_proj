@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "SLM_Board.h"
+#include "Utility.h"
 
 SLM_Board::SLM_Board() {};
 
@@ -35,4 +36,14 @@ void SLM_Board::setPower(bool status) {
 
 void SLM_Board::setOptimize(bool optimized) {
 	this->to_be_optimized_ = optimized;
+	if (this->to_be_optimized_) {
+		Utility::printLine("INFO: Board #" + std::to_string(this->board_id) + " is set to be optimized!");
+	}
+	else {
+		Utility::printLine("INFO: Board #" + std::to_string(this->board_id) + " is set to NOT be optimized!");
+	}
+}
+
+bool SLM_Board::isToBeOptimized() {
+	return this->to_be_optimized_;
 }
