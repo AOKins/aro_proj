@@ -1,11 +1,11 @@
 ////////////////////
 // Utility.cpp - implementation of the Utility namespace methods
-// Last edited: 08/02/2021 by Andrew O'Kins
+// Last edited: 08/11/2021 by Andrew O'Kins
 ////////////////////
 
 #include "stdafx.h"
 
-#include <ctime>	// for getCurTime
+#include <ctime>	// for getting current time for getCurDateTime and getCurLocalTime
 #include <iostream> // std::cout in printLine
 
 #include <opencv2\highgui\highgui.hpp>	//image processing used in FindAverageValue methods
@@ -14,17 +14,20 @@
 #include "Utility.h"
 
 // [CONSOLE FEATURES]
+// On a new line print a message formatted as <[LOCAL TIME]> - [MESSAGE]
 void Utility::printLine(std::string msg, bool isDebug) {
 	// Comment out only when need to see debug type line printing
+#ifndef _DEBUG // Only in release mode do we ignore debug only messages
 	if (isDebug) {
 		return;
 	}
-	std::cout << "\n" << msg;
+#endif
+	std::cout << "\n<" << Utility::getCurLocalTime() << "> -" << msg;
 }
 
 // [TIMING FEATURES]
-// Return a string of formatted time label with current local time
-std::string Utility::getCurTime() {
+// Return a string of formatted time label with current local date and time
+std::string Utility::getCurDateTime() {
 	time_t tt;
 	struct tm curTime;
 	time(&tt);
@@ -49,6 +52,31 @@ std::string Utility::getCurTime() {
 
 	return finalTimeString;
 }
+
+// Return a string of formatted time label with current local time
+std::string Utility::getCurLocalTime() {
+	time_t tt;
+	struct tm curTime;
+	time(&tt);
+	//curTime = localtime(&tt); // Depreceated version
+	localtime_s(&curTime, &tt);
+
+	// https://en.cppreference.com/w/c/chrono/asctime
+	char ascBuf[26]; // Buffer to hold output from asctime_s
+	asctime_s(ascBuf, sizeof ascBuf, &curTime);
+	std::vector<std::string> timeParts = seperateByDelim(ascBuf, ' ');
+	std::vector<std::string> hourMinuteSecondParts = seperateByDelim(timeParts[3], ':');
+
+	std::string finalTimeString = "";
+	finalTimeString += std::to_string(std::stoi((std::string(hourMinuteSecondParts[0]))) % 12) + "-";	// hour
+	finalTimeString += hourMinuteSecondParts[1] + "-";  // minute
+	finalTimeString += hourMinuteSecondParts[2];		// seconds
+
+	finalTimeString.erase(std::remove(finalTimeString.begin(), finalTimeString.end(), '\n'), finalTimeString.end());
+
+	return finalTimeString;
+}
+
 
 // Calculate an average intensity from an image taken by the camera  which can be used as a fitness value
 // Input: image - pointer to the image data

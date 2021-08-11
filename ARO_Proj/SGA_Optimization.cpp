@@ -179,7 +179,7 @@ bool SGA_Optimization::runIndividual(int indID) {
 				this->tfile << "SGA GENERATION," << this->curr_gen << "," << fitness*exposureTimesRatio << std::endl;
 				tFileLock.unlock();
 				// Save image
-				std::string curTime = Utility::getCurTime(); // Get current time to use as timeStamp
+				std::string curTime = Utility::getCurDateTime(); // Get current time to use as timeStamp
 				this->cc->saveImage(curImage, std::string(this->outputFolder + curTime + "_SGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite_Camera" + ".bmp"));
 				scalerLock.lock();
 				for (int popID = 0; popID < this->population.size(); popID++) {
@@ -301,7 +301,7 @@ bool SGA_Optimization::setupInstanceVariables() {
 // Method to clean up & save resulting runOptimziation() instance
 bool SGA_Optimization::shutdownOptimizationInstance() {
 
-	std::string curTime = Utility::getCurTime();
+	std::string curTime = Utility::getCurDateTime();
 
 	// Only save images if not aborting (successful results)
 	if (this->dlg->stopFlag == false && this->saveResultImages) {

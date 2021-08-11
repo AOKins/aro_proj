@@ -1,23 +1,28 @@
 ////////////////////
 // Utility.h - Define various methods for accessible & repeatable use in a Utility namespace
-// Last edited: 08/02/2021 by Andrew O'Kins
+// Last edited: 08/11/2021 by Andrew O'Kins
 ////////////////////
 
 #ifndef UTILITY_H_
 #define UTILITY_H_
 
-#include <string>	// output format of getCurTime
+#include <string>	// output format of getCurDateTime and getCurLocalTime
 #include <vector>	// for seperateByDelim and rejoinClear
 #include <thread>	// for rejoinClear
 
 // Utility namespace to encapsulate the various isolated methods that aren't associated with a particular class
 namespace Utility {
 	// [CONSOLE FEATURES]
+	// On a new line print a message formatted as <[LOCAL TIME]> - [MESSAGE]
+	// if isDebug and this is release build, message ignored
 	void printLine(std::string msg = "", bool isDebug = false);
 
 	// [TIMING FEATURES]
-	// Return a string of formatted time label with current local time
-	std::string getCurTime();
+	// Return a string of formatted time label with current local date and time
+	std::string getCurDateTime();
+
+	// Return a string of formatted time label with current local time (no date)
+	std::string getCurLocalTime();
 
 	// [IMAGE PROCCESSING]
 	// Calculate an average intensity from an image taken by the camera  which can be used as a fitness value
