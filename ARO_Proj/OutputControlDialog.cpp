@@ -22,7 +22,6 @@ OutputControlDialog::OutputControlDialog(CWnd* pParent /*=NULL*/)
 
 BOOL OutputControlDialog::OnInitDialog() {
 	this->m_mainToolTips->Create(this);
-
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_LOGALL_FILES),		L"Enable all outputs");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_OUTPUT_PARAMETERS),	L"Save current settings in both loadable and readable files for reference");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SAVE_ELITEIMAGE),	L"Save elite results across generations during optimization");
@@ -33,7 +32,6 @@ BOOL OutputControlDialog::OnInitDialog() {
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_OUTPUT_LOCATION),	L"Directory where the outputs will be stored");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_EXPOSURE_FILE),		L"Record when the exposure is changed during optimization");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_ELITE_SAVE_FREQ),	L"How frequent to save elite results (units of generation)");
-
 	this->m_mainToolTips->Activate(true);
 
 	return CDialogEx::OnInitDialog();

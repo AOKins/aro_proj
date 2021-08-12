@@ -27,14 +27,12 @@ SLMControlDialog::SLMControlDialog(CWnd* pParent /*=NULL*/)
 BOOL SLMControlDialog::OnInitDialog() {
 	// Setup tool tips for SLM dialog window
 	this->m_mainToolTips->Create(this);
-
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_PWR_BUTTON), L"Set currently selected SLM's power on or off");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(ID_SLM_SELECT),		L"Select SLM to assign LUT and wavefront compensation files to and turn on/off");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SLM_ALLSAME),	L"Set to ignore select SLM and apply changes in settings to all connected boards");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_OPT_TOGGLE),		L"Toggle the currently selected board(s) to be included in the optimization or ignored");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_CURR_LUT_OUT),	L"The current LUT file being assigned to this SLM");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SETLUT),			L"Set LUT file for the selected board(s)");
-	
 	this->m_mainToolTips->Activate(true);
 
 	return CDialogEx::OnInitDialog();

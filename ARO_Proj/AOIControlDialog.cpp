@@ -1,6 +1,6 @@
 ////////////////////
 // AOIControlDIalog.cpp - implemetnation for the "AOI Settings" tab window
-// Last edited: 08/02/2021 by Andrew O'Kins
+// Last edited: 08/12/2021 by Andrew O'Kins
 ////////////////////
 
 #include "stdafx.h"
@@ -20,15 +20,14 @@ AOIControlDialog::AOIControlDialog(CWnd* pParent /*=NULL*/)
 
 BOOL AOIControlDialog::OnInitDialog() {
 	this->m_mainToolTips->Create(this);
-
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_CENTER_AOI_BUTTON), L"Take width and height but have image be center of camera's view");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_MAX_IMAGE_SIZE_BUTTON), L"Take full image of entire camera view");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_AOI_LEFT_INPUT), L"Pixel offset of ROI from the left most pixel");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_AOI_RIGHT_INPUT), L"Pixel offset of ROI from the top most pixel");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_AOI_WIDTH_INPUT), L"Width of ROI in pixels");
-	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_AOI_HEIGHT_INPUT), L"Height of ROI in pixels");
-
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_CENTER_AOI_BUTTON),		L"Take width and height but have image be center of camera's view");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_MAX_IMAGE_SIZE_BUTTON),	L"Take full image of entire camera view");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_AOI_LEFT_INPUT),			L"Pixel offset of ROI from the left most pixel");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_AOI_RIGHT_INPUT),		L"Pixel offset of ROI from the top most pixel");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_AOI_WIDTH_INPUT),		L"Width of ROI in pixels");
+	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_AOI_HEIGHT_INPUT),		L"Height of ROI in pixels");
 	this->m_mainToolTips->Activate(true);
+
 	return CDialogEx::OnInitDialog();
 }
 
@@ -100,7 +99,7 @@ void AOIControlDialog::OnBnClickedCenterAoiButton() {
 	int finalHeight = maxHeight;
 	if (curWidth < maxWidth && curWidth >= 0) {
 		int halfWidth = curWidth / 2;
-		finalX = centerX - curWidth;
+		finalX = centerX - halfWidth;
 		finalWidth = curWidth;
 	}
 	if (curHeight < maxHeight && curHeight >= 0) {

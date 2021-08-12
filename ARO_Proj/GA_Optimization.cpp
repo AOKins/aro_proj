@@ -7,7 +7,7 @@
 #include "GA_Optimization.h"	// Header file
 
 bool GA_Optimization::runOptimization() {
-	Utility::printLine("INFO: Starting uGA Optimization!");
+	Utility::printLine("INFO: Starting "+this->algorithm_name_+" Optimization!");
 	// Setup before optimization (see base class for implementation)
 	if (!prepareSoftwareHardware()) {
 		Utility::printLine("ERROR: Failed to prepare software or/and hardware for " +this->algorithm_name_+ " Optimization");
@@ -216,8 +216,9 @@ bool GA_Optimization::runIndividual(int indID) {
 		}
 	}
 	catch (std::exception &e) {
-		Utility::printLine("ERROR: Unidentified error occured while running individual #" + std::to_string(indID), true);
+		Utility::printLine("ERROR: Unidentified error occured while running individual #" + std::to_string(indID) + " in generation " + std::to_string(this->curr_gen), true);
 		Utility::printLine(e.what());
+		return false;
 	}
 	return true;
 }

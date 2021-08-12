@@ -18,7 +18,6 @@ OptimizationControlDialog::OptimizationControlDialog(CWnd* pParent /*=NULL*/)
 
 BOOL OptimizationControlDialog::OnInitDialog() {
 	this->m_mainToolTips->Create(this);
-
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_MIN_FITNESS_INPUT),	L"Minimum fitness value that the GA must reach before finishing");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_MIN_SECONDS_INPUT),	L"Minimum time in seconds that the GA must run");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_MIN_GEN_INPUT),		L"Minimum number of generations that the GA must evaluate");
@@ -28,8 +27,8 @@ BOOL OptimizationControlDialog::OnInitDialog() {
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_MAX_GENERATIONS),	L"Maximum number of generations to allow the GA to evaluate (0 indicates indefinite)");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_MAX_SEC_INPUT),		L"Maximum time to allow the GA to evaluate (0 indicates indefinite)");
 	this->m_mainToolTips->AddTool(this->GetDlgItem(IDC_SKIP_ELITE_CHECK),	L"Skip individuals in a pool that already have a determined fitness");
-
 	this->m_mainToolTips->Activate(true);
+
 	return CDialogEx::OnInitDialog();
 }
 
