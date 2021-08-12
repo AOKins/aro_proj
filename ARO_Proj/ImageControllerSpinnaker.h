@@ -81,6 +81,6 @@ public:
 	}
 };
 
-#endif
+#endif // inclusion for only Spinnaker version
 
-#endif
+#endif // file inclusion

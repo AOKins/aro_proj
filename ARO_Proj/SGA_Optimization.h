@@ -21,10 +21,6 @@ public:
 	SGA_Optimization(MainDialog* dlg, CameraController* cc, SLMController* sc) : GA_Optimization(dlg, cc, sc) {
 		this->algorithm_name_ = "SGA";
 	};
-
-	// Method for executing the optimization
-	// Output: returns true if successful ran without error, false if error occurs
-	bool runOptimization();
 };
 
 #endif

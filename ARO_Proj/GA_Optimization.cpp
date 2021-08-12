@@ -122,7 +122,7 @@ bool GA_Optimization::runIndividual(int indID) {
 		// If the boolean is already true, then that means another thread is using this hardware and we have an issue
 		if (this->usingHardware) {
 			consoleLock.lock();
-			Utility::printLine("ERROR: HARDWARE BEING USED BY OTHER THREAD(S)! Exiting out of this individual", true);
+			Utility::printLine("CRITICAL ERROR: HARDWARE BEING USED BY OTHER THREAD(S)! Exiting out of this individual", true);
 			consoleLock.unlock();
 			hardwareLock.unlock();
 			return false;
@@ -152,10 +152,8 @@ bool GA_Optimization::runIndividual(int indID) {
 			consoleLock.unlock();
 			return false;
 		}
-		// Getting the image data from resulting image
-		unsigned char * camImg = curImage->getRawData();
-		// Determine the fitness by intensity of the image within circle of target radius
-		double fitness = Utility::FindAverageValue(camImg, curImage->getWidth(), curImage->getHeight(), this->cc->targetRadius);
+		// Using the image data from resulting image to determine the fitness by intensity of the image within circle of target radius
+		double fitness = Utility::FindAverageValue(curImage->getRawData(), curImage->getWidth(), curImage->getHeight(), this->cc->targetRadius);
 		// Get current exposure setting of camera (relative to initial)
 		double exposureTimesRatio = this->cc->GetExposureRatio();	// needed for proper fitness value across changing exposure time
 
@@ -170,7 +168,7 @@ bool GA_Optimization::runIndividual(int indID) {
 		if (indID == (population[0]->getSize() - 1)) {
 			if ((this->saveEliteImages) && (this->curr_gen % this->saveEliteFrequency == 0)) {
 				// Save Info
-				std::unique_lock<std::mutex> tFileLock(tfileMutex, std::defer_lock);
+				std::unique_lock<std::mutex> tFileLock(this->tfileMutex, std::defer_lock);
 				tFileLock.lock();
 				this->tfile << this->algorithm_name_ << " GENERATION," << this->curr_gen << "," << fitness*exposureTimesRatio << std::endl;
 				tFileLock.unlock();
@@ -207,13 +205,13 @@ bool GA_Optimization::runIndividual(int indID) {
 		}
 		// If the fitness value is too high, flag that the exposure needs to be shortened
 		if (fitness > this->maxFitnessValue) {
-			std::unique_lock<std::mutex> exposureFlagLock(exposureFlagMutex, std::defer_lock);
+			std::unique_lock<std::mutex> exposureFlagLock(this->exposureFlagMutex, std::defer_lock);
 			exposureFlagLock.lock();
 			this->shortenExposureFlag = true;
 			exposureFlagLock.unlock();
 		}
 		// If the pointer to current image does not also point to the best image we are safe to delete
-		if (curImage != bestImage) {
+		if (curImage != this->bestImage) {
 			delete curImage;
 		}
 	}
@@ -223,4 +221,3 @@ bool GA_Optimization::runIndividual(int indID) {
 	}
 	return true;
 }
-

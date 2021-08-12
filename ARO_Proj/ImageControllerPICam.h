@@ -90,6 +90,6 @@ public:
 	}
 };
 
-#endif
+#endif // inclusion for only PICam version
 
-#endif
+#endif // file inclusion

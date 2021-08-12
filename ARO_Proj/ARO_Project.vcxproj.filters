@@ -188,6 +188,12 @@
     <ClCompile Include="GA_Optimization.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SGA_Population.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="uGA_Population.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ARO_Project.rc">

@@ -143,8 +143,7 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 	else if (name == "maxGenerations")
 		this->m_optimizationControlDlg.m_maxGenerations.SetWindowTextW(valueStr);
 	else if (name == "skipEliteReeval") {
-		if (valueStr == "true") {this->m_optimizationControlDlg.m_skipEliteReevaluation.SetCheck(BST_CHECKED);}
-		else {this->m_optimizationControlDlg.m_skipEliteReevaluation.SetCheck(BST_UNCHECKED);}
+		this->m_optimizationControlDlg.m_skipEliteReevaluation.SetCheck(valueStr == "true");
 	}
 	// SLM Dialog
 	else if (name == "slmSelect")  {

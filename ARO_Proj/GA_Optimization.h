@@ -20,6 +20,9 @@ protected:
 	int eliteSize;				// Number of elite individuals within the population (should be less than populationSize)
 	int curr_gen;				// Current generation being evaluated (start at 0)
 
+	// GA specific output file stream
+	std::ofstream timePerGenFile;		// Record time it took to perform each generation during optimization
+
 	// Vector hold threads of running individuals
 	std::vector<std::thread> ind_threads;
 

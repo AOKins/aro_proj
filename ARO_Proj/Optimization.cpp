@@ -1,6 +1,6 @@
 ////////////////////
 // Optimization.cpp - implementation for the Optimization's base class functions
-// Last edited: 08/02/2021 by Andrew O'Kins
+// Last edited: 08/12/2021 by Andrew O'Kins
 ////////////////////
 
 #include "stdafx.h"				// Required in source
@@ -187,7 +187,6 @@ bool Optimization::prepareOutputSettings() {
 	return true;
 }
 
-//[SETUP]
 // Setup camera, verify SLM is ready (setting up the board vector) and prepare stop conditions
 bool Optimization::prepareSoftwareHardware() {
 	Utility::printLine("INFO: Preparing equipment and software for optimization!");

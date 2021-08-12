@@ -39,10 +39,10 @@ protected:
 
 	//Preference-type parameters
 	bool displayCamImage	= true;  // TRUE -> opens a window showing the camera image
-	bool displaySLMImage	= false; // TODO: only first SLM right now - add functionality to display any or all boards
+	bool displaySLMImage	= false; // TURE -> opens window showing best for currently being optimized SLM
 	bool logAllFiles		= true;	 // TRUE -> output all logging files to record performance
 	bool saveEliteImages	= false; // TRUE -> save images of the fittest individual of each gen
-	int  saveEliteFrequency = 1;	 // How often per generation to save elite images if enabled
+	int  saveEliteFrequency = 10;	 // How often per generation to save elite images if enabled
 	bool saveResultImages   = true;	 // TRUE -> Will save results
 	bool saveParametersPref = true;  // TRUE -> Output parameters used
 	bool saveTimeVSFitness  = true;	 // TRUE -> Output timing performance
@@ -67,7 +67,6 @@ protected:
 
 	// Logging file streams
 	std::ofstream tfile;				// Record elite individual progress over generations
-	std::ofstream timePerGenFile;		// Record time it took to perform each generation during optimization
 	std::ofstream timeVsFitnessFile;	// Recording general fitness progress
 	std::ofstream efile;				// Exposure file to record when exposure is shortened
 	std::string outputFolder;	// string containing path to folder to save outputs to
@@ -96,8 +95,7 @@ protected:
 
 	// Save the various setting parameters used in this optimization
 	// Stores the values with formatting in "this->outputFolder/[time]_[optType]_Optimization_Parameters.txt"
-	// Input:
-	//		time - the current time as a string label
+	// Input: time - the current time as a string label
 	void saveParameters(std::string time);
 	
 	// Methods relying on implementation from child classes
