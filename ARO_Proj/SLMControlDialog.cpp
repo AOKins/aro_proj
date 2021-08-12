@@ -72,21 +72,22 @@ BOOL SLMControlDialog::PreTranslateMessage(MSG* pMsg) {
 void SLMControlDialog::OnCbnSelchangeSlmSelect() { 
 	// Update current SLM selection
 	this->slmSelectionID_ = this->slmSelection_.GetCurSel();
-	// Update LUT file name
-	CString LUTpath(this->slmCtrl->boards[this->slmSelectionID_]->LUTFileName.c_str());
-	this->m_LUT_pathDisplay.SetWindowTextW(LUTpath);
-	// Update power button to reflect on current power state
-	CString pwrMsg;
-	if (this->slmCtrl->boards[this->slmSelectionID_]->isPoweredOn()) {
-		pwrMsg = "Turn power OFF";
+	if (this->slmSelectionID_ > 0 && this->slmSelectionID_ < this->slmCtrl->boards.size()) {
+		// Update LUT file name
+		CString LUTpath(this->slmCtrl->boards[this->slmSelectionID_]->LUTFileName.c_str());
+		this->m_LUT_pathDisplay.SetWindowTextW(LUTpath);
+		// Update power button to reflect on current power state
+		CString pwrMsg;
+		if (this->slmCtrl->boards[this->slmSelectionID_]->isPoweredOn()) {
+			pwrMsg = "Turn power OFF";
+		}
+		else {
+			pwrMsg = "Turn power ON";
+		}
+		this->m_SlmPwrButton.SetWindowTextW(pwrMsg);
+		// Update "to be optimized" toggle according to the now selected board's status
+		this->m_optBoardCheck.SetCheck(this->slmCtrl->boards[this->slmSelectionID_]->isToBeOptimized());
 	}
-	else {
-		pwrMsg = "Turn power ON";
-	}
-	this->m_SlmPwrButton.SetWindowTextW(pwrMsg);
-
-	// Update "to be optimized" toggle according to the now selected board's status
-	this->m_optBoardCheck.SetCheck(this->slmCtrl->boards[this->slmSelectionID_]->isToBeOptimized());
 }
 
 // Turn the select SLM's power on/off accordingly

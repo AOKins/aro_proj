@@ -58,16 +58,6 @@ bool CameraController::startCamera() {
 	piint readout_size = 0;
 	Picam_GetParameterIntegerValue(this->camera_, PicamParameter_ReadoutStride, &readout_size);
 	
-	delete[] this->buffer_.memory;
-		
-	// Setting up the buffer, making the available memory size equal to ONE readout (as we would be only interested in one image at a time)
-	if (this->buffer_.memory == NULL) {
-		delete [] this->buffer_.memory;
-	}
-	this->buffer_.memory = new char[readout_size*2];
-	this->buffer_.memory_size = readout_size*2;
-
-	
 	// Commiting buffer parameter
 	const PicamParameter* failed_parameters;
 	piint failed_parameters_count;
@@ -75,11 +65,18 @@ bool CameraController::startCamera() {
 
 	// - print any invalid parameters
 	if (failed_parameters_count > 0) {
-		Utility::printLine("ERROR: invalid following parameters to commit!");
+		Utility::printLine("ERROR: invalid following parameters to commit prior to starting the camera!");
 	}
 
-	// - free picam-allocated resources
+	// - free picam-allocated resources for parameters
 	Picam_DestroyParameters(failed_parameters);
+
+	// Setting up the buffer, making the available memory size sufficient
+	if (this->buffer_.memory == NULL) {
+		delete [] this->buffer_.memory;
+	}
+	this->buffer_.memory = new char[readout_size*2];
+	this->buffer_.memory_size = readout_size*2;
 
 	// Setup acquisition buffer
 	err = PicamAdvanced_SetAcquisitionBuffer(this->camera_, &this->buffer_);
@@ -144,6 +141,7 @@ ImageController* CameraController::AcquireImage() {
 
 // Stop acquisition process (but still holds camera instance and other resources)
 bool CameraController::stopCamera() {
+	// TODO: Check if acquisition is going beforehand
 
 	// End acquisition management but still need to have camera online for another run if needed
 	Picam_StopAcquisition(this->camera_);
@@ -174,6 +172,7 @@ int CameraController::PrintDeviceInfo() {
 	Utility::printLine();
 	Utility::printLine("*** CAMERA INFORMATION ***");
 
+	// Get camrea id to get the name and serial number
 	PicamCameraID id;
 	Picam_GetCameraID(this->camera_, &id);
 
@@ -184,7 +183,7 @@ int CameraController::PrintDeviceInfo() {
 	Utility::printLine("Calculated readout time: " + std::to_string(getFloatParameterValue(PicamParameter_ReadoutTimeCalculation)) + " milliseconds");
 	Utility::printLine("Calculated frame time: " + std::to_string(float(1000.0f / getFloatParameterValue(PicamParameter_FrameRateCalculation))) + " milliseconds per frame");
 
-	Picam_DestroyCameraIDs(&id);
+	Picam_DestroyCameraIDs(&id); // freeing resources
 
 	Utility::printLine("");
 	return 0;
@@ -224,6 +223,8 @@ std::string CameraController::getStringParameterValue(PicamEnumeratedType type, 
 }
 
 bool CameraController::shutdownCamera() {
+	// TODO: Add check for if acquisition is still occurring and stop if so
+
 	Utility::printLine("INFO: Beginning to shutdown camera!");
 	// Clear out camera
 	pibln connected;
@@ -373,14 +374,15 @@ bool CameraController::UpdateConnectedCameraInfo() {
 	
 	// get the ids of all cameras
 	if (Picam_GetAvailableCameraIDs(&id, &id_count) != PicamError_None) {
-		Utility::printLine("WARNING: Error in getting availabel cameras!");
+		Utility::printLine("WARNING: Error in getting available cameras!");
 	}
-
 	// Connect to first one if available, if this fails will setup demo camera to debug with
 	if (PicamAdvanced_OpenCameraDevice(id, &this->camera_) != PicamError_None) {
+		#ifdef _DEBUG // In debug build, will setup demo camera
+		
 		// If no successfully connected camera, will create a demo camera for the purposes of demonstrating the program and debugging
 		// Demo setup is based on provided PICam example within its acquire.cpp source file
-		Utility::printLine("WARNING: Failed to connect to a camera, creating demo camera to demonstrate program");
+		Utility::printLine("WARNING: Failed to connect to a camera, creating demo camera for debugging/demo purporses");
 		
 		PicamCameraID id;
 		PicamError demoConnectErr = Picam_ConnectDemoCamera(PicamModel_Pixis100B, "12345", &id);
@@ -392,6 +394,11 @@ bool CameraController::UpdateConnectedCameraInfo() {
 			std::string errMsg = "ERROR: " + std::to_string(demoConnectErr);
 			Utility::printLine(errMsg);
 		}
+		
+		#else // If _DEBUG not defined, this is release version and we would want to return false (error) if open camera failed
+		Utility::printLine("ERROR: Failed to open camera!");
+		return false;
+		#endif
 	}
 	else {
 		Utility::printLine("INFO: Connected to " + std::string(id->sensor_name));
@@ -431,14 +438,6 @@ bool CameraController::ConfigureCustomImageSettings() {
 
 	// ROI according to GUI, implementation approach based on PICam example rois.cpp //
 
-	//XY factor check (axes offsets need to be certain factor to be valid see above)
-	if (this->x0 % 4 != 0) {
-		this->x0 -= this->x0 % 4;
-	}
-	if (this->y0 % 2 != 0) {
-		this->y0 -= this->y0 % 2;
-	}
-
 	// Checking if the GUI setup is invalid by checking against max dimensions and if our ROI is going out of bounds
 	int x_max, y_max;
 	this->GetFullImage(x_max, y_max);
@@ -449,7 +448,6 @@ bool CameraController::ConfigureCustomImageSettings() {
 		this->cameraImageWidth = x_max;
 		this->cameraImageHeight = y_max;
 	}
-
 	/* Get the orinal ROI */
 	const PicamRois* region;
 	if (Picam_GetParameterRoisValue(this->camera_, PicamParameter_Rois, &region) != PicamError_None) {
@@ -474,7 +472,7 @@ bool CameraController::ConfigureCustomImageSettings() {
 	
 	// TODO: Figure out these two parameters
 	// Set gamma
-		// Unsure of comparablse setting for PICam
+		// Unsure of comparable setting for PICam
 
 
 	// Set FPS

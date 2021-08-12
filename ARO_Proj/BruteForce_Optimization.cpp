@@ -200,7 +200,7 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 		this->lmaxfile.close();
 		this->rtime.close();
 	}
-	std::string curTime = Utility::getCurTime();
+	std::string curTime = Utility::getCurDateTime();
 	// Generic file renaming to include time stamps
 	if (this->logAllFiles || this->saveTimeVSFitness) {
 		this->timeVsFitnessFile.close();

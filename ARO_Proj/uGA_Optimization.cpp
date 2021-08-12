@@ -124,7 +124,7 @@ bool uGA_Optimization::runIndividual(int indID) {
 		// If the boolean is already true, then that means another thread is using this hardware and we have an issue
 		if (this->usingHardware) {
 			consoleLock.lock();
-			Utility::printLine("ERROR: HARDWARE BEING USED BY OTHER THREAD(S)! Exiting out of this individual");
+			Utility::printLine("ERROR: HARDWARE BEING USED BY OTHER THREAD(S)! Exiting out of this individual", true);
 			consoleLock.unlock();
 			hardwareLock.unlock();
 			return false;
@@ -177,7 +177,7 @@ bool uGA_Optimization::runIndividual(int indID) {
 				this->tfile << "uGA GENERATION," << this->curr_gen << "," << fitness*exposureTimesRatio << std::endl;
 				tFileLock.unlock();
 				// Save image
-				std::string curTime = Utility::getCurTime(); // Get current time to use as timeStamp
+				std::string curTime = Utility::getCurDateTime(); // Get current time to use as timeStamp
 				this->cc->saveImage(curImage, std::string(this->outputFolder + curTime + "_uGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite_Camera" + ".bmp"));
 				scalerLock.lock();
 				for (int popID = 0; popID < this->popCount; popID++) {
@@ -219,7 +219,7 @@ bool uGA_Optimization::runIndividual(int indID) {
 		}
 	}
 	catch (std::exception &e) {
-		Utility::printLine("ERROR: Unidentified error occured while running individual #" + std::to_string(indID));
+		Utility::printLine("ERROR: Unidentified error occured while running individual #" + std::to_string(indID), true);
 		Utility::printLine(e.what());
 	}
 	return true;
@@ -291,7 +291,7 @@ bool uGA_Optimization::setupInstanceVariables() {
 // Method to clean up & save resulting runOptimziation() instance
 bool uGA_Optimization::shutdownOptimizationInstance() {
 
-	std::string curTime = Utility::getCurTime();
+	std::string curTime = Utility::getCurDateTime();
 
 	// Only save images if not aborting (successful results
 	if (this->dlg->stopFlag == false && this->saveResultImages) {
