@@ -258,7 +258,6 @@ void SLMControlDialog::OnBnClickedOptToggle() {
 		// Set to optimize all the boards
 		for (int i = 0; i < this->slmCtrl->boards.size(); i++) {
 			this->slmCtrl->boards[i]->setOptimize(optimize_board);
-
 		}
 	}
 	else {

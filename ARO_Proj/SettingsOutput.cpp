@@ -1,7 +1,7 @@
 ////////////////////
 // Additional source file to export some of the contents of MainDialog.cpp for easier navigation
 // SettingsOutput.cpp - behavior of the Save Settings and Load Settings buttons within MainDialog
-// Last edited: 08/02/2021 by Andrew O'Kins
+// Last edited: 08/10/2021 by Andrew O'Kins
 ////////////////////
 #include "stdafx.h"				// Required in source
 
@@ -60,7 +60,6 @@ void MainDialog::OnBnClickedLoadSettings() {
 		else {
 			tryAgain = false;
 		}
-
 	} while (tryAgain);
 }
 
@@ -106,7 +105,7 @@ bool MainDialog::setUIfromFile(std::string filePath) {
 // Output: variable associated with name is assigned varValue, returns false if error or inputs are empty
 bool MainDialog::setValueByName(std::string name, std::string value) {
 	CString valueStr(value.c_str());
-	// Do a pre-emptive check if either name or value are empty
+	// Do a pre-emptive check if either name or value are empty and return false if either are
 	if (name == "" || value == "") {
 		return false;
 	}
@@ -147,7 +146,6 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 		if (valueStr == "true") {this->m_optimizationControlDlg.m_skipEliteReevaluation.SetCheck(BST_CHECKED);}
 		else {this->m_optimizationControlDlg.m_skipEliteReevaluation.SetCheck(BST_UNCHECKED);}
 	}
-
 	// SLM Dialog
 	else if (name == "slmSelect")  {
 		int selectID = std::stoi(value.c_str()) - 1; // Correct from base 1 index to 0 based

@@ -114,10 +114,10 @@ protected:
 	// Vector hold threads of running individuals
 	std::vector<std::thread> ind_threads;
 	// Mutexes to protect critical sections
-	std::mutex hardwareMutex; // Mutex to protect access to the hardware used in evaluating an individual (SLM, Camera, etc.)
-	std::mutex consoleMutex, imageMutex, camDisplayMutex, slmDisplayMutex;	// Mutex to protect access to i/o and lastImage dimension values
-	std::mutex tfileMutex, timeVsFitMutex, efileMutex;					// Mutex to protect file i/o
-	std::mutex stopFlagMutex, exposureFlagMutex;						// Mutex to protect important flags 
+	std::mutex hardwareMutex;						// Mutex to protect critical section of accessing SLM and Camera data
+	std::mutex consoleMutex, imageMutex;			// Mutex to protect console output and bestImage values
+	std::mutex tfileMutex, timeVsFitMutex;			// Mutex to protect file i/o
+	std::mutex stopFlagMutex, exposureFlagMutex;	// Mutex to protect important flags 
 	std::mutex slmScalersMutex; // Mutex to protect the usage of the the SLM scalers (which are used in both for hardware and in image output)
 public:
 	// Constructor

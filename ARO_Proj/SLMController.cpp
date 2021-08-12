@@ -230,14 +230,14 @@ void SLMController::setBoardPower(int boardID, bool isOn) {
 
 // Write an image to a board
 // Input:
-//		slmNum - index for board to assing image to (0 based index)
+//		slmNum - index for board to assing image to (1 based index)
 //		image - pointer to array of image data to assign to board
 // Output: Write image to board at slmNum, using that board's height for the image size
 bool SLMController::writeImageToBoard(int slmNum, unsigned char * image) {
-	if (slmNum < 0 || slmNum >= boards.size()) {
+	if (slmNum < 1 || slmNum > this->boards.size()) {
 		return false;
 	}
 	else {
-		return this->blink_sdk->Write_image(slmNum + 1, image, this->getBoardHeight(slmNum), false, false, 0);
+		return this->blink_sdk->Write_image(slmNum, image, this->getBoardHeight(slmNum), false, false, 0);
 	}
 }

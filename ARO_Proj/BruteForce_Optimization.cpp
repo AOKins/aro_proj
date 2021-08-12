@@ -23,11 +23,11 @@ bool BruteForce_Optimization::runOptimization() {
 		return false;
 	}
 	this->timestamp = new TimeStampGenerator();
-	// Optimize the selected boards
-	for (int boardID = 0; boardID < this->optBoards.size() && this->dlg->stopFlag != true; boardID++) {
-		Utility::printLine("INFO: Currently optimizing board #" + std::to_string(this->optBoards[boardID]->board_id));
-		runIndividual(boardID);
-		Utility::printLine("INFO: Finished optimizing board #" + std::to_string(this->optBoards[boardID]->board_id));
+	// Optimize the selected boards by iterating through the vector that only holds boards to be optimized and access there IDs
+	for (int boardIndex = 0; boardIndex < this->optBoards.size() && this->dlg->stopFlag == false; boardIndex++) {
+		Utility::printLine("INFO: Currently optimizing board #" + std::to_string(this->optBoards[boardIndex]->board_id));
+		runIndividual(this->optBoards[boardIndex]->board_id);
+		Utility::printLine("INFO: Finished optimizing board #" + std::to_string(this->optBoards[boardIndex]->board_id));
 	}
 	// Cleanup
 	return shutdownOptimizationInstance();;
@@ -35,10 +35,12 @@ bool BruteForce_Optimization::runOptimization() {
 
 
 // Run individual for BF refers to the board being used
-// Input: indID - index of SLM board being used (0 based)
+// Input: indID - index of SLM board being used (1 based)
 // Output: Result added to finalImages_ vector
 bool BruteForce_Optimization::runIndividual(int boardID) {
-	if (boardID < 0 || boardID >= this->sc->boards.size()) {
+	// Bound check to make sure that the boardID is a valid board
+	if (boardID < 1 || boardID > this->sc->boards.size()) {
+		Utility::printLine("ERROR: Attempting to optimize a non-existent board (#"+ std::to_string(boardID) + "), ignoring");
 		return false;
 	}
 	int slmWidth = this->sc->getBoardWidth(boardID);
@@ -49,22 +51,22 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 
 	int dphi = 16;
 
-	bool endOpt;
 	//Initialize array of SLM image with 0s (note that the size of slmImg is dependent on the camera and not SLM!)
 	setBlankSlmImg(slmImg);
 
+	bool endOpt;
 	try {
 		// Iterate through columns
-		for (int binCol = 0; binCol < this->cc->numberOfBinsX; binCol++) {
+		for (int binCol = 0; binCol < this->cc->numberOfBinsX && !endOpt; binCol++) {
 			// Iterate through rows
-			for (int binRow = 0; binRow < this->cc->numberOfBinsY; binRow++) {
+			for (int binRow = 0; binRow < this->cc->numberOfBinsY && !endOpt; binRow++) {
 				int binValMax = 0;
 				double fitValMax = 0;
 				// Current bin
 				int binIndex = (binCol + binRow*this->cc->numberOfBinsX)*this->cc->populationDensity;
 
 				// Find max phase for this bin
-				for (int curBinVal = 0; curBinVal< 256; curBinVal += dphi) {
+				for (int curBinVal = 0; curBinVal < 256 && !endOpt; curBinVal += dphi) {
 					// Abort if stop button was pressed
 					if (dlg->stopFlag == true) {
 						return true;
@@ -122,12 +124,12 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 					if (fitness > this->maxFitnessValue) {
 						this->cc->HalfExposureTime();
 					}
-
-					endOpt = dlg->stopFlag;
+					// Deallocate current image if not the best one
 					if (curImage != this->bestImage) {
 						delete curImage;
 					}
-
+					// Get stop flag to check if should continue or abort
+					endOpt = dlg->stopFlag;
 				}  // ... curBinVal loop
 
 				if (fitValMax > this->allTimeBestFitness) {
@@ -187,7 +189,7 @@ bool BruteForce_Optimization::setupInstanceVariables() {
 	this->allTimeBestFitness = 0;
 
 	// Open files for logging algorithm progress 
-	if (this->logAllFiles) {
+	if (this->logAllFiles || this->saveTimeVSFitness) {
 		this->lmaxfile.open(this->outputFolder + "lmax.txt");
 		this->rtime.open(this->outputFolder + "Opt_rtime.txt");
 	}
@@ -235,7 +237,9 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 	this->cc->stopCamera();
 
 	// - memory deallocation
-	delete this->bestImage;
+	if (this->bestImage != NULL) {
+		delete this->bestImage;
+	}
 	if (this->camDisplay != NULL) {
 		this->camDisplay->CloseDisplay();
 		delete this->camDisplay;
@@ -245,8 +249,10 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 		delete this->slmDisplayVector[0];
 	}
 	this->slmDisplayVector.clear();
-	delete this->timestamp;
 
+	if (this->timestamp != NULL) {
+		delete this->timestamp;
+	}
 	// Delete all the scalers in the vector
 	for (int i = 0; i < this->scalers.size(); i++) {
 		delete this->scalers[i];
@@ -265,7 +271,9 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 			cv::Mat m_ary = cv::Mat(512, 512, CV_8UC1, this->finalImages_[i]);
 			cv::imwrite(this->outputFolder + curTime + "_OPT5_phaseopt_" + std::to_string(this->optBoards[i]->board_id)+".bmp", m_ary);
 		}
-		delete[] this->finalImages_[i]; // deallocate then
+		if (this->finalImages_[i] != NULL) {
+			delete[] this->finalImages_[i]; // deallocate then
+		}
 		this->finalImages_.pop_back();  // remove from vector
 	}
 	this->finalImages_.clear();

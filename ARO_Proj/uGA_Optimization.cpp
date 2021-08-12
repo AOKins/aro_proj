@@ -137,7 +137,7 @@ bool uGA_Optimization::runIndividual(int indID) {
 			// Scale the individual genome to fit SLMs
 			this->scalers[i]->TranslateImage(this->population[i]->getGenome(indID)->data(), this->slmScaledImages[i]); // Translate the vector genome into char array image
 			// Write to SLM, getting the board position according to optBoards and correcting to 0 base
-			this->sc->writeImageToBoard(this->optBoards[i]->board_id-1, this->slmScaledImages[i]);
+			this->sc->writeImageToBoard(this->optBoards[i]->board_id, this->slmScaledImages[i]);
 		}
 		scalerLock.unlock();
 
@@ -176,9 +176,10 @@ bool uGA_Optimization::runIndividual(int indID) {
 				tFileLock.lock();
 				this->tfile << "uGA GENERATION," << this->curr_gen << "," << fitness*exposureTimesRatio << std::endl;
 				tFileLock.unlock();
-				// Save image
+				// Save camera image
 				std::string curTime = Utility::getCurDateTime(); // Get current time to use as timeStamp
 				this->cc->saveImage(curImage, std::string(this->outputFolder + curTime + "_uGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite_Camera" + ".bmp"));
+				// Save SLM image(s)
 				scalerLock.lock();
 				for (int popID = 0; popID < this->popCount; popID++) {
 					scalers[popID]->TranslateImage(this->population[popID]->getGenome(this->population[popID]->getSize() - 1)->data(), this->slmScaledImages[popID]);
@@ -305,6 +306,7 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 
 		// Save final (most fit SLM images)
 		for (int popID = 0; popID < this->population.size(); popID++) {
+			// Scale the genome, data() is raw pointer to vector data within the individual
 			scalers[popID]->TranslateImage(this->population[popID]->getGenome(this->population[popID]->getSize() - 1)->data(), this->slmScaledImages[popID]);
 			cv::Mat m_ary = cv::Mat(512, 512, CV_8UC1, this->slmScaledImages[popID]);
 			imwrite(this->outputFolder + curTime + "_uGA_phaseopt_SLM" + std::to_string(this->optBoards[popID]->board_id) + ".bmp", m_ary);
@@ -349,12 +351,17 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 	// - camera
 	this->cc->stopCamera();
 	// - pointers
-	delete this->bestImage;
+	if (this->bestImage != NULL) {
+		delete this->bestImage;
+	}
 	for (int i = 0; i < this->population.size(); i++) {
 		delete this->population[i];
 	}
 	this->population.clear();
-	delete this->timestamp;
+
+	if (this->timestamp != NULL) {
+		delete this->timestamp;
+	}
 	// Delete all the scalers in the vector
 	for (int i = 0; i < this->scalers.size(); i++) {
 		delete this->scalers[i];

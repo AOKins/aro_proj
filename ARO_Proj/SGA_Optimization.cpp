@@ -132,12 +132,12 @@ bool SGA_Optimization::runIndividual(int indID) {
 		this->usingHardware = true;
 
 		// Write translated image to SLM boards, assumes there are at least as many boards as populations (accessing optBoards)
-		scalerLock.lock(); // Scaler lock as the scaler is closely used with the slm
+		scalerLock.lock(); // Scaler lock as the scaler is closely used with the slm, being sure that the scaler and image writing are used in tandem
 		for (int i = 0; i < this->popCount; i++) {
 			// Scale the individual genome to fit SLM
 			this->scalers[i]->TranslateImage(this->population[i]->getGenome(indID)->data(), this->slmScaledImages[i]); // Translate the vector genome into char array image
 			// Write to SLM, getting the board position according to optBoards and correcting to 0 base
-			this->sc->writeImageToBoard(this->optBoards[i]->board_id - 1, this->slmScaledImages[i]);
+			this->sc->writeImageToBoard(this->optBoards[i]->board_id, this->slmScaledImages[i]);
 		}
 		scalerLock.unlock();
 
@@ -193,7 +193,6 @@ bool SGA_Optimization::runIndividual(int indID) {
 			this->bestImage = curImage;
 			imageLock.unlock();
 		}
-
 		// Check stop conditions, only assign true if we reached the condition (race condition if done directly)
 		if (stopConditionsReached((fitness*exposureTimesRatio), this->timestamp->S_SinceStart(), this->curr_gen + 1) == true) {
 			std::unique_lock<std::mutex> stopLock(this->stopFlagMutex, std::defer_lock);
@@ -201,7 +200,6 @@ bool SGA_Optimization::runIndividual(int indID) {
 			this->stopConditionsMetFlag = true;
 			stopLock.unlock();
 		}
-
 		// Update fitness for the individuals
 		for (int popID = 0; popID < this->population.size(); popID++) {
 			this->population[popID]->setFitness(indID, fitness * exposureTimesRatio);
@@ -349,12 +347,17 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	// - camera
 	this->cc->stopCamera();
 	// - pointers
-	delete this->bestImage;
+	if (this->bestImage != NULL) {
+		delete this->bestImage;
+	}
 	for (int i = 0; i < this->population.size(); i++) {
 		delete this->population[i];
 	}
 	this->population.clear();
-	delete this->timestamp;
+
+	if (this->timestamp != NULL) {
+		delete this->timestamp;
+	}
 	// Delete all the scalers in the vector
 	for (int i = 0; i < this->scalers.size(); i++) {
 		delete this->scalers[i];
