@@ -6,223 +6,6 @@
 #include "stdafx.h"				// Required in source
 #include "SGA_Optimization.h"	// Header file
 
-// Method for executing the optimization
-// Output: returns true if successful ran without error, false if error occurs
-bool SGA_Optimization::runOptimization() {
-	Utility::printLine("INFO: Starting SGA Optimization!");
-	// Setup before optimization (see base class for implementation)
-	if (!prepareSoftwareHardware()) {
-		Utility::printLine("ERROR: Failed to prepare software or/and hardware for SGA Optimization");
-		return false;
-	}
-	// Setup variables that are of instance and depend on this specific optimization method (such as pop size)
-	if (!setupInstanceVariables()) {
-		Utility::printLine("ERROR: Failed to prepare values and files for SGA Optimization");
-		return false;
-	}
-	double start = 0;
-	double end = 0;
-	try {	// Begin general camera exception handling while optimization loop is going
-		this->timestamp = new TimeStampGenerator();		// Starting time stamp to track elapsed time
-		// Optimization loop for each generation
-		for (this->curr_gen = 0; this->curr_gen < this->maxGenenerations && !this->stopConditionsMetFlag; this->curr_gen++) {
-			// Run each individual, giving them all fitness values as a result of their genome
-			for (int indID = 0; indID < this->population[0]->getSize(); indID++) {
-				// If skipping already evaluated toggled and this individual already has a fitness (not initial assignment -1) then skip
-				if (this->skipEliteReevaluation == false || (this->skipEliteReevaluation == true && this->population[0]->getFitness(indID) == -1)) {
-					// Decide if launching a seperate thread to run the individual or not
-					if (this->multithreadEnable == true) {
-						// Lambda function to access this instance of Optimization to perform runIndividual
-						// Input: indID - index location to run individual from in population
-						// Captures: this - pointer to current SGA_Optimization instance
-						this->ind_threads.push_back(std::thread([this](int indID) {	this->runIndividual(indID); }, indID)); // Parallel
-					}
-					else {
-						this->runIndividual(indID); // Serial
-					}
-				}
-			}
-			Utility::rejoinClear(this->ind_threads); // Clear threads that may have been launched
-			// Perform GA crossover/breeding to produce next generation
-			for (int popID = 0; popID < population.size(); popID++) {
-				if (this->multithreadEnable == true) {
-					this->ind_threads.push_back(std::thread([this](int popID) { this->population[popID]->nextGeneration(); }, popID)); // Parallel
-				}
-				else {
-					this->population[popID]->nextGeneration(); // Serial
-				}
-			}
-			Utility::rejoinClear(this->ind_threads); // Clear threads that may have been launched
-			// Update displays with best individual now that they are done
-			if (this->displayCamImage) {
-				this->camDisplay->UpdateDisplay(this->bestImage->getRawData());
-			}
-			if (this->displaySLMImage) {
-				for (int slmID = 0; slmID < this->popCount; slmID++) {
-					this->scalers[slmID]->TranslateImage(this->population[slmID]->getGenome(this->populationSize - 1)->data(), this->slmScaledImages[slmID]);
-					this->slmDisplayVector[slmID]->UpdateDisplay(this->slmScaledImages[slmID]);
-				}
-			}
-			// Half exposure time if fitness value is too high
-			if (this->shortenExposureFlag) {
-				this->cc->HalfExposureTime();
-				this->shortenExposureFlag = false;
-				if (this->saveExposureShorten || this->logAllFiles) {
-					this->efile << "Exposure shortened after gen: " << this->curr_gen + 1 << " with new ratio " << this->cc->GetExposureRatio() << std::endl;
-				}
-			}
-			// Output to the terminal progress to help show progress
-			if (this->curr_gen % 10 == 0) {
-				Utility::printLine("INFO: Finished generation #" + std::to_string(this->curr_gen) + " with a fitness of " + std::to_string(this->population[0]->getFitness(this->populationSize - 1)));
-			}
-			// Record the time it took to perform this generation, then update start to now (for getting duration next generation)
-			if (this->logAllFiles || this->saveTimeVSFitness) {
-				end = this->timestamp->MicroS_SinceStart();
-				this->timePerGenFile << this->curr_gen << "," << end - start << std::endl;
-				start = end;
-			}
-		} // ... optimization loop
-		// Cleanup & Save resulting instance
-		if (shutdownOptimizationInstance()) {
-			Utility::printLine("INFO: Successfully ended optimization instance and saved results");
-		}
-		else {
-			Utility::printLine("WARNING: Failure to properly end optimization instance!");
-		}
-	}
-	catch (std::exception &e) {
-		Utility::printLine("ERROR: " + std::string(e.what()));
-		return false;
-	}
-	//Reset UI State
-	this->isWorking = false;
-	this->dlg->disableMainUI(!isWorking);
-	return true;
-}
-
-// Method for handling the execution of an individual
-// Input: indID - index value for individual in each population being run to determine fitness (for multithreading will be the thread id as well)
-// Output: returns false if a critical error occurs, true otherwise
-//	individual in population index indID will have assigned fitness according to result from cc
-//	lastImgWidth,lastImgHeight updated according to result from cc
-//     shortenExposureFlag is set to true if fitness value is high enough
-//     stopConditionsMetFlag is set to true if conditions met
-bool SGA_Optimization::runIndividual(int indID) {
-	try {
-		ImageController * curImage = NULL;
-		// Setting up mutex locks
-		std::unique_lock<std::mutex> consoleLock(this->consoleMutex, std::defer_lock);
-		std::unique_lock<std::mutex> hardwareLock(this->hardwareMutex, std::defer_lock);
-		std::unique_lock<std::mutex> scalerLock(this->slmScalersMutex, std::defer_lock);
-
-		hardwareLock.lock();
-		// Pre end the result for the individual if the stop flag has been raised while waiting
-		if (this->dlg->stopFlag == true) {
-			hardwareLock.unlock();
-			return true;
-		}
-		// If the hardware boolean is already true, then that means another thread is using this hardware and we have an issue
-		if (this->usingHardware) {
-			hardwareLock.unlock();
-			consoleLock.lock();
-			Utility::printLine("ERROR: HARDWARE BEING USED BY OTHER THREAD(S)! Exiting out of this individual");
-			consoleLock.unlock();
-			return false;
-		}
-		this->usingHardware = true;
-
-		// Write translated image to SLM boards, assumes there are at least as many boards as populations (accessing optBoards)
-		scalerLock.lock(); // Scaler lock as the scaler is closely used with the slm, being sure that the scaler and image writing are used in tandem
-		for (int i = 0; i < this->popCount; i++) {
-			// Scale the individual genome to fit SLM
-			this->scalers[i]->TranslateImage(this->population[i]->getGenome(indID)->data(), this->slmScaledImages[i]); // Translate the vector genome into char array image
-			// Write to SLM, getting the board position according to optBoards and correcting to 0 base
-			this->sc->writeImageToBoard(this->optBoards[i]->board_id, this->slmScaledImages[i]);
-		}
-		scalerLock.unlock();
-
-		// Acquire image
-		curImage = this->cc->AcquireImage();
-
-		this->usingHardware = false;
-		hardwareLock.unlock(); // Now done with the hardware
-
-		// Giving error and ends early if there is no data
-		if (curImage == NULL) {
-			consoleLock.lock();
-			Utility::printLine("ERROR: Image Acquisition has failed!");
-			consoleLock.unlock();
-			return false;
-		}
-		// Getting the image data from resulting image
-		unsigned char * camImg = curImage->getRawData();
-		// Determine the fitness by intensity of the image within circle of target radius
-		double fitness = Utility::FindAverageValue(camImg, curImage->getWidth(), curImage->getHeight(), this->cc->targetRadius);
-		// Get current exposure setting of camera (relative to initial)
-		double exposureTimesRatio = this->cc->GetExposureRatio();	// needed for proper fitness value across changing exposure time
-
-		// Record files
-		if (this->logAllFiles || this->saveTimeVSFitness) {
-			std::unique_lock<std::mutex> tVfLock(this->timeVsFitMutex, std::defer_lock);
-			tVfLock.lock();
-			this->timeVsFitnessFile << this->timestamp->MS_SinceStart() << "," << fitness*exposureTimesRatio << "," << this->cc->finalExposureTime << "," << exposureTimesRatio << std::endl;
-			tVfLock.unlock();
-		}
-		//Save elite info of last generation
-		if (indID == (population[0]->getSize() - 1)) {
-			if ((this->saveEliteImages) && (this->curr_gen % this->saveEliteFrequency == 0)) {
-				// Save Info
-				std::unique_lock<std::mutex> tFileLock(tfileMutex, std::defer_lock);
-				tFileLock.lock();
-				this->tfile << "SGA GENERATION," << this->curr_gen << "," << fitness*exposureTimesRatio << std::endl;
-				tFileLock.unlock();
-				// Save image
-				std::string curTime = Utility::getCurDateTime(); // Get current time to use as timeStamp
-				this->cc->saveImage(curImage, std::string(this->outputFolder + curTime + "_SGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite_Camera" + ".bmp"));
-				scalerLock.lock();
-				for (int popID = 0; popID < this->popCount; popID++) {
-					scalers[popID]->TranslateImage(this->population[popID]->getGenome(this->population[popID]->getSize() - 1)->data(), this->slmScaledImages[popID]);
-					cv::Mat m_ary = cv::Mat(this->sc->getBoardWidth(popID), this->sc->getBoardHeight(popID), CV_8UC1, this->slmScaledImages[popID]);
-					cv::imwrite(this->outputFolder + curTime + "_SGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite_SLM_" + std::to_string(this->optBoards[popID]->board_id) + ".bmp", m_ary);
-				}
-				scalerLock.unlock();
-			}
-			// Also save the image as current best regardless (not an output until end of optimization)
-			std::unique_lock<std::mutex> imageLock(this->imageMutex, std::defer_lock);
-			imageLock.lock();
-			this->bestImage = curImage;
-			imageLock.unlock();
-		}
-		// Check stop conditions, only assign true if we reached the condition (race condition if done directly)
-		if (stopConditionsReached((fitness*exposureTimesRatio), this->timestamp->S_SinceStart(), this->curr_gen + 1) == true) {
-			std::unique_lock<std::mutex> stopLock(this->stopFlagMutex, std::defer_lock);
-			stopLock.lock();
-			this->stopConditionsMetFlag = true;
-			stopLock.unlock();
-		}
-		// Update fitness for the individuals
-		for (int popID = 0; popID < this->population.size(); popID++) {
-			this->population[popID]->setFitness(indID, fitness * exposureTimesRatio);
-		}
-		// If the fitness value is too high, flag that the exposure needs to be shortened
-		if (fitness > this->maxFitnessValue) {
-			std::unique_lock<std::mutex> exposureFlagLock(exposureFlagMutex, std::defer_lock);
-			exposureFlagLock.lock();
-			this->shortenExposureFlag = true;
-			exposureFlagLock.unlock();
-		}
-		// If the pointer to current image does not also point to the best image we are safe to delete
-		if (curImage != bestImage) {
-			delete curImage;
-		}
-	}
-	catch (std::exception &e) {
-		Utility::printLine("ERROR: Unidentified error occured while running individual #" + std::to_string(indID));
-		Utility::printLine(e.what());
-	}
-	return true; // No errors!
-}
-
 // Method to setup specific properties runOptimziation() instance
 bool SGA_Optimization::setupInstanceVariables() {
 	// Setting population size as well as number of elite individuals kept in the genetic repopulation
@@ -251,8 +34,8 @@ bool SGA_Optimization::setupInstanceVariables() {
 	this->slmDisplayVector.clear();
 	if (this->displaySLMImage) {
 		for (int displayNum = 0; displayNum < this->popCount; displayNum++) {
-			int slmID = this->optBoards[displayNum]->board_id - 1;
-			this->slmDisplayVector.push_back(new CameraDisplay(this->sc->getBoardHeight(slmID), this->sc->getBoardWidth(slmID), ("SLM Display " + std::to_string(slmID+1)).c_str()));
+			int slmID = this->optBoards[displayNum]->board_id;
+			this->slmDisplayVector.push_back(new CameraDisplay(this->sc->getBoardHeight(slmID-1), this->sc->getBoardWidth(slmID-1), ("SLM Display " + std::to_string(slmID)).c_str()));
 			this->slmDisplayVector[displayNum]->OpenDisplay(240, 240);
 		}
 	}
@@ -272,15 +55,15 @@ bool SGA_Optimization::setupInstanceVariables() {
 
 	//Open up files to which progress will be logged
 	if (this->logAllFiles || this->saveTimeVSFitness) {
-		this->timePerGenFile.open(this->outputFolder + "SGA_timePerformance.txt");
+		this->timePerGenFile.open(this->outputFolder + this->algorithm_name_ + "_timePerformance.txt");
 		timePerGenFile << "Generation,Time (microseconds)\n";
-		this->timeVsFitnessFile.open(this->outputFolder + "SGA_time_vs_fitness.txt");
+		this->timeVsFitnessFile.open(this->outputFolder + this->algorithm_name_ + "_time_vs_fitness.txt");
 	}
 	if (this->logAllFiles || this->saveExposureShorten) {
-		this->efile.open(this->outputFolder + "SGA_exposure.txt");
+		this->efile.open(this->outputFolder + this->algorithm_name_ + "_exposure.txt");
 	}
 	if (this->logAllFiles || this->saveEliteImages) {
-		this->tfile.open(this->outputFolder + "SGA_functionEvals_vs_fitness.txt");
+		this->tfile.open(this->outputFolder + this->algorithm_name_ + "_functionEvals_vs_fitness.txt");
 	}
 
 	return true; // Returning true if no issues met
@@ -299,13 +82,13 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 		int imgWidth = this->bestImage->getWidth();
 
 		// Save how final optimization looks through camera
-		this->cc->saveImage(this->bestImage, this->outputFolder + curTime + "_SGA_Optimized.bmp");
+		this->cc->saveImage(this->bestImage, this->outputFolder + curTime + "_" + this->algorithm_name_ + "_Optimized.bmp");
 
 		// Save final (most fit SLM images)
 		for (int popID = 0; popID < this->population.size(); popID++) {
 			scalers[popID]->TranslateImage(this->population[popID]->getGenome(this->population[popID]->getSize() - 1)->data(), this->slmScaledImages[popID]);
 			cv::Mat m_ary = cv::Mat(512, 512, CV_8UC1, this->slmScaledImages[popID]);
-			cv::imwrite(this->outputFolder + curTime + "_SGA_phaseopt_SLM_" + std::to_string(this->optBoards[popID]->board_id) + ".bmp", m_ary);
+			cv::imwrite(this->outputFolder + curTime + "_" + this->algorithm_name_ + "_phaseopt_SLM_" + std::to_string(this->optBoards[popID]->board_id) + ".bmp", m_ary);
 		}
 	}
 
@@ -313,23 +96,23 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	if (this->logAllFiles || this->saveTimeVSFitness) {
 		this->timeVsFitnessFile << this->timestamp->MS_SinceStart() << " " << 0 << std::endl;
 		this->timeVsFitnessFile.close();
-		std::rename((this->outputFolder + "SGA_timePerformance.txt").c_str(), (this->outputFolder + curTime + "_SGA_timePerformance.txt").c_str());
-		std::rename((this->outputFolder + "SGA_time_vs_fitness.txt").c_str(), (this->outputFolder + curTime + "_SGA_time_vs_fitness.txt").c_str());
+		std::rename((this->outputFolder + this->algorithm_name_ + "_timePerformance.txt").c_str(), (this->outputFolder + curTime + "_" + this->algorithm_name_ + "_timePerformance.txt").c_str());
+		std::rename((this->outputFolder + this->algorithm_name_ + "_time_vs_fitness.txt").c_str(), (this->outputFolder + curTime + "_" + this->algorithm_name_ + "_time_vs_fitness.txt").c_str());
 	}
 	if (this->logAllFiles || this->saveEliteImages) {
 		this->tfile.close();
-		std::rename((this->outputFolder + "SGA_functionEvals_vs_fitness.txt").c_str(), (this->outputFolder + curTime + "_SGA_functionEvals_vs_fitness.txt").c_str());
+		std::rename((this->outputFolder + this->algorithm_name_ + "_functionEvals_vs_fitness.txt").c_str(), (this->outputFolder + curTime + "_" + this->algorithm_name_ + "_functionEvals_vs_fitness.txt").c_str());
 	}
 	if (this->logAllFiles || this->saveExposureShorten) {
 		this->efile.close();
-		std::rename((this->outputFolder + "SGA_exposure.txt").c_str(), (this->outputFolder + curTime + "_SGA_exposure.txt").c_str());
+		std::rename((this->outputFolder + this->algorithm_name_ + "_exposure.txt").c_str(), (this->outputFolder + curTime + "_" + this->algorithm_name_ + "_exposure.txt").c_str());
 	}
 	if (this->logAllFiles || this->saveParametersPref) {
-		saveParameters(curTime, "SGA");
+		saveParameters(curTime, this->algorithm_name_);
 		CString buff;
 		dlg->m_outputControlDlg.m_OutputLocationField.GetWindowTextW(buff);
 		std::string path = CT2A(buff);
-		path += curTime + "_SGA_savedParameters.cfg";
+		path += curTime + "_" + this->algorithm_name_ + "_savedParameters.cfg";
 		dlg->saveUItoFile(path);
 	}
 

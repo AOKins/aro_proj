@@ -1,42 +1,26 @@
 ////////////////////
 // uGA_Optimization.h - handler for micro genetic algorithm that inherits from base Optimization class
-// Last edited: 07/01/2021 by Andrew O'Kins
+// Last edited: 08/12/2021 by Andrew O'Kins
 ////////////////////
 
 #ifndef UGA_OPTIMIZATION_H_
 #define UGA_OPTIMIZATION_H_
 
-#include "Optimization.h"
+#include "GA_Optimization.h"
 #include "uGA_Population.h"
 
-class uGA_Optimization : public Optimization {
-	// Method to setup specific properties runOptimziation() instance
+class uGA_Optimization : public GA_Optimization {
+	// Method to setup specific properties for uGA
 	bool setupInstanceVariables();
 
-	// Method to clean up & save resulting runOptimziation() instance
+	// Method to clean up & save resulting uGA instance
 	bool shutdownOptimizationInstance();
 
-	// Method for handling the execution of an individual
-	// Input:
-	//		indID - index value for individual being run to determine fitness (for multithreading will be the thread id as well)
-	//		popID - index value for population being run to determine fitness
-	// Output: returns false if a critical error occurs, true otherwise
-	//		individual in population index indID will have assigned fitness according to result from cc
-	//		lastImgWidth,lastImgHeight updated according to result from cc
-	//		shortenExposureFlag is set to true if fitness value is high enough
-	//		stopConditionsMetFlag is set to true if conditions met
-	bool runIndividual(int indID);
-
-	// Population that this optimization class uses
-	// Set here to prevent possible slicing if were instead using a base class pointer in base class of Optimization
-	std::vector<uGAPopulation<int>*> population;
 public:
 	// Constructor - inherits from base class
-	uGA_Optimization(MainDialog* dlg, CameraController* cc, SLMController* sc) : Optimization(dlg, cc, sc){};
-
-	// Method for executing the optimization
-	// Output: returns true if successful ran without error, false if error occurs
-	bool runOptimization();
+	uGA_Optimization(MainDialog* dlg, CameraController* cc, SLMController* sc) : GA_Optimization(dlg, cc, sc) {
+		this->algorithm_name_ = "uGA";
+	};
 };
 
 #endif

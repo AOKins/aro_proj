@@ -287,6 +287,7 @@
     <ClInclude Include="CameraController.h" />
     <ClInclude Include="CameraControllerPICam.h" />
     <ClInclude Include="CameraControllerSpinnaker.h" />
+    <ClInclude Include="GA_Optimization.h" />
     <ClInclude Include="ImageControllerPICam.h" />
     <ClInclude Include="ImageControllerSpinnaker.h" />
     <ClInclude Include="OutputControlDialog.h" />
@@ -334,6 +335,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\opencv\build\include;C:\Program Files\Meadowlark Optics\Blink OverDrive Plus\SDK;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ClCompile Include="SLM_Board.cpp" />
+    <ClCompile Include="GA_Optimization.cpp" />
     <ClCompile Include="uGA_Optimization.cpp" />
     <ClCompile Include="Utility.cpp" />
     <ClCompile Include="stdafx.cpp">

@@ -1,6 +1,6 @@
 ////////////////////
 // Optimization.h - header file for the base optimization class
-// Last edited: 08/02/2021 by Andrew O'Kins
+// Last edited: 08/12/2021 by Andrew O'Kins
 ////////////////////
 
 #ifndef OPTIMIZATION_H_
@@ -21,6 +21,7 @@
 
 class Optimization {
 protected:
+	std::string algorithm_name_; // String that gives an identifying label for the algorithm being run ("uGA" for example)
 	//Object references
 	MainDialog* dlg;		// The GUI to draw the desired settings from
 	CameraController* cc;	// Interface with camera hardware
@@ -53,22 +54,16 @@ protected:
 	// Values assigned within setupInstanceVariables(), then if needed cleared in shutdownOptimizationInstance()
 	bool isWorking = false;		// true if currently actively running the optimization algorithm
 	bool usingHardware = false; // debug flag of using hardware currently in a run of an individual (to know if accidentally having two threads use hardware at once!)
-	int populationSize;			// Size of the populations being used (number of individuals in a population class)
-	int popCount;				// Number of populations working with (equal to sc->boards.size() if multi-SLM mode)
-	int selectSLM;				// If optimizing only 1 SLM, index for the board being optimized
-	int eliteSize;				// Number of elite individuals within the population (should be less than populationSize)
 	bool shortenExposureFlag;   // Set to true by individual if fitness is too high
 	bool stopConditionsMetFlag; // Set to true if a stop condition was reached by one of the individuals
 	CameraDisplay * camDisplay; // Display for camera
 	std::vector<CameraDisplay *> slmDisplayVector; // Display for SLM (currently [June 24th 2021] only board at index 0)
-	int curr_gen;				// Current generation being evaluated (start at 0)
 	TimeStampGenerator * timestamp; // Timer to track and store elapsed time as the algorithm executes
 
 	ImageController * bestImage; // Current camera image found to have best resulting fitness from elite individuals
 	std::vector<ImageScaler*> scalers; // Image scalers for each SLM (each SLM may have different dimensions so can't have just one)
 	std::vector<unsigned char*> slmScaledImages; // To easily store the scaled images from individual to what will be written
 	std::vector<SLM_Board*> optBoards; // Vector to hold pointers of boards taken from SLMController that are to be optimized (do not delete the boards here!)
-
 
 	// Logging file streams
 	std::ofstream tfile;				// Record elite individual progress over generations
@@ -103,22 +98,12 @@ protected:
 	// Stores the values with formatting in "this->outputFolder/[time]_[optType]_Optimization_Parameters.txt"
 	// Input:
 	//		time - the current time as a string label
-	//		optType - a string for identifying the kind of optimization that has been performed
-	void saveParameters(std::string time, std::string optType);
+	void saveParameters(std::string time);
 	
 	// Methods relying on implementation from child classes
 	virtual bool setupInstanceVariables() = 0;		 // Setting up properties used in runOptimization()
 	virtual bool shutdownOptimizationInstance() = 0; // Cleaning up properties as well as final saving for runOptimization()
 	virtual bool runIndividual(int indID) = 0;		 // Method for handling the execution of an individual
-
-	// Vector hold threads of running individuals
-	std::vector<std::thread> ind_threads;
-	// Mutexes to protect critical sections
-	std::mutex hardwareMutex;						// Mutex to protect critical section of accessing SLM and Camera data
-	std::mutex consoleMutex, imageMutex;			// Mutex to protect console output and bestImage values
-	std::mutex tfileMutex, timeVsFitMutex;			// Mutex to protect file i/o
-	std::mutex stopFlagMutex, exposureFlagMutex;	// Mutex to protect important flags 
-	std::mutex slmScalersMutex; // Mutex to protect the usage of the the SLM scalers (which are used in both for hardware and in image output)
 public:
 	// Constructor
 	Optimization(MainDialog* dlg, CameraController* cc, SLMController* sc);

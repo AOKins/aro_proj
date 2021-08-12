@@ -17,7 +17,6 @@ Optimization::Optimization(MainDialog* dlg, CameraController* cc, SLMController*
 	this->cc = cc;
 	this->sc = sc;
 	this->dlg = dlg;
-	this->ind_threads.clear();
 	
 	// Read from the output dialog for output parameters
 	prepareOutputSettings();
@@ -260,12 +259,12 @@ ImageScaler* Optimization::setupScaler(unsigned char *slmImg, int slmNum = 0) {
 
 // [SAVE/LOAD FEATURES]
 // Output information of the parameters used in the optimization in to logs
-void Optimization::saveParameters(std::string time, std::string optType) {
-	std::ofstream paramFile(this->outputFolder + time + "_" + optType + "_Optimization_Parameters.txt");
+void Optimization::saveParameters(std::string time) {
+	std::ofstream paramFile(this->outputFolder + time + "_" + this->algorithm_name_ + "_Optimization_Parameters.txt");
 	paramFile << "----------------------------------------------------------------" << std::endl;
 	paramFile << "OPTIMIZATION SETTINGS:" << std::endl;
-	paramFile << "Type - " << optType << std::endl;
-	if (optType != "OPT5") {
+	paramFile << "Type - " << this->algorithm_name_ << std::endl;
+	if (this->algorithm_name_ != "OPT5") {
 		paramFile << "Stop Fitness - " << std::to_string(this->fitnessToStop) << std::endl;
 		paramFile << "Min Stop Time - " << std::to_string(this->minSecondsToStop) << std::endl;
 		paramFile << "Max Stop Time - " << std::to_string(this->maxSecondsToStop) << std::endl;
@@ -289,9 +288,10 @@ void Optimization::saveParameters(std::string time, std::string optType) {
 	paramFile << "----------------------------------------------------------------" << std::endl;
 	paramFile << "SLM SETTINGS:" << std::endl;
 	paramFile << "Board Amount - " << std::to_string(this->sc->numBoards) << std::endl;
-	paramFile << "Number of Boards being Optimized - " << std::to_string(this->popCount) << std::endl;
+	paramFile << "Number of Boards being Optimized - " << std::to_string(this->optBoards.size()) << std::endl;
 	for (int i = 0; i < int(this->sc->numBoards); i++) {
-		paramFile << "Board #" << i << " LUT filePath - " << this->sc->boards[i]->LUTFileName << std::endl;
+		paramFile << "Board #" << i+1 << "\tLUT filePath - " << this->sc->boards[i]->LUTFileName << std::endl;
+		paramFile << "        '\t'" << "To Be Optimized - " << this->sc->boards[i]->isToBeOptimized() << std::endl;
 	}
 	paramFile.close();
 }

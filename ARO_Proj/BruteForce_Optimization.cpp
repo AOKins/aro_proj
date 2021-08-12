@@ -11,7 +11,7 @@
 #include <string>
 
 bool BruteForce_Optimization::runOptimization() {
-	Utility::printLine("INFO: Starting OPT5 Optimization!");
+	Utility::printLine("INFO: Starting" +this->algorithm_name_+ "Optimization!");
 	//Setup before optimization (see base class for implementation)
 	if (!prepareSoftwareHardware()) {
 		Utility::printLine("ERROR: Failed to prepare software or/and hardware for Brute Force Optimization");
@@ -19,7 +19,7 @@ bool BruteForce_Optimization::runOptimization() {
 	}
 	// Setup variables that are of instance and depend on this specific optimization method (such as pop size)
 	if (!setupInstanceVariables()) {
-		Utility::printLine("ERROR: Failed to prepare values and files for OPT 5 Optimization");
+		Utility::printLine("ERROR: Failed to prepare values and files for" +this->algorithm_name_+ "Optimization");
 		return false;
 	}
 	this->timestamp = new TimeStampGenerator();
@@ -151,7 +151,7 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 		slmImg = NULL;
 	}
 	catch (std::exception &e) {
-		Utility::printLine("ERROR: OPT5 ran into issue with board #" + std::to_string(boardID));
+		Utility::printLine("ERROR: "+this->algorithm_name_+"ran into issue with board #" + std::to_string(boardID));
 		Utility::printLine(std::string(e.what()));
 		return false;
 	}
@@ -162,8 +162,8 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 bool BruteForce_Optimization::setupInstanceVariables() {
 	this->cc->startCamera(); // setup camera
 	if (this->logAllFiles || this->saveTimeVSFitness) {
-		this->tfile.open(this->outputFolder + "Opt_functionEvals_vs_fitness.txt");
-		this->timeVsFitnessFile.open(this->outputFolder + "Opt_time_vs_fitness.txt");
+		this->tfile.open(this->outputFolder + this->algorithm_name_ +"_functionEvals_vs_fitness.txt");
+		this->timeVsFitnessFile.open(this->outputFolder + this->algorithm_name_ +"_time_vs_fitness.txt");
 	}
 	// Setup displays
 	if (this->displayCamImage) {
