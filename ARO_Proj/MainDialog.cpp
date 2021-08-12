@@ -408,9 +408,14 @@ void MainDialog::disableMainUI(bool isMainEnabled) {
 	// - enabled: when nothing is running
 	// - disabled when the algorithm is running
 
-	this->m_uGAButton.EnableWindow(isMainEnabled);
-	this->m_SGAButton.EnableWindow(isMainEnabled);
-	this->m_OptButton.EnableWindow(isMainEnabled);
+	// Reference for directly enabling/disabling items: https://stackoverflow.com/questions/30350537/how-to-check-and-uncheck-and-enable-and-disable-a-check-box-control-in-mfc
+	GetDlgItem(IDC_UGA_BUTTON)->EnableWindow(isMainEnabled);
+	GetDlgItem(IDC_SGA_BUTTON)->EnableWindow(isMainEnabled);
+	GetDlgItem(IDC_OPT_BUTTON)->EnableWindow(isMainEnabled);
+	GetDlgItem(IDC_MULTITHREAD_ENABLE)->EnableWindow(isMainEnabled);
+	GetDlgItem(IDC_SAVE_SETTINGS)->EnableWindow(isMainEnabled);
+	GetDlgItem(IDC_LOAD_SETTINGS)->EnableWindow(isMainEnabled);
+	GetDlgItem(IDC_TAB1)->EnableWindow(isMainEnabled);
 }
 
 // Start the selected optimization if haven't started, or attempt to stop if already running by setting flag
@@ -431,6 +436,14 @@ void MainDialog::OnBnClickedStartStopButton() {
 				MB_ICONERROR| MB_OK);
 			return;
 		}
+		else if (!this->slmCtrl->optimizeAny()) {
+			MessageBox(
+				(LPCWSTR)L"No SLM have been selected to be optimized! Cancelling start of optimization since there is nothing to optimize.",
+				(LPCWSTR)L"No SLMs to optimize!",
+				MB_ICONERROR | MB_OK);
+			return;
+		}
+
 		// Give an error message if no camera
 		if (!this->camCtrl->hasCameras()) {
 			MessageBox(

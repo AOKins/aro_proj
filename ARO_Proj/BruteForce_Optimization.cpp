@@ -1,6 +1,6 @@
 ////////////////////
 // BruteForce_Optimization.cpp - implementation for brute force algorithm
-// Last edited: 08/02/2021 by Andrew O'Kins
+// Last edited: 08/10/2021 by Andrew O'Kins
 ////////////////////
 
 #include "stdafx.h"						// Required in source
@@ -23,27 +23,11 @@ bool BruteForce_Optimization::runOptimization() {
 		return false;
 	}
 	this->timestamp = new TimeStampGenerator();
-
-	Utility::printLine("INFO: Currently optimizing board 0");
-	// By default run the first SLM (since with any option will be running with this
-	//	TODO: If having "choose SLM to optimize" option, this will be here
-	runIndividual(0);
-	Utility::printLine("INFO: Finished optimizing board 0");
-
-	// If dual or multi, run second SLM
-	if ((this->dualEnable_ || this->multiEnable_) && this->dlg->stopFlag != true) {
-		Utility::printLine("INFO: Currently optimizing board 1");
-		runIndividual(1);
-		Utility::printLine("INFO: Finished optimizing board 1");
-	}
-	
-	// If multi, run rest of boards
-	if (this->multiEnable_  && this->dlg->stopFlag != true) {
-		for (int boardID = 2; boardID < this->sc->boards.size() && this->dlg->stopFlag != true; boardID++) {
-			Utility::printLine("INFO: Optimizing board "+std::to_string(boardID));
-			runIndividual(boardID);
-			Utility::printLine("INFO: Finished optimizing board " + std::to_string(boardID));
-		}
+	// Optimize the selected boards
+	for (int boardID = 0; boardID < this->optBoards.size() && this->dlg->stopFlag != true; boardID++) {
+		Utility::printLine("INFO: Currently optimizing board #" + std::to_string(this->optBoards[boardID]->board_id));
+		runIndividual(boardID);
+		Utility::printLine("INFO: Finished optimizing board #" + std::to_string(this->optBoards[boardID]->board_id));
 	}
 	// Cleanup
 	return shutdownOptimizationInstance();;
@@ -174,15 +158,6 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 }
 
 bool BruteForce_Optimization::setupInstanceVariables() {
-	this->multiEnable_ = false;
-	this->dualEnable_ = false;
-	if (dlg->m_slmControlDlg.multiEnable.GetCheck() == BST_CHECKED) {
-		this->multiEnable_ = true;
-	}
-	else if (dlg->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED) {
-		this->dualEnable_ = true;
-	}
-
 	this->cc->startCamera(); // setup camera
 	if (this->logAllFiles || this->saveTimeVSFitness) {
 		this->tfile.open(this->outputFolder + "Opt_functionEvals_vs_fitness.txt");
@@ -288,7 +263,7 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 		// Save image
 		if (this->logAllFiles || this->saveResultImages) {
 			cv::Mat m_ary = cv::Mat(512, 512, CV_8UC1, this->finalImages_[i]);
-			cv::imwrite(this->outputFolder + curTime + "_OPT5_phaseopt_"+std::to_string(i)+".bmp", m_ary);
+			cv::imwrite(this->outputFolder + curTime + "_OPT5_phaseopt_" + std::to_string(this->optBoards[i]->board_id)+".bmp", m_ary);
 		}
 		delete[] this->finalImages_[i]; // deallocate then
 		this->finalImages_.pop_back();  // remove from vector

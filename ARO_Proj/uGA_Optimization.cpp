@@ -1,6 +1,6 @@
 ////////////////////
 // Optimization handler methods implementation for micro-genetic algorithm
-// Last edited: 07/23/2021 by Andrew O'Kins
+// Last edited: 08/10/2021 by Andrew O'Kins
 ////////////////////
 
 #include "stdafx.h"				// Required in source
@@ -10,7 +10,7 @@
 // Output: returns true if successful ran without error, false if error occurs
 bool uGA_Optimization::runOptimization() {
 	Utility::printLine("INFO: Starting uGA Optimization!");
-	//Setup before optimization (see base class for implementation)
+	// Setup before optimization (see base class for implementation)
 	if (!prepareSoftwareHardware()) {
 		Utility::printLine("ERROR: Failed to prepare software or/and hardware for UGA Optimization");
 		return false;
@@ -110,7 +110,7 @@ bool uGA_Optimization::runOptimization() {
 bool uGA_Optimization::runIndividual(int indID) {
 	try {
 		ImageController * curImage = NULL;
-
+		// Setting up mutex locks
 		std::unique_lock<std::mutex> consoleLock(this->consoleMutex, std::defer_lock);
 		std::unique_lock<std::mutex> hardwareLock(this->hardwareMutex, std::defer_lock);
 		std::unique_lock<std::mutex> scalerLock(this->slmScalersMutex, std::defer_lock);
@@ -131,15 +131,13 @@ bool uGA_Optimization::runIndividual(int indID) {
 		}
 		this->usingHardware = true;
 
-		// Write translated image to SLM boards, assumes there are at least as many boards as populations
-		// Multi SLM engaged -> should write to every board (popCount = # of boards)
-		// Single SLM -> should only write to board 0 (popCount = 1)
+		// Write translated image to SLM boards, assumes there are as many boards as populations (accessing optBoards)
 		scalerLock.lock(); // Scaler lock as the scaler is closely used with the slm
 		for (int i = 0; i < this->popCount; i++) {
 			// Scale the individual genome to fit SLMs
 			this->scalers[i]->TranslateImage(this->population[i]->getGenome(indID)->data(), this->slmScaledImages[i]); // Translate the vector genome into char array image
-			// Write to SLM
-			this->sc->writeImageToBoard(i, this->slmScaledImages[i]);
+			// Write to SLM, getting the board position according to optBoards and correcting to 0 base
+			this->sc->writeImageToBoard(this->optBoards[i]->board_id-1, this->slmScaledImages[i]);
 		}
 		scalerLock.unlock();
 
@@ -182,10 +180,10 @@ bool uGA_Optimization::runIndividual(int indID) {
 				std::string curTime = Utility::getCurDateTime(); // Get current time to use as timeStamp
 				this->cc->saveImage(curImage, std::string(this->outputFolder + curTime + "_uGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite_Camera" + ".bmp"));
 				scalerLock.lock();
-				for (int popID = 0; popID < this->population.size(); popID++) {
+				for (int popID = 0; popID < this->popCount; popID++) {
 					scalers[popID]->TranslateImage(this->population[popID]->getGenome(this->population[popID]->getSize() - 1)->data(), this->slmScaledImages[popID]);
 					cv::Mat m_ary = cv::Mat(this->sc->getBoardWidth(popID), this->sc->getBoardHeight(popID), CV_8UC1, this->slmScaledImages[popID]);
-					cv::imwrite(this->outputFolder + curTime + "_uGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite_SLM_" + std::to_string(popID) + ".bmp", m_ary);
+					cv::imwrite(this->outputFolder + curTime + "_uGA_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite_SLM_" + std::to_string(this->optBoards[popID]->board_id) + ".bmp", m_ary);
 				}
 				scalerLock.unlock();
 			}
@@ -234,17 +232,8 @@ bool uGA_Optimization::setupInstanceVariables() {
 	this->eliteSize = 1;
 	this->ind_threads.clear();
 
-	// Set things up accordingly if doing single or multi-SLM
-	if (this->dlg->m_slmControlDlg.multiEnable.GetCheck() == BST_CHECKED) {
-		this->popCount = int(sc->boards.size());
-	}
-	else if (this->dlg->m_slmControlDlg.dualEnable.GetCheck() == BST_CHECKED) {
-		// Will asume that if this is enabled that there are indeed 2 boards (not checking here right now)
-		this->popCount = 2;
-	}
-	else {
-		this->popCount = 1;
-	}
+	// Get how many populations to have (same as number of boards being optimized)
+	this->popCount = int(this->optBoards.size());
 
 	// Setting population vector
 	this->population.clear();
@@ -263,9 +252,9 @@ bool uGA_Optimization::setupInstanceVariables() {
 	}
 	this->slmDisplayVector.clear();
 	if (this->displaySLMImage) {
-		this->slmDisplayVector.push_back(new CameraDisplay(this->sc->getBoardHeight(0), this->sc->getBoardWidth(0), "SLM Display 1"));
-		for (int displayNum = 1; displayNum < this->popCount; displayNum++) {
-			this->slmDisplayVector.push_back(new CameraDisplay(this->sc->getBoardHeight(displayNum), this->sc->getBoardWidth(displayNum), ("SLM Display " + std::to_string(displayNum + 1)).c_str()));
+		for (int displayNum = 0; displayNum < this->popCount; displayNum++) {
+			int slmID = this->optBoards[displayNum]->board_id - 1;
+			this->slmDisplayVector.push_back(new CameraDisplay(this->sc->getBoardHeight(slmID), this->sc->getBoardWidth(slmID), ("SLM Display " + std::to_string(slmID+1)).c_str()));
 			this->slmDisplayVector[displayNum]->OpenDisplay(240, 240);
 		}
 	}
@@ -274,9 +263,9 @@ bool uGA_Optimization::setupInstanceVariables() {
 	// Setup the scaled images vector
 	this->slmScaledImages = std::vector<unsigned char*>(this->sc->boards.size());
 	this->scalers.clear();
-	// Setup a vector for every board
-	for (int i = 0; i < sc->boards.size(); i++) {
-		this->slmScaledImages[i] = new unsigned char[this->sc->boards[i]->GetArea()];
+	// Setup a vector of scalers for every board being optimized
+	for (int i = 0; i < this->optBoards.size(); i++) {
+		this->slmScaledImages[i] = new unsigned char[this->optBoards[i]->GetArea()];
 		this->scalers.push_back(setupScaler(this->slmScaledImages[i], i));
 	}
 
@@ -318,7 +307,7 @@ bool uGA_Optimization::shutdownOptimizationInstance() {
 		for (int popID = 0; popID < this->population.size(); popID++) {
 			scalers[popID]->TranslateImage(this->population[popID]->getGenome(this->population[popID]->getSize() - 1)->data(), this->slmScaledImages[popID]);
 			cv::Mat m_ary = cv::Mat(512, 512, CV_8UC1, this->slmScaledImages[popID]);
-			imwrite(this->outputFolder + curTime + "_uGA_phaseopt_SLM" + std::to_string(popID) + ".bmp", m_ary);
+			imwrite(this->outputFolder + curTime + "_uGA_phaseopt_SLM" + std::to_string(this->optBoards[popID]->board_id) + ".bmp", m_ary);
 		}
 	}	
 	
