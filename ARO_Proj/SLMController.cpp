@@ -23,8 +23,6 @@ SLMController::SLMController() {
 	size_t max_transiet_frames = 20U;
 	const char* static_regional_lut_file = NULL; // NULL -> no overdrive, actual LUT file -> yes overdrive
 
-	// Create the sdk that lets control the board(s)
-	blink_sdk = new Blink_SDK(bits_per_pixel, &numBoards, &isBlinkSuccess, is_LC_Nematic, RAM_write_enable, use_GPU_if_available, max_transiet_frames, NULL);
 	// Perform initial board info retrival and settings setup
 	repopulateBoardList();
 
@@ -63,8 +61,8 @@ bool SLMController::repopulateBoardList() {
 	this->boards.clear();
 
 	// Go through and generate new board structs with default filenames
-	for (unsigned int i = 1; i <= this->numBoards; i++) {
-		SLM_Board *curBoard = new SLM_Board(true, this->blink_sdk->Get_image_width(i), this->blink_sdk->Get_image_height(i), i);
+	for (unsigned int i = 1; i <= 3; i++) {
+		SLM_Board *curBoard = new SLM_Board(true, 64, 64, i);
 
 		//Add board info to board list
 		this->boards.push_back(curBoard);
@@ -93,7 +91,7 @@ bool SLMController::AssignLUTFile(int boardIdx, std::string path) {
 
 	//Write LUT file to the board
 	try {
-		if (!this->blink_sdk->Load_LUT_file(boardIdx + 1, LUT_file)) {
+		if (!true) {
 			Utility::printLine("INFO: Failed to Load LUT file: " + std::string(LUT_file));
 			return false;
 		}
@@ -111,8 +109,6 @@ bool SLMController::AssignLUTFile(int boardIdx, std::string path) {
 // [DESTRUCTOR]
 SLMController::~SLMController() {
 	//Poweroff and deallokate sdk functionality
-	blink_sdk->SLM_power(false);
-	blink_sdk->~Blink_SDK();
 
 	//De-allocate all memory allocated to store board information
 	for (int i = 0; i < boards.size(); i++)
@@ -134,13 +130,6 @@ bool SLMController::updateFromGUI() {
 			if (path.IsEmpty()) throw new std::exception();
 			fps = float(_tstof(path));
 
-			//IMPORTANT NOTE: if framerate is not the same framerate that was used in OnInitDialog AND the LC type is FLC 
-			//				  then it is VERY IMPORTANT that true frames be recalculated prior to calling SetTimer such
-			//				  that the FrameRate and TrueFrames are properly related
-			if (!boards[i]->is_LC_Nematic) {
-				trueFrames = blink_sdk->Compute_TF(float(fps));
-			}
-			this->blink_sdk->Set_true_frames(trueFrames);
 		}
 		catch (...)	{
 			Utility::printLine("ERROR: Was unable to parse frame rate field for SLMs!");
@@ -171,9 +160,6 @@ bool SLMController::optimizeAny() {
 }
 
 bool SLMController::slmCtrlReady() {
-	if (blink_sdk == NULL || blink_sdk == nullptr) {
-		return false;
-	}
 	//TODO: add more conditions
 
 	return true;
@@ -203,15 +189,10 @@ int SLMController::getBoardHeight(int boardIdx) {
 // Input: isOn - power setting (true = on, false = off)
 // Output: All SLMs available to the SDK are powered on
 void SLMController::setBoardPowerALL(bool isOn) {
-	if (blink_sdk != NULL) {
-		blink_sdk->SLM_power(isOn);
 		for (int i = 0; i < this->boards.size(); i++) {
 			this->boards[i]->setPower(isOn);
 		}
-	}
-	else {
-		Utility::printLine("WARNING: SDK not avalible to power ON/OFF the boards!");
-	}
+	
 }
 
 // Set the power to a board
@@ -219,13 +200,7 @@ void SLMController::setBoardPowerALL(bool isOn) {
 //		  isOn - power setting (true = on, false = off)
 // Output: SLM is turned on/off accordingly
 void SLMController::setBoardPower(int boardID, bool isOn) {
-	if (blink_sdk != NULL) {
-		blink_sdk->SLM_power(boardID+1, isOn);
-		this->boards[boardID]->setPower(isOn);
-	}
-	else {
-		Utility::printLine("WARNING: SDK not avalible to power ON/OFF the board!");
-	}
+	this->boards[boardID]->setPower(isOn);
 }
 
 // Write an image to a board
@@ -238,6 +213,6 @@ bool SLMController::writeImageToBoard(int slmNum, unsigned char * image) {
 		return false;
 	}
 	else {
-		return this->blink_sdk->Write_image(slmNum, image, this->getBoardHeight(slmNum), false, false, 0);
+		return true;
 	}
 }

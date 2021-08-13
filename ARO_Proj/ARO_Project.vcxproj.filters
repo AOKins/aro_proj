@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
@@ -19,9 +19,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ARO_App.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Blink_SDK.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="BruteForce_Optimization.h">
@@ -96,25 +93,19 @@
     <ClInclude Include="BetterRandom.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CameraControllerSpinnaker.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="CameraController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ImageControllerSpinnaker.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CameraControllerPICam.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ImageControllerPICam.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CameraDisplay.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GA_Optimization.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CameraControllerEmpty.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageControllerEmpty.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -173,12 +164,6 @@
     <ClCompile Include="SettingsOutput.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CameraControllerSpinnaker.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CameraControllerPICam.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="CameraDisplay.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -186,6 +171,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SGA_Optimization.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CameraControllerEmpty.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

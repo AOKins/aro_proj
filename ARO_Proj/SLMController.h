@@ -7,7 +7,6 @@
 #define SLM_CONTROLLER_H_
 
 #include "SLM_Board.h"
-#include "Blink_SDK.h"
 
 #include <vector>
 
@@ -20,7 +19,6 @@ private:
 	MainDialog* dlg;
 public:
 	//Board control
-	Blink_SDK* blink_sdk;			//Library that controls the SLMs
 	bool isBlinkSuccess = true;		//TRUE -> if SLM control wrapper was constructed correctly
 	//Board parameters
 	unsigned int numBoards = 0;		//Number of boards populated after creation of the SDK

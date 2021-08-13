@@ -9,22 +9,12 @@ class CameraController;
 class ImageController;
 
 // Define which version to build with (Spinnaker or PICam?) cannot be both
-#define USE_PICAM
+//#define USE_PICAM
 //#define USE_SPINNAKER
+#define TEST_ONLY
 
-// Spinnaker version
-#ifdef USE_SPINNAKER
-	#include "CameraControllerSpinnaker.h"
-	#include "ImageControllerSpinnaker.h"
-	#ifdef USE_PICAM// Performing additional check to see if other version is also being includes (which would be bad!)
-		#error "Cannot have Spinnaker and PICam versions in same build!"
-	#endif
-#endif
-// PICam version
-#ifdef USE_PICAM
-	#include "CameraControllerPICam.h"
-	#include "ImageControllerPICam.h"
-	#ifdef USE_SPINNAKER // Performing additional check to see if other version is also being includes (which would be bad!)
-		#error "Cannot have Spinnaker and PICam versions in same build!"
-	#endif
+
+#ifdef TEST_ONLY
+	#include "CameraControllerEmpty.h"
+	#include "ImageControllerEmpty.h"
 #endif

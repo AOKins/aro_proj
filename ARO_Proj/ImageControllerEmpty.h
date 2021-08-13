@@ -1,15 +1,10 @@
 ////////////////////
-// ImageControllerPICam.h - Header file of ImageController with implementation using PICam SDK
+// ImageControllerEmpty.h - Header file of ImageController for performance testing only
 // Last edited: 07/22/2021 by Andrew O'Kins
 ////////////////////
 
 #ifndef IMAGE_CONTROLLER_PICAM_H_
 #define IMAGE_CONTROLLER_PICAM_H_
-
-#ifdef USE_PICAM // Only include implementation if building with PICam
-
-#include <opencv2\core\core.hpp> // Using OpenCV to save image info
-#include <opencv2\highgui\highgui.hpp>
 
 // Note / TODO: Consider how to handle issue of image size received being larger (16 bit versus 8 bit)
 
@@ -35,14 +30,7 @@ public:
 		this->size_ = size;
 		this->width_ = width;
 		this->height_ = height;
-
-		this->data_ = new unsigned char[size];
-		for (int index = 0; index < size; index++) {
-			// Attempting a kind of compression to convert short size value to byte size (1/2 the size) by dividing it down so max is reduced to 255 and so on.
-			// Note that this not at all a lossless compression, but should work to having data comparable to Spinnaker's
-			unsigned char byteData = unsigned char(rawData[index] / 257);
-			this->data_[index] = byteData;
-		}
+		this->data_ = nullptr;
 	}
 
 	// Copy constructor
@@ -85,11 +73,7 @@ public:
 
 	// Output the image with given file path
 	void saveImage(std::string path) {
-		// PICam does not offer it's own method of saving images, so using OpenCV's
-		cv::imwrite(path, cv::Mat(this->height_, this->width_, CV_8UC1, this->data_));
 	}
 };
-
-#endif // inclusion for only PICam version
 
 #endif // file inclusion

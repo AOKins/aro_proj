@@ -157,3 +157,93 @@ void Utility::rejoinClear(std::vector<std::thread> & myThreads) {
 	}
 	myThreads.clear();
 }
+
+
+// [SORTING ALGORITHMS]
+// The pivot value is in the front of the vector
+template <typename It>
+It Utility::partition(It front, It back){
+	// Index values for comparing the data inside the partition with the pivot (but don't want to changethe front and back values so that they can be used later)
+	It left = front + 1;
+	It right = back - 1;
+	// A do while loop so that it runs atleast twice to make sure that all left and right are in right order
+	do {
+		// Increment left comparison index value until it comes across a value greater than the pivot ORreaches the end of the partitioned portion of the vector
+		while ((left != back - 1) && !(*front < *left)) {
+			++left;
+		}
+
+		while (*front < *right) {
+			--right;
+		}
+
+		if (left < right) {
+			std::iter_swap(left, right);
+		}
+	} while (left < right);
+	// Swap the pivot with the right value so that it is in the middle of the partition sides before returning the position of pivot 
+	std::iter_swap(front, right);
+	return right;
+}
+
+
+// The "main sorting function" that takes the iterators and calls partition before recursively calling QuickSort on the left and right sides of the pivot
+template <typename It>
+void Utility::QuickSort(It front, It back) {
+	if (back - front != 0){
+		It pivot = partition(front, back);
+
+		QuickSort(front, pivot);
+		QuickSort(pivot + 1, back);
+	}
+}
+
+// Helper function that calls QuickSort with pointer array and size of array with return of sorted copy
+// Input: data - pointer to array of elements
+//		  size - number of elements
+// Output: Sorted copy of data (uses = operator)
+template <typename T>
+T * Utility::QuickSortCopy(T * data, int size) {
+	// Create new temp array
+	T * temp = new T[size];
+	// Copy elements
+	for (int i = 0; i < size; i++) {
+		temp[i] = data[i];
+	}
+	// Sort temp array
+	QuickSort(temp, temp + size);
+	// Return sorted result
+	return temp;
+}
+
+template <typename T>
+T * Utility::InsertionSort(T* data, int size) {
+	bool found = false;
+	T * temp = new T[size];
+	temp[0] = data[0];
+	for (int i = 1; i < size; i++) {
+		for (int j = 0; j < i; j++)	{
+			if (data[i] < temp[j]) {
+				found = true;
+				// insert individual
+				T holder1;
+				holder1 = data[i];
+				T holder2;
+				for (int k = j; k < i; k++)	{
+					holder2 = temp[k];
+					temp[k] = holder1;
+					holder1 = holder2;
+				}
+				temp[i] = holder1;
+				break;
+			}
+		}
+		if (!found) {
+			temp[i] = data[i];
+		}
+		else {
+			found = false;
+		}
+	}
+	return temp;
+}

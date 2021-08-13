@@ -1,29 +1,24 @@
 ////////////////////
-// CameraControllerSpinnaker.h - Header file for the camera controller to Spinnaker version
+// CameraControllerPICam.h - Header file for the camera controller to testing performance version only
 // Last edited: 08/02/2021 by Andrew O'Kins
 ////////////////////
 
-#ifndef CAMERA_CONTROLLER_SPINNAKER_H_
-#define CAMERA_CONTROLLER_SPINNAKER_H_
-
-#ifdef USE_SPINNAKER
+#ifndef CAMERA_CONTROLLER_PICAM_H_
+#define CAMERA_CONTROLLER_PICAM_H_
 
 #include <string>
 
-#include "Spinnaker.h"
-#include "SpinGenApi\SpinnakerGenApi.h"
-using namespace Spinnaker::GenApi;
-using namespace Spinnaker::GenICam;
-
-#include "ImageControllerSpinnaker.h"	// For wrapping the input/output of image data
+#include "ImageControllerEmpty.h" // Image wrapper
 
 class MainDialog;
 
 class CameraController {
 public:
 	//Image parameters (with defaults set)
+	// ROI offset
 	int x0 = 896;				//  Must be a factor of 4 (like 752)
 	int y0 = 568;				//	Must be a factor of 2 (like 752)
+	// ROI dimension
 	int cameraImageWidth = 64;	//	Must be a factor of 32 (like 64)
 	int cameraImageHeight = 64;	//	Must be a factor of 2  (like 64)
 	int populationDensity = 1;
@@ -42,17 +37,10 @@ public:
 
 	//Image target settings
 	int targetRadius = 5;
-
 private:
-	//UI/Equipment reference
-	MainDialog* dlg;
-	//Camera access using Spinnaker
-	Spinnaker::SystemPtr system;
-	Spinnaker::CameraList camList;
-	Spinnaker::CameraPtr cam;
+	MainDialog* dlg; // Pointer to GUI instance to access parameters with
 
-	//Logic control
-	bool isCamCreated = false;
+	
 public:
 
 	CameraController(MainDialog* dlg_);
@@ -73,19 +61,18 @@ public:
 
 	// [UTILITY]
 	int PrintDeviceInfo();
-	// Return true if this controller has access to at least one camera
-	bool hasCameras(); 
-
-	bool SetExposure(double exposureTimeToSet);
-	double GetExposureRatio();
-	void HalfExposureTime();
 
 	// [ACCESSOR(S)/MUTATOR(S)]
 	bool GetCenter(int &x, int &y);
 	bool GetFullImage(int &x, int &y);
-
+	// Return true if this controller has access to at least one camera
+	bool hasCameras();
+	// Setter for exposure setting
+	bool SetExposure(double exposureTimeToSet);
+	// Get the multiplier for exposure having been halved
+	double GetExposureRatio();
+	// half the current exposure time setting
+	void HalfExposureTime();
 };
-
-#endif
 
 #endif

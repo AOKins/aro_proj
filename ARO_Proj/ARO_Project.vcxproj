@@ -111,7 +111,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>C:\Program Files\Princeton Instruments\PICam\Libraries;C:\Program Files\Point Grey Research\Spinnaker2013\lib64\vs2013;C:\Program Files\Meadowlark Optics\Blink OverDrive Plus\SDK;C:\opencv\build\x64\vc12\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\opencv\build\x64\vc12\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='TestConfig|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -122,7 +122,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>C:\Program Files\Princeton Instruments\PICam\Libraries;C:\Program Files\Point Grey Research\Spinnaker2013\lib64\vs2013;C:\Program Files\Meadowlark Optics\Blink OverDrive Plus\SDK;C:\opencv\build\x64\vc12\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\opencv\build\x64\vc12\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -175,14 +175,14 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_WINDOWS;_DEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Program Files\Princeton Instruments\PICam\Includes;C:\Program Files\Point Grey Research\Spinnaker2013\include;C:\opencv\build\include;C:\Program Files\Meadowlark Optics\Blink OverDrive Plus\SDK;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\opencv\build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>C:\Program Files\Princeton Instruments\PICam\Libraries;C:\Program Files\Point Grey Research\Spinnaker2013\lib64\vs2013;C:\opencv\build\x64\vc12\lib;C:\Program Files\Meadowlark Optics\Blink OverDrive Plus\SDK;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Picam.lib;opencv_core248d.lib;opencv_imgproc248d.lib;opencv_highgui248d.lib;Blink_SDK.lib;Spinnakerd_$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\opencv\build\x64\vc12\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opencv_core2411d.lib;opencv_imgproc2411d.lib;opencv_highgui2411d.lib;$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>Yes</GenerateDebugInformation>
     </Link>
     <Midl>
@@ -258,14 +258,14 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Program Files\Princeton Instruments\PICam\Includes;C:\Program Files\Point Grey Research\Spinnaker2013\include;C:\opencv\build\include;C:\Program Files\Meadowlark Optics\Blink OverDrive Plus\SDK;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\opencv\build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Picam.lib;opencv_core248.lib;opencv_imgproc248.lib;opencv_highgui248.lib;Blink_SDK.lib;Spinnakerd_$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Program Files\Princeton Instruments\PICam\Libraries;C:\Program Files\Point Grey Research\Spinnaker2013\lib64\vs2013;C:\opencv\build\x64\vc12\lib;C:\Program Files\Meadowlark Optics\Blink OverDrive Plus\SDK;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opencv_core2411.lib;opencv_imgproc2411.lib;opencv_highgui2411.lib;$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\opencv\build\x64\vc12\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -285,16 +285,13 @@
     <ClInclude Include="BruteForce_Optimization.h" />
     <ClInclude Include="CameraControlDialog.h" />
     <ClInclude Include="CameraController.h" />
-    <ClInclude Include="CameraControllerPICam.h" />
-    <ClInclude Include="CameraControllerSpinnaker.h" />
+    <ClInclude Include="CameraControllerEmpty.h" />
     <ClInclude Include="GA_Optimization.h" />
-    <ClInclude Include="ImageControllerPICam.h" />
-    <ClInclude Include="ImageControllerSpinnaker.h" />
+    <ClInclude Include="ImageControllerEmpty.h" />
     <ClInclude Include="OutputControlDialog.h" />
     <ClInclude Include="uGA_Population.h" />
     <ClInclude Include="ImageScaler.h" />
     <ClInclude Include="MainDialog.h" />
-    <ClInclude Include="Blink_SDK.h" />
     <ClInclude Include="CameraDisplay.h" />
     <ClInclude Include="cdib.h" />
     <ClInclude Include="Individual.h" />
@@ -319,8 +316,7 @@
     <ClCompile Include="ARO_App.cpp" />
     <ClCompile Include="BruteForce_Optimization.cpp" />
     <ClCompile Include="CameraControlDialog.cpp" />
-    <ClCompile Include="CameraControllerPICam.cpp" />
-    <ClCompile Include="CameraControllerSpinnaker.cpp" />
+    <ClCompile Include="CameraControllerEmpty.cpp" />
     <ClCompile Include="ImageScaler.cpp" />
     <ClCompile Include="MainDialog.cpp" />
     <ClCompile Include="CameraDisplay.cpp" />
