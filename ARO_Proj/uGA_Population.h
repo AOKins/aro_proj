@@ -59,7 +59,7 @@ public:
 			genInd(3, 3, 2);
 		}
 		// Keeping current best onto next generation
-		DeepCopyIndividual(temp[4], sorted_temp[4]);
+		temp[4] = sorted_temp[4];
 
 		Utility::rejoinClear(this->ind_threads);	// rejoin
 

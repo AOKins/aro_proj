@@ -58,6 +58,27 @@ public:
 		this->fitness_ = fitness;
 	}
 
+	// Overloaded = operator to perform deep copy of genome data
+	template <typename T>
+	Individual<T>& operator=(const Individual<T> &from) {
+		// If they are the same
+		if (this == &from){
+			return *this;
+		}
+		// Copy fitness
+		this->set_fitness(from.fitness());
+		// Deep Copy genome
+			// Create temp to hold copy of equal size
+		std::vector<T> * temp_genome = new std::vector<T>(from.genome_()->size(), 0);
+			// Iterate through to copy each value
+		for (int i = 0; i < from.genome_()->size(); i++) {
+			(*temp_genome)[i] = (*from.genome())[i];
+		}
+			// Set resulting deep copy
+		this->set_genome(temp_genome);
+
+		return *this;
+	}
 }; // ... class Individual
 
 // Comparative operator
