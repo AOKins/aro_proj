@@ -1,6 +1,6 @@
 ////////////////////
 // CameraControllerPICam.cpp - implementation of CameraController using PICam SDK
-// Last edited: 07/21/2021 by Andrew O'Kins
+// Last edited: 08/13/2021 by Andrew O'Kins
 ////////////////////
 
 #include "stdafx.h"				// Required in source
@@ -52,8 +52,6 @@ bool CameraController::setupCamera() {
 bool CameraController::startCamera() {
 	// Begin acquisition management when camera has been configured and is now ready to being acquiring images.
 
-	PicamError err;
-
 	// Get the size that a readout would be
 	piint readout_size = 0;
 	Picam_GetParameterIntegerValue(this->camera_, PicamParameter_ReadoutStride, &readout_size);
@@ -61,7 +59,7 @@ bool CameraController::startCamera() {
 	// Commiting buffer parameter
 	const PicamParameter* failed_parameters;
 	piint failed_parameters_count;
-	err = Picam_CommitParameters(this->camera_, &failed_parameters, &failed_parameters_count);
+	PicamError err = Picam_CommitParameters(this->camera_, &failed_parameters, &failed_parameters_count);
 
 	// - print any invalid parameters
 	if (failed_parameters_count > 0) {
@@ -99,9 +97,7 @@ bool CameraController::startCamera() {
 
 // Get most recent image
 ImageController* CameraController::AcquireImage() {
-	
 	// Get most recent image and return within ImageController class
-
 	PicamAvailableData curImageData;
 	PicamAcquisitionStatus curr_status;
 	PicamError result;
@@ -115,7 +111,6 @@ ImageController* CameraController::AcquireImage() {
 	int num_pixels = int(frame_size) / 2; // Number of pixels is half the size in bytes (2-byte depth for each pixel)
 
 	// Grab an image
-
 	// Attempt for acquisiton that is using (hopefully faster) asynchronous approach
 	try {
 		result = Picam_WaitForAcquisitionUpdate(this->camera_, -1, &curImageData, &curr_status);
@@ -497,7 +492,6 @@ bool CameraController::saveImage(ImageController * curImage, std::string path) {
 	}
 	curImage->saveImage(path);
 	return true;
-
 }
 
 // [ACCESSOR(S)/MUTATOR(S)]
@@ -505,8 +499,7 @@ bool CameraController::GetCenter(int &x, int &y) {
 	int fullWidth = -1;
 	int fullHeight = -1;
 
-	if (!GetFullImage(fullWidth, fullHeight))
-	{
+	if (!GetFullImage(fullWidth, fullHeight)) {
 		Utility::printLine("ERROR: failed to get max dimensions for getting center values");
 		return false;
 	}
@@ -547,7 +540,8 @@ bool CameraController::hasCameras() {
 // Input: exposureTimeToSet - time to set in microseconds
 bool CameraController::SetExposure(double exposureTimeToSet) {
 	// PICam deals with exposure time in milliseconds, so need to divide the input by 1000
-	if (Picam_SetParameterFloatingPointValue(this->camera_, PicamParameter_ExposureTime, exposureTimeToSet / 1000) != PicamError_None) {
+	PicamError errMsg = Picam_SetParameterFloatingPointValue(this->camera_, PicamParameter_ExposureTime, exposureTimeToSet / 1000);
+	if (errMsg != PicamError_None) {
 		Utility::printLine("ERROR: Failed to set exposure parameter!");
 		return false;
 	}
@@ -564,7 +558,6 @@ bool CameraController::SetExposure(double exposureTimeToSet) {
 
 	// - free picam-allocated resources
 	Picam_DestroyParameters(failed_parameters);
-
 
 	return true;
 }
