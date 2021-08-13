@@ -22,7 +22,7 @@ void Utility::printLine(std::string msg, bool isDebug) {
 		return;
 	}
 #endif
-	std::cout << "\n<" << Utility::getCurLocalTime() << "> -" << msg;
+	std::cout << "\n<" << Utility::getCurLocalTime() << "> " << msg;
 }
 
 // [TIMING FEATURES]
@@ -68,8 +68,8 @@ std::string Utility::getCurLocalTime() {
 	std::vector<std::string> hourMinuteSecondParts = seperateByDelim(timeParts[3], ':');
 
 	std::string finalTimeString = "";
-	finalTimeString += std::to_string(std::stoi((std::string(hourMinuteSecondParts[0]))) % 12) + "-";	// hour
-	finalTimeString += hourMinuteSecondParts[1] + "-";  // minute
+	finalTimeString += std::to_string(std::stoi((std::string(hourMinuteSecondParts[0]))) % 12) + ":";	// hour
+	finalTimeString += hourMinuteSecondParts[1] + ":";  // minute
 	finalTimeString += hourMinuteSecondParts[2];		// seconds
 
 	finalTimeString.erase(std::remove(finalTimeString.begin(), finalTimeString.end(), '\n'), finalTimeString.end());

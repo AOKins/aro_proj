@@ -330,7 +330,6 @@
     <ClCompile Include="OutputControlDialog.cpp" />
     <ClCompile Include="SettingsOutput.cpp" />
     <ClCompile Include="SGA_Optimization.cpp" />
-    <ClCompile Include="SGA_Population.cpp" />
     <ClCompile Include="SLMControlDialog.cpp" />
     <ClCompile Include="SLMController.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\opencv\build\include;C:\Program Files\Meadowlark Optics\Blink OverDrive Plus\SDK;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -338,7 +337,6 @@
     <ClCompile Include="SLM_Board.cpp" />
     <ClCompile Include="GA_Optimization.cpp" />
     <ClCompile Include="uGA_Optimization.cpp" />
-    <ClCompile Include="uGA_Population.cpp" />
     <ClCompile Include="Utility.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

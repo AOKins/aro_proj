@@ -218,7 +218,7 @@ bool BruteForce_Optimization::shutdownOptimizationInstance() {
 	}
 
 	if (this->logAllFiles || this->saveParametersPref) {
-		saveParameters(curTime, "OPT5");
+		saveParameters(curTime);
 		CString buff;
 		dlg->m_outputControlDlg.m_OutputLocationField.GetWindowTextW(buff);
 		std::string path = CT2A(buff);

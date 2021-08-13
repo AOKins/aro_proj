@@ -549,7 +549,7 @@ bool CameraController::SetExposure(double exposureTimeToSet) {
 	// Commit the change to exposure parameter
 	const PicamParameter* failed_parameters;
 	piint failed_parameters_count;
-	PicamError errMsg = Picam_CommitParameters(this->camera_, &failed_parameters, &failed_parameters_count);
+	errMsg = Picam_CommitParameters(this->camera_, &failed_parameters, &failed_parameters_count);
 
 	// - print any invalid parameters
 	if (failed_parameters_count > 0) {

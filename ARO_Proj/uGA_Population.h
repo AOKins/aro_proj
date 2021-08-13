@@ -22,7 +22,83 @@ public:
 		: Population<T>(genome_length, population_size, elite_size, accepted_similarity, multiThread) {};
 
 	// Starts next generation using fitness of individuals.
-	bool nextGeneration();
+	bool nextGeneration() {
+		// temp for storing sorted current population
+		Individual<T>* sorted_temp = this->SortIndividuals(this->individuals_, this->pop_size_);
+		bool * same_check = new bool[(this->pop_size_ - this->elite_size_)];
+		// temp for storing new population before storing into this->individuals_
+		Individual<T>* temp = new Individual<T>[this->pop_size_];
+
+		// Lambda function to do assignment in parallel
+		// Input: indID - index of location to store individual in temp array
+		//		parent1 - index of a parent in sorted_temp
+		//		parent2 - index of the other parent in sorted_temp
+		// Captures:
+		//		temp - pointer array to store new individuals
+		//		sorted_temp - pointer to array of sorted individuals to draw parents from
+		//		same_check - unused bool passed in for Crossover()
+		//		this - pointer to current instance of uGA_Population for accessing Crossover method with mutation disabled
+		auto genInd = [temp, sorted_temp, &same_check, this](int indID, int parent1, int parent2) {
+			temp[indID].set_genome(this->Crossover(sorted_temp[parent1].genome(), sorted_temp[parent2].genome(), same_check[indID], false));
+		};
+
+		// Crossover generation for new population
+		// Assumes population is 5
+		// recall lower index is higher fitness, so index 4 is most fit individual
+
+		if (this->multiThread_) { // Parallel
+			this->ind_threads.push_back(std::thread(genInd, 0, 4, 3));
+			this->ind_threads.push_back(std::thread(genInd, 1, 4, 2));
+			this->ind_threads.push_back(std::thread(genInd, 2, 3, 2));
+			this->ind_threads.push_back(std::thread(genInd, 3, 3, 2));
+		}
+		else { // Serial
+			genInd(0, 4, 3);
+			genInd(1, 4, 2);
+			genInd(2, 3, 2);
+			genInd(3, 3, 2);
+		}
+		// Keeping current best onto next generation
+		DeepCopyIndividual(temp[4], sorted_temp[4]);
+
+		Utility::rejoinClear(this->ind_threads);	// rejoin
+
+		// Collect the resulting same_check values,
+		// if at least one is false (not similar) then the result is set to false
+		bool same_check_result = true;
+		for (int i = 0; i < (this->pop_size_ - this->elite_size_) && same_check_result; i++) {
+			if (same_check[i] == false) {
+				same_check_result = false;
+			}
+		}
+
+		// if all of our individuals are labeled similar, replace half of them with new images
+		if (same_check_result) {
+			// Calling generate random image for bottom 4 individuals (keeping best)
+			for (int i = 0; i < 4; i++) {
+				if (this->multiThread_) {
+					// Lambda function to ensure that generating random image is done in parallel
+					// Input: id - index for individual to be set
+					// Captures:
+					//		temp - pointer to array of individuals to store new random genomes in
+					//		this - pointer to current instance of uGA_Population for accessing GenerateRandomImage method
+					this->ind_threads.push_back(std::thread([temp, this](int id)
+					{temp[id].set_genome(this->GenerateRandomImage()); }, i));
+				}
+				else {
+					temp[i].set_genome(this->GenerateRandomImage());
+				}
+			}
+			Utility::rejoinClear(this->ind_threads);			// Rejoin
+		}
+
+		delete[] same_check;
+		// Assign new population to individuals_
+		delete[] this->individuals_;
+		this->individuals_ = temp;
+		delete[] sorted_temp;
+		return true; // No issues!
+	}	// ... Function nextGeneration
 }; // ... class uGAPopulation
 
 #endif

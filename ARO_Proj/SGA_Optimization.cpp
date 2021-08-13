@@ -108,7 +108,7 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 		std::rename((this->outputFolder + this->algorithm_name_ + "_exposure.txt").c_str(), (this->outputFolder + curTime + "_" + this->algorithm_name_ + "_exposure.txt").c_str());
 	}
 	if (this->logAllFiles || this->saveParametersPref) {
-		saveParameters(curTime, this->algorithm_name_);
+		saveParameters(curTime);
 		CString buff;
 		dlg->m_outputControlDlg.m_OutputLocationField.GetWindowTextW(buff);
 		std::string path = CT2A(buff);

@@ -146,9 +146,6 @@
     <ClCompile Include="OptimizationControlDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SGA_Optimization.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="SLM_Board.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -188,10 +185,7 @@
     <ClCompile Include="GA_Optimization.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SGA_Population.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="uGA_Population.cpp">
+    <ClCompile Include="SGA_Optimization.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
