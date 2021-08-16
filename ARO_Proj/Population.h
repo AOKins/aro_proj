@@ -170,13 +170,49 @@ public:
 	//	size - the size of the array to_sort
 	// Output: returns sorted pointer array of individuals originating from to_sort
 	Individual<T>* SortIndividuals(Individual<T>* to_sort, int size) {
-		// 
-		if (size > 100) {
-			return Utility::QuickSortCopy(to_sort, size);
+		bool found = false;
+		Individual<T> * temp = new Individual<T>[size];
+		DeepCopyIndividual(temp[0], to_sort[0]);
+		for (int i = 1; i < size; i++) {
+			for (int j = 0; j < i; j++)	{
+				if (to_sort[i].fitness() < temp[j].fitness()) {
+					found = true;
+					// insert individual
+					Individual<T> holder1;
+					DeepCopyIndividual(holder1, to_sort[i]);
+					Individual<T> holder2;
+					for (int k = j; k < i; k++)	{
+						DeepCopyIndividual(holder2, temp[k]);
+						DeepCopyIndividual(temp[k], holder1);
+						DeepCopyIndividual(holder1, holder2);
+					}
+					DeepCopyIndividual(temp[i], holder1);
+					break;
+				}
+			}
+			if (!found) {
+				DeepCopyIndividual(temp[i], to_sort[i]);
+			}
+			else {
+				found = false;
+			}
 		}
-		else {
-			return Utility::InsertionSort(to_sort, size);
+		return temp;
+	}
+
+	// Deep copies the genome & resulting image from one individual to another
+	// Input:
+	//	to - the individual to be copied to
+	//	from - the individual copied
+	// Output: to is contains deep copy of from
+	void DeepCopyIndividual(Individual<T> & to, Individual<T> & from) {
+		to.set_fitness(from.fitness());
+		std::vector<T> * temp_genome1 = new std::vector<T>(this->genome_length_, 0);
+		std::vector<T> * temp_genome2 = from.genome();
+		for (int i = 0; i < this->genome_length_; i++) {
+			(*temp_genome1)[i] = (*temp_genome2)[i];
 		}
+		to.set_genome(temp_genome1);
 	}
 
 	// Perform the genetic algorithm to create new individuals for next gneeration

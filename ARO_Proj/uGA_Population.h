@@ -59,7 +59,7 @@ public:
 			genInd(3, 3, 2);
 		}
 		// Keeping current best onto next generation
-		temp[4] = sorted_temp[4];
+		DeepCopyIndividual(temp[4], sorted_temp[4]);
 
 		Utility::rejoinClear(this->ind_threads);	// rejoin
 
@@ -99,6 +99,7 @@ public:
 		delete[] sorted_temp;
 		return true; // No issues!
 	}	// ... Function nextGeneration
+
 }; // ... class uGAPopulation
 
 #endif

@@ -70,7 +70,7 @@ BOOL SLMControlDialog::PreTranslateMessage(MSG* pMsg) {
 void SLMControlDialog::OnCbnSelchangeSlmSelect() { 
 	// Update current SLM selection
 	this->slmSelectionID_ = this->slmSelection_.GetCurSel();
-	if (this->slmSelectionID_ > 0 && this->slmSelectionID_ < this->slmCtrl->boards.size()) {
+	if (this->slmSelectionID_ >= 0 && this->slmSelectionID_ < this->slmCtrl->boards.size()) {
 		// Update LUT file name
 		CString LUTpath(this->slmCtrl->boards[this->slmSelectionID_]->LUTFileName.c_str());
 		this->m_LUT_pathDisplay.SetWindowTextW(LUTpath);
@@ -243,9 +243,10 @@ void SLMControlDialog::populateSLMlist() {
 	}
 	// If there is at least one board, default to board 0 for selection
 	if (numBoards > 0) {
-		this->slmSelection_.SetCurSel(0);
-	// Default to having the first board be optimized!
+		// Default to having the first board be optimized!
 		this->slmCtrl->boards[0]->setOptimize(true);
+
+		this->slmSelection_.SetCurSel(0);
 	}
 }
 

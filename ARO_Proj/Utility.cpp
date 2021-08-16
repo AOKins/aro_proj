@@ -44,7 +44,7 @@ std::string Utility::getCurDateTime() {
 	finalTimeString += timeParts[1] + "-"; // month
 	finalTimeString += timeParts[2] + "-"; // date (day)
 	finalTimeString += timeParts[4] + "_"; // year
-	finalTimeString += std::to_string(std::stoi((std::string(hourMinuteSecondParts[0])))%12) + "-";	// hour
+	finalTimeString += std::to_string(std::stoi((std::string(hourMinuteSecondParts[0])))%12) + "-";	// hour in 12 format
 	finalTimeString += hourMinuteSecondParts[1] + "-";  // minute
 	finalTimeString += hourMinuteSecondParts[2];		// seconds
 
@@ -68,7 +68,7 @@ std::string Utility::getCurLocalTime() {
 	std::vector<std::string> hourMinuteSecondParts = seperateByDelim(timeParts[3], ':');
 
 	std::string finalTimeString = "";
-	finalTimeString += std::to_string(std::stoi((std::string(hourMinuteSecondParts[0]))) % 12) + ":";	// hour
+	finalTimeString += std::to_string(std::stoi((std::string(hourMinuteSecondParts[0])))) + ":";	// hour in 24 format
 	finalTimeString += hourMinuteSecondParts[1] + ":";  // minute
 	finalTimeString += hourMinuteSecondParts[2];		// seconds
 

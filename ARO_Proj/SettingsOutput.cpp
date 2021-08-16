@@ -61,6 +61,7 @@ void MainDialog::OnBnClickedLoadSettings() {
 			tryAgain = false;
 		}
 	} while (tryAgain);
+	this->m_outputControlDlg.OnBnClickedLogallFiles();
 }
 
 // Set the UI according to given file path, called from Load Settings

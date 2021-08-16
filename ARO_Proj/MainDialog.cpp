@@ -131,11 +131,10 @@ BOOL MainDialog::OnInitDialog() {
 	// - get reference to slm controller
 	this->slmCtrl = m_slmControlDlg.getSLMCtrl();
 	this->slmCtrl->SetMainDlg(this);
+	Utility::printLine("INFO: There are " + std::to_string(this->slmCtrl->numBoards) + " boards");
 
 	// - set all default settings
 	setDefaultUI();
-
-	Utility::printLine("INFO: There are " + std::to_string(this->slmCtrl->numBoards) + " boards");
 
 	// Give a warning message if no boards have been detected
 	if (this->slmCtrl != nullptr && this->slmCtrl->numBoards < 1) {
@@ -452,7 +451,7 @@ void MainDialog::OnBnClickedStartStopButton() {
 				MB_ICONERROR | MB_OK);
 			return;
 		}
-		this->runOptThread = AfxBeginThread(optThreadMethod, LPVOID(this));
+		this->runOptThread = AfxBeginThread(optThreadMethod, LPVOID(this), THREAD_PRIORITY_ABOVE_NORMAL);
 		this->runOptThread->m_bAutoDelete = true; // Explicit setting for auto delete
 	}
 }

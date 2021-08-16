@@ -21,6 +21,8 @@ bool GA_Optimization::runOptimization() {
 	double start = 0;
 	double end = 0;
 	try {	// Begin camera exception handling while optimization loop is going
+		int * SLMgenome = this->population[0]->getGenome(this->populationSize - 1)->data();
+
 		this->timestamp = new TimeStampGenerator();		// Starting time stamp to track elapsed time
 		// Optimization loop for each generation
 		for (this->curr_gen = 0; this->curr_gen < this->maxGenenerations && !this->stopConditionsMetFlag; this->curr_gen++) {
@@ -41,6 +43,7 @@ bool GA_Optimization::runOptimization() {
 				}
 			}
 			Utility::rejoinClear(this->ind_threads);
+
 			// Perform GA crossover/breeding to produce next generation
 			for (int popID = 0; popID < population.size(); popID++) {
 				if (this->multithreadEnable == true) {
@@ -57,7 +60,8 @@ bool GA_Optimization::runOptimization() {
 			}
 			if (this->displaySLMImage) {
 				for (int slmID = 0; slmID < this->popCount; slmID++) {
-					this->scalers[slmID]->TranslateImage(this->population[slmID]->getGenome(this->populationSize - 1)->data(), this->slmScaledImages[slmID]);
+					SLMgenome = this->population[0]->getGenome(this->populationSize - 1)->data();
+					this->scalers[slmID]->TranslateImage(SLMgenome, this->slmScaledImages[slmID]);
 					this->slmDisplayVector[slmID]->UpdateDisplay(this->slmScaledImages[slmID]);
 				}
 			}

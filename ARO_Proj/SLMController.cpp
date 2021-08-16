@@ -69,6 +69,7 @@ bool SLMController::repopulateBoardList() {
 		//Add board info to board list
 		this->boards.push_back(curBoard);
 	}
+
 	return true;
 }
 

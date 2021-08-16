@@ -88,15 +88,15 @@ public:
 		// Performing deep copy for individuals in parallel
 		for (int id = (this->pop_size_ - this->elite_size_); id < this->pop_size_; id++) {
 			if (this->multiThread_) {
-				// Lambda function for copying individauls in parallel since the genome may be time consuming
+				// Lambda function for using DeepCopyIndividual in parallel
 				// Input: id - index for individual to be copied from individuals_ and to temp
 				// Captures: temp - pointer to array of individuals to store in
 				//  		 this - current Population instance for using appropriate methods
 				this->ind_threads.push_back(std::thread(
-					[this, temp](int id){ temp[id] = this->individuals_[id]; }, id));
+					[this, temp](int id){this->DeepCopyIndividual(temp[id], this->individuals_[id]); }, id));
 			}
 			else {
-				temp[id] = this->individuals_[id];
+				this->DeepCopyIndividual(temp[id], this->individuals_[id]);
 			}
 		}
 		Utility::rejoinClear(this->ind_threads);		// Rejoin

@@ -28,7 +28,9 @@ public:
 
 	// Destructor
 	~Individual() {
-		delete this->genome_;
+		if (this->genome_ != NULL) {
+			delete this->genome_;
+		}
 	}
 
 	// Returns the array(genome) associated with the individual.
