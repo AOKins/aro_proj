@@ -25,7 +25,6 @@ public:
 	bool nextGeneration() {
 		// temp for storing sorted current population
 		Individual<T>* sorted_temp = this->SortIndividuals(this->individuals_, this->pop_size_);
-		bool * same_check = new bool[(this->pop_size_ - this->elite_size_)];
 		// temp for storing new population before storing into this->individuals_
 		Individual<T>* temp = new Individual<T>[this->pop_size_];
 
@@ -38,8 +37,8 @@ public:
 		//		sorted_temp - pointer to array of sorted individuals to draw parents from
 		//		same_check - unused bool passed in for Crossover()
 		//		this - pointer to current instance of uGA_Population for accessing Crossover method with mutation disabled
-		auto genInd = [temp, sorted_temp, &same_check, this](int indID, int parent1, int parent2) {
-			temp[indID].set_genome(this->Crossover(sorted_temp[parent1].genome(), sorted_temp[parent2].genome(), same_check[indID], false));
+		auto genInd = [temp, sorted_temp, this](int indID, int parent1, int parent2) {
+			temp[indID].set_genome(this->Crossover(sorted_temp[parent1].genome(), sorted_temp[parent2].genome(), this->same_check[indID], false));
 		};
 
 		// Crossover generation for new population
@@ -92,7 +91,6 @@ public:
 			Utility::rejoinClear(this->ind_threads);			// Rejoin
 		}
 
-		delete[] same_check;
 		// Assign new population to individuals_
 		delete[] this->individuals_;
 		this->individuals_ = temp;

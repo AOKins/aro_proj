@@ -17,8 +17,13 @@ struct BetterRandom {
 		dist = new std::uniform_int_distribution<int>(0, cap - 1);
 	}
 
+	~BetterRandom() {
+		delete mt;
+		delete dist;
+	}
+
 	// () operator, use this to get a random number
-	int operator()() {
+	const int operator()() {
 		return (*dist)(*mt);
 	}
 };

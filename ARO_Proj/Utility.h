@@ -15,7 +15,7 @@ namespace Utility {
 	// [CONSOLE FEATURES]
 	// On a new line print a message formatted as <[LOCAL TIME]> - [MESSAGE]
 	// if isDebug and this is release build, message ignored
-	void printLine(std::string msg = "", bool isDebug = false);
+	const void printLine(std::string msg = "", bool isDebug = false);
 
 	// [TIMING FEATURES]
 	// Return a string of formatted time label with current local date and time
@@ -31,7 +31,7 @@ namespace Utility {
 	//		 height - the height of the camera image in pixels
 	//			  r - radius of area (centered in middle of image) to find average within
 	// Output: The average intensity within the calculated area
-	double FindAverageValue(void *image, int width, int height, int r);
+	const double FindAverageValue(const void *image, const int width, const int height, const int r);
 
 	// [STRING PROCCESSING]
 	// Separate a string into a vector array, breaks in given character

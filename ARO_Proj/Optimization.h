@@ -91,12 +91,12 @@ protected:
 	//		curSecPassed - current passed time in seconds to compare against secondsToStop
 	//		curGenerations - the current generation that has been evaluated to compare against genEvalsToStop
 	// Output: returns true if either input is greater than compared against OR the MainDialog's stopFlag has been set to true
-	bool stopConditionsReached(double curFitness, double curSecPassed, double curGenerations);
+	bool const stopConditionsReached(double curFitness, double curSecPassed, double curGenerations);
 
 	// Save the various setting parameters used in this optimization
 	// Stores the values with formatting in "this->outputFolder/[time]_[optType]_Optimization_Parameters.txt"
 	// Input: time - the current time as a string label
-	void saveParameters(std::string time);
+	void const saveParameters(std::string time);
 	
 	// Methods relying on implementation from child classes
 	virtual bool setupInstanceVariables() = 0;		 // Setting up properties used in runOptimization()

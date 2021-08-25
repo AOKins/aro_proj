@@ -29,6 +29,8 @@ protected:
 	bool multiThread_;
 	// vector for managing the multithreads for individuals used in genetic algorithm
 	std::vector<std::thread> ind_threads;
+	// Array to store results of crossovers to determine if a refresh is needed
+	bool * same_check;
 public:
 	// Constructor
 	// Input:
@@ -51,6 +53,7 @@ public:
 		}
 
 		this->individuals_ = new Individual<T>[this->pop_size_];
+		this->same_check = new bool[this->pop_size_ - this->elite_size_];
 
 		// initialize images for each individual
 		// Lambda function to ensure that generating random image is done in parallel to speed up process
@@ -76,6 +79,7 @@ public:
 	~Population() {
 		Utility::rejoinClear(this->ind_threads);
 		delete[] this->individuals_;
+		delete[] this->same_check;
 	}
 
 	// Get number of individuals in population
@@ -159,6 +163,9 @@ public:
 		same_counter /= this->genome_length_;
 		if (same_counter < this->accepted_similarity_) {
 			same_check = false;
+		}
+		else {
+			same_check = true;
 		}
 		return temp;
 	}

@@ -35,8 +35,6 @@ public:
 		}
 
 		// Breeding
-		// Size of same_check is being how many new individuals are being made
-		bool * same_check = new bool[(this->pop_size_ - this->elite_size_)];
 		Individual<T> * temp = new Individual<T>[this->pop_size_];
 		BetterRandom parent_selector(RAND_MAX);
 		double divisor = RAND_MAX / fitness_sum;
@@ -49,8 +47,7 @@ public:
 		//		divisor			- used in proportionate selection
 		//		individuals_	- access population genomes
 		// Output: temp[i] is set a new genome using crossover algorithm and mutation enabled
-		auto genInd = [temp, &parent_selector, divisor, same_check, this](int i) {
-			same_check[i] = true;
+		auto genInd = [temp, &parent_selector, divisor, this](int i) {
 			// select first parent with fitness proportionate selection and store associated genome into temp_image1
 			double selected = parent_selector() / divisor;
 			double temp_sum = this->individuals_[0].fitness(); // Recall 0 index has worst fitness
@@ -72,7 +69,7 @@ public:
 			std::vector<T> * parent2 = this->individuals_[j].genome();
 
 			// perform crossover with mutation
-			temp[i].set_genome(Crossover(parent1, parent2, same_check[i], true));
+			temp[i].set_genome(Crossover(parent1, parent2, this->same_check[i], true));
 		}; // ... genInd(i)
 
 		// for each new individual a thread with call to genInd()
@@ -129,7 +126,6 @@ public:
 			Utility::rejoinClear(this->ind_threads);			// Rejoin
 		}
 
-		delete[] same_check;
 		// Assign new population to individuals_
 		delete[] this->individuals_;
 		this->individuals_ = temp;

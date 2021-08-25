@@ -34,19 +34,19 @@ public:
 	}
 
 	// Returns the array(genome) associated with the individual.
-	std::vector<T>* genome() {
+	const std::vector<T>* genome() {
 		return this->genome_;
 	}
 
 	// Returns the fitness associated with the individual.
-	double fitness() {
+	const double fitness() {
 		return this->fitness_;
 	}
 
 	// Sets the genome to be associated with the individual.
 	// Input: new_genome - genome to be set to this individual
 	// Output: new_genome is assigned, old genome is deleted
-	void set_genome(std::vector<T> * new_genome) {
+	void set_genome(const std::vector<T> * new_genome) {
 		if (this->genome_ != NULL) {
 			delete this->genome_;
 		}
@@ -56,7 +56,7 @@ public:
 	// Sets fitness to be associated with the individual.
 	// Input: fitness - the fitness to be associated.
 	// Output: this->fitness is assigned input value
-	void set_fitness(double fitness){
+	void set_fitness(const double fitness){
 		this->fitness_ = fitness;
 	}
 
@@ -85,7 +85,7 @@ public:
 
 // Comparative operator
 template <typename T>
-bool operator<(Individual<T> &a, Individual<T> &b) {
+bool operator<(const Individual<T> &a, const Individual<T> &b) {
 	return a.fitness() < b.fitness();
 }
 

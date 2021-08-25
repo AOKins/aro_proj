@@ -258,7 +258,7 @@ ImageScaler* Optimization::setupScaler(unsigned char *slmImg, int slmNum = 0) {
 
 // [SAVE/LOAD FEATURES]
 // Output information of the parameters used in the optimization in to logs
-void Optimization::saveParameters(std::string time) {
+void const Optimization::saveParameters(std::string time) {
 	std::ofstream paramFile(this->outputFolder + time + "_" + this->algorithm_name_ + "_Optimization_Parameters.txt");
 	paramFile << "----------------------------------------------------------------" << std::endl;
 	paramFile << "OPTIMIZATION SETTINGS:" << std::endl;
@@ -296,7 +296,7 @@ void Optimization::saveParameters(std::string time) {
 }
 
 //[CHECKS]
-bool Optimization::stopConditionsReached(double curFitness, double curSecPassed, double curGenerations) {
+bool const Optimization::stopConditionsReached(double curFitness, double curSecPassed, double curGenerations) {
 	// If reached fitness to stop and minimum time and minimum generations to perform
 	if ((curFitness > this->fitnessToStop && curSecPassed > this->minSecondsToStop && curGenerations > this->genEvalToStop) ) {
 		return true;
