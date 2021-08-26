@@ -15,7 +15,7 @@ namespace Utility {
 	// [CONSOLE FEATURES]
 	// On a new line print a message formatted as <[LOCAL TIME]> - [MESSAGE]
 	// if isDebug and this is release build, message ignored
-	const void printLine(std::string msg = "", bool isDebug = false);
+	void printLine(const std::string msg = "", bool isDebug = false);
 
 	// [TIMING FEATURES]
 	// Return a string of formatted time label with current local date and time
@@ -46,28 +46,6 @@ namespace Utility {
 	// Input: myThreads - vector to threads that need to be rejoined
 	// Output: threads is myThreads are rejoined and vector is cleared
 	void rejoinClear(std::vector<std::thread>& myThreads);
-
-	// [SORTING ALGORITHMS]
-	// Helper function that calls QuickSort with pointer array and size of array with return of sorted copy
-	// Input: data - pointer to array of elements
-	//		  size - number of elements
-	// Output: Sorted copy of data (uses = operator)	template <typename T>
-	template <typename T>
-	T* QuickSortCopy(T* data, int size);
-
-	// The "main sorting function" that takes the iterators and calls partition before recursively calling QuickSort on the left and right sides of the pivot
-	template <typename It>
-	void QuickSort(It front, It back);
-	
-	// Helper function for QuickSort
-		// The pivot value is in the front of the vector
-	template <typename It>
-	It partition(It front, It back);
-
-	// InsertionSort implementation as alternative to QuickSort
-	template <typename T>
-	T* InsertionSort(T*data, int size);
-
 };
 
 #endif

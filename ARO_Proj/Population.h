@@ -83,18 +83,18 @@ public:
 	}
 
 	// Get number of individuals in population
-	int getSize() {
+	const int getSize() const {
 		return this->pop_size_;
 	}
 
 	// Get number of elite individuals in population
-	int getEliteSize() {
+	const int getEliteSize() const {
 		return this->elite_size_;
 	}
 
 	// Generates a random image using BetterRandom
 	// Output: a randomly generated image that has size of genome_length for Population with each value being from 0 to 255
-	std::vector<T>* GenerateRandomImage() {
+	std::vector<T>* GenerateRandomImage() const {
 		static BetterRandom ran(256);
 		std::vector<T> * image = new std::vector<T>(this->genome_length_, 0);
 		for (int j = 0; j < this->genome_length_; j++) {
@@ -106,7 +106,7 @@ public:
 	// Getter for image of individual at inputted index
 	// Input: i - individual at given index (population not guranteed sorted)
 	// Output: the image for the individual
-	std::vector<T>* getGenome(int i) {
+	std::vector<T>* getGenome(int i) const {
 		return this->individuals_[i].genome();
 	}
 
@@ -122,7 +122,7 @@ public:
 	// Gett for fitness of an individual in the population
 	// Input:
 	//	i - individual at index i (population not guranteed sorted)
-	double getFitness(int i) {
+	double getFitness(int i) const {
 		return this->individuals_[i].fitness();
 	}
 
@@ -133,7 +133,7 @@ public:
 	//	same_check - boolean will be set to false if the arrays are different.
 	//  useMutation - boolean set if to perform mutation or not, defaults to true (enable).
 	// Output: returns new individual as result of crossover algorithm
-	std::vector<T> * Crossover(std::vector<T> * a, std::vector<T> * b, bool& same_check, bool useMutation = true) {
+	std::vector<T> * Crossover(const std::vector<T> * a, const std::vector<T> * b, bool& same_check, bool useMutation = true) const {
 		std::vector<T> * temp = new std::vector<T>(this->genome_length_, 0);
 		double same_counter = 0; // counter keeping track of how many indices in the genomes are the same
 		static BetterRandom ran(100);
@@ -212,7 +212,7 @@ public:
 	//	to - the individual to be copied to
 	//	from - the individual copied
 	// Output: to is contains deep copy of from
-	void DeepCopyIndividual(Individual<T> & to, Individual<T> & from) {
+	void DeepCopyIndividual(Individual<T> & to, Individual<T> & from) const {
 		to.set_fitness(from.fitness());
 		std::vector<T> * temp_genome1 = new std::vector<T>(this->genome_length_, 0);
 		std::vector<T> * temp_genome2 = from.genome();

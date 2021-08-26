@@ -37,7 +37,7 @@ public:
 		// Breeding
 		Individual<T> * temp = new Individual<T>[this->pop_size_];
 		BetterRandom parent_selector(RAND_MAX);
-		double divisor = RAND_MAX / fitness_sum;
+		const double divisor = RAND_MAX / fitness_sum;
 
 		// Lambda function to be used for generating new individual
 		// Input: i - index for new individual
@@ -56,7 +56,7 @@ public:
 				j++;
 				temp_sum += this->individuals_[j].fitness();
 			}
-			std::vector<T> * parent1 = this->individuals_[j].genome();
+			const std::vector<T> * parent1 = this->individuals_[j].genome();
 
 			// Select second parent with fitness proportionate selection and store associated genome into temp_image2
 			selected = parent_selector() / divisor;
@@ -66,7 +66,7 @@ public:
 				j++;
 				temp_sum += this->individuals_[j].fitness();
 			}
-			std::vector<T> * parent2 = this->individuals_[j].genome();
+			const std::vector<T> * parent2 = this->individuals_[j].genome();
 
 			// perform crossover with mutation
 			temp[i].set_genome(Crossover(parent1, parent2, this->same_check[i], true));
@@ -79,7 +79,6 @@ public:
 			else
 				genInd(i); // Serial
 		}
-		Utility::rejoinClear(this->ind_threads);		// Rejoin
 
 		// for the elites, copy directly into new generation
 		// Performing deep copy for individuals in parallel

@@ -15,7 +15,7 @@
 
 // [CONSOLE FEATURES]
 // On a new line print a message formatted as <[LOCAL TIME]> - [MESSAGE]
-void Utility::printLine(std::string msg, bool isDebug) {
+void Utility::printLine(const std::string msg, bool isDebug) {
 	// Comment out only when need to see debug type line printing
 #ifndef _DEBUG // Only in release mode do we ignore debug only messages
 	if (isDebug) {
@@ -84,10 +84,10 @@ std::string Utility::getCurLocalTime() {
 //		 height - the height of the camera image in pixels
 //			  r - radius of area (centered in middle of image) to find average within
 // Output: The average intensity within the calculated area
-double Utility::FindAverageValue(void *Image, int width, int height, int r) {
+const double Utility::FindAverageValue(const void *image, const int width, const int height, const int r) {
 	int value, ll, kk, cx, cy, ymin, ymax;
 	double rdbl, sdbl, rloop, sloop, xmin, xmax, area;
-	cv::Mat m_ary = cv::Mat(height, width, CV_8UC1, Image);
+	cv::Mat m_ary = cv::Mat(height, width, CV_8UC1, (void*)image);
 	rdbl = 0;
 	rloop = 0;
 	sloop = 0;

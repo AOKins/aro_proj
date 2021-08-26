@@ -23,7 +23,7 @@ struct BetterRandom {
 	}
 
 	// () operator, use this to get a random number
-	const int operator()() {
+	const int operator()() const {
 		return (*dist)(*mt);
 	}
 };
