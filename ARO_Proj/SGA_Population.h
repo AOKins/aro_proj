@@ -1,6 +1,6 @@
 ////////////////////
 // SGA_Population.h - handler for simple genetic algorithm that inherits from base Population
-// Last edited: 06/21/2021 by Andrew O'Kins
+// Last edited: 08/24/2021 by Andrew O'Kins
 ////////////////////
 
 #ifndef SGAPOPULATION_H_
@@ -18,7 +18,7 @@ public:
 	//	elite_size:			 the number of individuals for the population that are kept as elite
 	//	accepted_similarity: precentage of similarity to be counted as same between individuals (default 90%)
 	//  multiThread:		 enable usage of multithreading (default true)
-	SGAPopulation(int genome_length, int population_size, int elite_size, double accepted_similarity = .9, bool multiThread = true) 
+	SGAPopulation(int genome_length, int population_size, int elite_size, double accepted_similarity = .9, bool multiThread = true)
 		: Population<T>(genome_length, population_size, elite_size, accepted_similarity, multiThread) {};
 
 	// Starts next generation using fitness of individuals.  Following the simple genetic algorithm approach.
@@ -47,7 +47,8 @@ public:
 		//		divisor			- used in proportionate selection
 		//		individuals_	- access population genomes
 		// Output: temp[i] is set a new genome using crossover algorithm and mutation enabled
-		auto genInd = [temp, &parent_selector, divisor, this](int i) {
+		auto genInd = [temp, &parent_selector, &divisor, this](int i) {
+			this->same_check[i] = true;
 			// select first parent with fitness proportionate selection and store associated genome into temp_image1
 			double selected = parent_selector() / divisor;
 			double temp_sum = this->individuals_[0].fitness(); // Recall 0 index has worst fitness
@@ -69,60 +70,77 @@ public:
 			const std::vector<T> * parent2 = this->individuals_[j].genome();
 
 			// perform crossover with mutation
-			temp[i].set_genome(Crossover(parent1, parent2, this->same_check[i], true));
+			temp[i].set_genome(Crossover(parent1, parent2, same_check[i], true));
 		}; // ... genInd(i)
 
-		// for each new individual a thread with call to genInd()
-		for (int i = 0; i < (this->pop_size_ - this->elite_size_); i++) {
-			if (this->multiThread_) // Parallel
-				this->ind_threads.push_back(std::thread(genInd, i));
-			else
-				genInd(i); // Serial
-		}
 
-		// for the elites, copy directly into new generation
-		// Performing deep copy for individuals in parallel
-		for (int id = (this->pop_size_ - this->elite_size_); id < this->pop_size_; id++) {
-			if (this->multiThread_) {
-				// Lambda function for using DeepCopyIndividual in parallel
-				// Input: id - index for individual to be copied from individuals_ and to temp
-				// Captures: temp - pointer to array of individuals to store in
-				//  		 this - current Population instance for using appropriate methods
-				this->ind_threads.push_back(std::thread(
-					[this, temp](int id){this->DeepCopyIndividual(temp[id], this->individuals_[id]); }, id));
+		// Use genInd and deep copy, but have fewer threads that perform a group of individual tasks to reduce resources required
+		auto genSubGroup = [temp, &parent_selector, &divisor, &genInd, this](const int threadID, const int numThreads) {
+			int groupSize = this->pop_size_ / numThreads;
+			int remainder = this->pop_size_ - groupSize*numThreads;
+			int start_index = threadID*groupSize;
+
+			if (remainder != 0) {
+				if (threadID < remainder) {
+					groupSize++;
+					start_index += threadID;
+				}
+				else {
+					start_index += remainder;
+				}
 			}
-			else {
-				this->DeepCopyIndividual(temp[id], this->individuals_[id]);
+			for (int id = start_index; id < start_index + groupSize; id++) {
+				if (id < (this->pop_size_ - this->elite_size_)) {
+					// Produce New Individuals
+					genInd(id);
+				}
+				else { // Carry Elites
+					this->DeepCopyIndividual(temp[id], this->individuals_[id]);
+				}
+			}
+		}; // .. genSubGroup
+
+		if (this->multiThread_) { // Parallel
+			const int num_threads = std::thread::hardware_concurrency();
+
+			for (int i = 0; i < num_threads; i++) {
+				this->ind_threads.push_back(std::thread(genSubGroup, i, num_threads));
+			}
+
+			Utility::rejoinClear(this->ind_threads);		// Rejoin
+		}
+		else { // Serial
+			// Produce New Individuals
+			for (int i = 0; i < (this->pop_size_ - this->elite_size_); i++) {
+				genInd(i);
+			}
+			// Carry Elites
+			for (int i = (this->pop_size_ - this->elite_size_); i < this->pop_size_; i++) {
+				this->DeepCopyIndividual(temp[i], this->individuals_[i]);
 			}
 		}
-		Utility::rejoinClear(this->ind_threads);		// Rejoin
 
 		// Collect the resulting same_check values,
 		// if at least one is false (not similar) then the result is set to false
 		bool same_check_result = true;
 		for (int i = 0; i < (this->pop_size_ - this->elite_size_) && same_check_result; i++) {
-			if (same_check[i] == false) {
+			if (this->same_check[i] == false) {
 				same_check_result = false;
 			}
 		}
 
 		// if all of our individuals are labeled similar, replace half of them with new images
 		if (same_check_result) {
+			auto randInd = [temp, this](int id) {temp[id].set_genome(this->GenerateRandomImage()); };
 			// Calling generate random image for half of pop individuals
 			for (int i = 0; i < this->pop_size_ / 2; i++) {
-				if (this->multiThread_) { // Parallel
-					// Lambda function to ensure that generating random image is done in parallel
-					// Input: id - index for individual to be set
-					// Captures: temp - pointer to array of individuals to store new random genomes in
-					//  		 this - current Population instance for using appropriate methods
-					this->ind_threads.push_back(std::thread(
-						[temp, this](int id) {temp[id].set_genome(this->GenerateRandomImage()); }, i));
+				if (this->multiThread_) {
+					this->ind_threads.push_back(std::thread(randInd, i));
 				}
-				else { // Serial
-					temp[i].set_genome(this->GenerateRandomImage());
+				else {
+					randInd(i);
 				}
 			}
-			Utility::rejoinClear(this->ind_threads);			// Rejoin
 		}
 
 		// Assign new population to individuals_

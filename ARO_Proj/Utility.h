@@ -15,7 +15,7 @@ namespace Utility {
 	// [CONSOLE FEATURES]
 	// On a new line print a message formatted as <[LOCAL TIME]> - [MESSAGE]
 	// if isDebug and this is release build, message ignored
-	void printLine(const std::string msg = "", bool isDebug = false);
+	const void printLine(const std::string msg = "", bool isDebug = false);
 
 	// [TIMING FEATURES]
 	// Return a string of formatted time label with current local date and time
