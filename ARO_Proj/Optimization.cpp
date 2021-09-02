@@ -17,7 +17,7 @@ Optimization::Optimization(MainDialog* dlg, CameraController* cc, SLMController*
 	this->cc = cc;
 	this->sc = sc;
 	this->dlg = dlg;
-	
+
 	// Read from the output dialog for output parameters
 	prepareOutputSettings();
 
@@ -75,7 +75,7 @@ bool Optimization::prepareStopConditions() {
 		if (path.IsEmpty()) {
 			throw new std::exception();
 		}
-		this->maxSecondsToStop= _tstof(path);
+		this->maxSecondsToStop = _tstof(path);
 	}
 	catch (...)	{
 		Utility::printLine("ERROR: Can't Parse Minimum Seconds Elapsed");
@@ -91,7 +91,7 @@ bool Optimization::prepareStopConditions() {
 		this->genEvalToStop = _tstof(path);
 	}
 	catch (...)	{
-		Utility::printLine("ERROR: Can't Parse Minimum Function Evaluations");
+		Utility::printLine("ERROR: Can't Parse Minimum Generation Evaluations");
 		result = false;
 	}
 	// Generations evaluations to stop at (maximum)
@@ -104,7 +104,7 @@ bool Optimization::prepareStopConditions() {
 		this->maxGenenerations = _tstof(path);
 	}
 	catch (...)	{
-		Utility::printLine("ERROR: Can't Parse Minimum Function Evaluations");
+		Utility::printLine("ERROR: Can't Parse Maximum Generation Evaluations");
 		result = false;
 	}
 	return result;
@@ -289,7 +289,7 @@ void const Optimization::saveParameters(std::string time) {
 	paramFile << "Board Amount - " << std::to_string(this->sc->numBoards) << std::endl;
 	paramFile << "Number of Boards being Optimized - " << std::to_string(this->optBoards.size()) << std::endl;
 	for (int i = 0; i < int(this->sc->numBoards); i++) {
-		paramFile << "Board #" << i+1 << "\tLUT filePath - " << this->sc->boards[i]->LUTFileName << std::endl;
+		paramFile << "Board #" << i + 1 << "\tLUT filePath - " << this->sc->boards[i]->LUTFileName << std::endl;
 		paramFile << "        '\t'" << "To Be Optimized - " << this->sc->boards[i]->isToBeOptimized() << std::endl;
 	}
 	paramFile.close();
@@ -298,7 +298,7 @@ void const Optimization::saveParameters(std::string time) {
 //[CHECKS]
 bool const Optimization::stopConditionsReached(double curFitness, double curSecPassed, double curGenerations) {
 	// If reached fitness to stop and minimum time and minimum generations to perform
-	if ((curFitness > this->fitnessToStop && curSecPassed > this->minSecondsToStop && curGenerations > this->genEvalToStop) ) {
+	if ((curFitness > this->fitnessToStop && curSecPassed > this->minSecondsToStop && curGenerations > this->genEvalToStop)) {
 		return true;
 	}
 	// If the stop button was pressed

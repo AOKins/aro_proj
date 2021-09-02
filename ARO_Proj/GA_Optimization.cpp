@@ -8,7 +8,29 @@
 
 bool GA_Optimization::runOptimization() {
 	Utility::printLine("INFO: Starting " + this->algorithm_name_ + " Optimization!");
-	Utility::printLine("INFO: The CPU being used has " + std::to_string(std::thread::hardware_concurrency()) + " logical processors");
+
+
+	if (this->multithreadEnable) {
+		Utility::printLine("INFO: The CPU being used has " + std::to_string(std::thread::hardware_concurrency()) + " logical processors");
+		// Getting how many threads that the tasks will be using
+		CString tempBuff;
+		this->dlg->m_optimizationControlDlg.m_indEvalThreadCount.GetWindowTextW(tempBuff);
+		this->indThreadCount = _tstoi(tempBuff);
+
+		this->dlg->m_optimizationControlDlg.m_PopGenThreadCount.GetWindowTextW(tempBuff);
+		this->gaPoolThreadCount = _tstoi(tempBuff);
+
+		// If the indThreadCount and gaPoolThreadCount are less than what the hardware supports, than we don't need the additional threads to be created in the pool
+		const int threadPool_size = std::min(int(std::thread::hardware_concurrency()), std::max(this->indThreadCount, this->gaPoolThreadCount));
+		this->myThreadPool_ = new threadPool(threadPool_size);
+
+		Utility::printLine("INFO: Using up to " + std::to_string(threadPool_size) + " threads");
+	}
+	else {
+		this->indThreadCount = 1;
+		this->gaPoolThreadCount = 1;
+	}
+
 	// Setup before optimization (see base class for implementation)
 	if (!prepareSoftwareHardware()) {
 		Utility::printLine("ERROR: Failed to prepare software or/and hardware for " + this->algorithm_name_ + " Optimization");
@@ -23,19 +45,13 @@ bool GA_Optimization::runOptimization() {
 	// Doubles to track time elapsed during optimization
 	double opt_start, opt_end, generation_start, generation_end, individuals_start, individuals_end, nextGen_start, nextGen_end;
 	try {	// Begin camera exception handling while optimization loop is going
-
-		// Lambda function to access this instance of Optimization to perform runIndividual
-		// Input: indID - index location to run individual from in population
-		// Captures: this - pointer to current GA_Optimization instance
-		auto evaluateIndividual = [this](int id){ this->runIndividual(id); };
-
 		// Lambda function to access this instance of Optimization to perform runIndividual for group of individuals (fewer threads)
 		// Input: threadID - this thread
 		//		  numThreads - total number of threads being run
 		// Captures: this - pointer to current GA_Optimization instance
-		auto evaluateSubGroup = [this](const int threadID, const int numThreads){
-			int groupSize = (this->populationSize / numThreads);
-			int remainder = this->populationSize - groupSize*numThreads;
+		auto evaluateSubGroup = [this](const int threadID){
+			int groupSize = (this->populationSize / this->indThreadCount);
+			int remainder = this->populationSize - groupSize*this->indThreadCount;
 			int start_index = threadID*groupSize;
 
 			if (remainder != 0) {
@@ -48,7 +64,7 @@ bool GA_Optimization::runOptimization() {
 				}
 			}
 
-			for (int id = start_index; id < start_index + groupSize; id++) {
+			for (int id = start_index; id < start_index + groupSize && id < this->populationSize; id++) {
 				if (this->skipEliteReevaluation == false || (this->skipEliteReevaluation == true && this->population[0]->getFitness(id) == -1)) {
 					this->runIndividual(id);
 				}
@@ -66,40 +82,30 @@ bool GA_Optimization::runOptimization() {
 
 			if (this->multithreadEnable == true) {
 				// Parallel
-				const int num_threads = std::thread::hardware_concurrency();
-				for (int indID = 0; indID < num_threads; indID++) {
-					this->ind_threads.push_back(std::thread(evaluateSubGroup, indID, num_threads));
+				for (int indID = 0; indID < this->indThreadCount; indID++) {
+					this->myThreadPool_->pushJob(std::bind(evaluateSubGroup, indID));
 				}
-				Utility::rejoinClear(this->ind_threads);
+				this->myThreadPool_->wait();
 			}
 			else {
 				for (int indID = 0; indID < this->populationSize; indID++) {
 					// If skipping already evaluated toggled and this individual already has a fitness (not initial -1) then skip
 					if (this->skipEliteReevaluation == false || (this->skipEliteReevaluation == true && this->population[0]->getFitness(indID) == -1)) {
-						evaluateIndividual(indID); // Serial
+						this->runIndividual(indID); // Serial
 					}
 				}
 			}
-
 			individuals_end = this->timestamp->MicroS_SinceStart();
 
 			// record how long it took to evaluate individuals
 			if (this->logAllFiles || this->saveTimeVSFitness) {
 				this->timePerGenFile << this->curr_gen + 1 << "," << individuals_end - individuals_start << ",";
 			}
-
-			nextGen_start = this->timestamp->MicroS_SinceStart();
 			// Perform GA crossover/breeding to produce next generation
+			nextGen_start = this->timestamp->MicroS_SinceStart();
 			for (int popID = 0; popID < this->population.size(); popID++) {
-				// If multithreading enabled and more than one generation to work with, launch others as seperate threads
-				if (this->multithreadEnable == true && popID < this->population.size() - 1) {
-					this->ind_threads.push_back(std::thread([this](int popID) { this->population[popID]->nextGeneration(); }, popID)); // Parallel
-				}
-				else {
-					this->population[popID]->nextGeneration(); // Serial
-				}
+				this->population[popID]->nextGeneration();
 			}
-			Utility::rejoinClear(this->ind_threads);
 			nextGen_end = this->timestamp->MicroS_SinceStart();
 
 			// Record how long it took to generate next generation
@@ -113,7 +119,7 @@ bool GA_Optimization::runOptimization() {
 			}
 			if (this->displaySLMImage) {
 				for (int slmID = 0; slmID < this->popCount; slmID++) {
-					this->scalers[slmID]->TranslateImage(this->population[slmID]->getGenome(this->populationSize - 1)->data(), this->slmScaledImages[slmID]);
+					this->scalers[slmID]->TranslateImage(this->population[slmID]->getGenome(this->populationSize - 1), this->slmScaledImages[slmID]);
 					this->slmDisplayVector[slmID]->UpdateDisplay(this->slmScaledImages[slmID]);
 				}
 			}
@@ -129,21 +135,17 @@ bool GA_Optimization::runOptimization() {
 			if (this->curr_gen % 10 == 0) {
 				Utility::printLine("INFO: Finished generation #" + std::to_string(this->curr_gen) + " with a fitness of " + std::to_string(this->population[0]->getFitness(this->populationSize - 1)));
 			}
+			// Check stop conditions, only assign true if we reached the condition
+			this->stopConditionsMetFlag = stopConditionsReached((this->population[0]->getFitness(this->populationSize - 1)*this->cc->GetExposureRatio()), this->timestamp->S_SinceStart(), this->curr_gen + 1);
+
 			// Record the time it took to perform this generation, then update start to now (for getting duration next generation)
 			if (this->logAllFiles || this->saveTimeVSFitness) {
 				generation_end = this->timestamp->MicroS_SinceStart();
 				this->timePerGenFile << generation_end - generation_start << std::endl;
 			}
-
-			// Check stop conditions, only assign true if we reached the condition (race condition if done directly)
-			if (stopConditionsReached((this->population[0]->getFitness(this->populationSize - 1)*this->cc->GetExposureRatio()), this->timestamp->S_SinceStart(), this->curr_gen + 1) == true) {
-				std::unique_lock<std::mutex> stopLock(this->stopFlagMutex, std::defer_lock);
-				stopLock.lock();
-				this->stopConditionsMetFlag = true;
-				stopLock.unlock();
-			}
 		} // ... optimization loop
 
+		// Recording how long it took to do the entire optimization process
 		if (this->logAllFiles || this->saveTimeVSFitness) {
 			opt_end = this->timestamp->MicroS_SinceStart();
 			this->timePerGenFile << "\nOverall Time in Microseconds," << opt_end - opt_start << std::endl;
@@ -163,6 +165,9 @@ bool GA_Optimization::runOptimization() {
 	}
 
 	//Reset UI State
+	// Deallocate thread pool
+	delete this->myThreadPool_;
+
 	this->isWorking = false;
 	this->dlg->disableMainUI(!isWorking);
 	return true;
@@ -176,6 +181,7 @@ bool GA_Optimization::runOptimization() {
 //     shortenExposureFlag is set to true if fitness value is high enough
 //     stopConditionsMetFlag is set to true if conditions met
 bool GA_Optimization::runIndividual(int indID) {
+
 	ImageController * curImage = NULL;
 	// Setting up mutex locks
 	std::unique_lock<std::mutex> consoleLock(this->consoleMutex, std::defer_lock);
@@ -192,9 +198,12 @@ bool GA_Optimization::runIndividual(int indID) {
 
 	// Write translated image to SLM boards, assumes there are as many boards as populations (accessing optBoards)
 	scalerLock.lock(); // Scaler lock as the scaler is closely used with the slm
+	int * genome;
 	for (int i = 0; i < this->popCount; i++) {
 		// Scale the individual genome to fit SLMs
-		this->scalers[i]->TranslateImage(this->population[i]->getGenome(indID)->data(), this->slmScaledImages[i]); // Translate the vector genome into char array image
+		genome = this->population[i]->getGenome(indID);
+
+		this->scalers[i]->TranslateImage(genome, this->slmScaledImages[i]); // Translate the vector genome into char array image
 		// Write to SLM, getting the board position according to optBoards and correcting to 0 base
 		this->sc->writeImageToBoard(this->optBoards[i]->board_id, this->slmScaledImages[i]);
 	}
@@ -238,7 +247,7 @@ bool GA_Optimization::runIndividual(int indID) {
 			// Save SLM image(s)
 			scalerLock.lock();
 			for (int popID = 0; popID < this->popCount; popID++) {
-				scalers[popID]->TranslateImage(this->population[popID]->getGenome(this->population[popID]->getSize() - 1)->data(), this->slmScaledImages[popID]);
+				scalers[popID]->TranslateImage(this->population[popID]->getGenome(this->population[popID]->getSize() - 1), this->slmScaledImages[popID]);
 				cv::Mat m_ary = cv::Mat(this->sc->getBoardWidth(popID), this->sc->getBoardHeight(popID), CV_8UC1, this->slmScaledImages[popID]);
 				cv::imwrite(this->outputFolder + curTime + "_" + this->algorithm_name_ + "_Gen_" + std::to_string(this->curr_gen + 1) + "_Elite_SLM_" + std::to_string(this->optBoards[popID]->board_id) + ".bmp", m_ary);
 			}
@@ -247,6 +256,7 @@ bool GA_Optimization::runIndividual(int indID) {
 		// Also save the image as current best regardless
 		std::unique_lock<std::mutex> imageLock(this->imageMutex, std::defer_lock);
 		imageLock.lock();
+		delete this->bestImage;
 		this->bestImage = curImage;
 		imageLock.unlock();
 	}

@@ -61,7 +61,8 @@ void MainDialog::OnBnClickedLoadSettings() {
 			tryAgain = false;
 		}
 	} while (tryAgain);
-	this->m_outputControlDlg.OnBnClickedLogallFiles();
+	this->m_outputControlDlg.OnBnClickedLogallFiles(); // Enable/Disable the output parameters accordingly
+	this->OnBnClickedMultiThreadEnable(); // Enable/Disable the threading parameters accordingly
 }
 
 // Set the UI according to given file path, called from Load Settings
@@ -143,6 +144,10 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 		this->m_optimizationControlDlg.m_minGenerations.SetWindowTextW(valueStr);
 	else if (name == "maxGenerations")
 		this->m_optimizationControlDlg.m_maxGenerations.SetWindowTextW(valueStr);
+	else if (name == "evalIndividualsThreadCount")
+		this->m_optimizationControlDlg.m_indEvalThreadCount.SetWindowTextW(valueStr);
+	else if (name == "popGenThreadCount")
+		this->m_optimizationControlDlg.m_PopGenThreadCount.SetWindowTextW(valueStr);
 	else if (name == "skipEliteReeval") {
 		this->m_optimizationControlDlg.m_skipEliteReevaluation.SetCheck(valueStr == "true");
 	}
@@ -159,7 +164,7 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 	}
 	else if (name.substr(0, 14) == "slmLutFilePath") {
 		// We are dealing with LUT file setting
-		int boardID = std::stoi(name.substr(14, name.length()-14)) - 1;
+		int boardID = std::stoi(name.substr(14, name.length() - 14)) - 1;
 		if (this->slmCtrl != NULL) {
 			if (boardID < this->slmCtrl->boards.size() && boardID >= 0) {
 				// Resource for conversion https://stackoverflow.com/questions/258050/how-do-you-convert-cstring-and-stdstring-stdwstring-to-each-other
@@ -230,8 +235,8 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 				if (boardID == this->m_slmControlDlg.slmSelectionID_) {
 					CString settingPowerMsg;
 					if (power) { settingPowerMsg = "Turn power OFF"; }
-					else {       settingPowerMsg = "Turn power ON"; }
-					
+					else { settingPowerMsg = "Turn power ON"; }
+
 					this->m_slmControlDlg.m_SlmPwrButton.SetWindowTextW(settingPowerMsg);
 				}
 			}
@@ -383,11 +388,11 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 
 	// Camera Dialog settings
 	outFile << "# Camera Settings" << std::endl;
+	this->m_cameraControlDlg.m_initialExposureTimeInput.GetWindowTextW(tempBuff);
 	outFile << "initialExposureTime=" << _tstof(tempBuff) << std::endl;
-	this->m_cameraControlDlg.m_gammaValue.GetWindowTextW(tempBuff);
 	this->m_cameraControlDlg.m_FramesPerSecond.GetWindowTextW(tempBuff);
 	outFile << "framesPerSecond=" << _tstof(tempBuff) << std::endl;;
-	this->m_cameraControlDlg.m_initialExposureTimeInput.GetWindowTextW(tempBuff);
+	this->m_cameraControlDlg.m_gammaValue.GetWindowTextW(tempBuff);
 	outFile << "gamma=" << _tstof(tempBuff) << std::endl;
 	// AOI Dialog settings
 	outFile << "# AOI Settings" << std::endl;
@@ -419,8 +424,12 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	this->m_optimizationControlDlg.m_maxGenerations.GetWindowTextW(tempBuff);
 	outFile << "maxGenerations=" << _tstof(tempBuff) << std::endl;
 	outFile << "skipEliteReeval=";
-	if (this->m_optimizationControlDlg.m_skipEliteReevaluation.GetCheck() == BST_CHECKED) {	outFile << "true" << std::endl;	}
-	else {	outFile << "false" << std::endl; }
+	if (this->m_optimizationControlDlg.m_skipEliteReevaluation.GetCheck() == BST_CHECKED) { outFile << "true" << std::endl; }
+	else { outFile << "false" << std::endl; }
+	this->m_optimizationControlDlg.m_indEvalThreadCount.GetWindowTextW(tempBuff);
+	outFile << "evalIndividualsThreadCount=" << _tstof(tempBuff) << std::endl;
+	this->m_optimizationControlDlg.m_PopGenThreadCount.GetWindowTextW(tempBuff);
+	outFile << "popGenThreadCount=" << _tstof(tempBuff) << std::endl;
 
 	// SLM Dialog settings
 	outFile << "# SLM Configuration Settings" << std::endl;
@@ -441,7 +450,7 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 		}
 	}
 	outFile << "SLMselectAll=";
-	if (this->m_slmControlDlg.SLM_SetALLSame_.GetCheck() == BST_CHECKED) {outFile << "true" << std::endl;}
+	if (this->m_slmControlDlg.SLM_SetALLSame_.GetCheck() == BST_CHECKED) { outFile << "true" << std::endl; }
 	else { outFile << "false" << std::endl; }
 
 	// Output Dialog
@@ -449,7 +458,7 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	outFile << "displayCamera=";
 	if (this->m_outputControlDlg.m_displayCameraCheck.GetCheck() == BST_CHECKED) { outFile << "true\n"; }
 	else { outFile << "false\n"; }
-	
+
 	outFile << "displaySLM=";
 	if (this->m_outputControlDlg.m_displaySLM.GetCheck() == BST_CHECKED) { outFile << "true\n"; }
 	else { outFile << "false\n"; }
@@ -457,7 +466,7 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	this->m_outputControlDlg.m_OutputLocationField.GetWindowTextW(tempBuff);
 	std::string buffStr = CT2A(tempBuff);
 	outFile << "outputFolder=" << buffStr << std::endl;
-	
+
 	outFile << "logAllFilesEnable=";
 	if (this->m_outputControlDlg.m_logAllFilesCheck.GetCheck() == BST_CHECKED) { outFile << "true\n"; }
 	else { outFile << "false\n"; }
@@ -477,7 +486,7 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	outFile << "saveExposureShortening=";
 	if (this->m_outputControlDlg.m_SaveExposureShortCheck.GetCheck() == BST_CHECKED) { outFile << "true\n"; }
 	else { outFile << "false\n"; }
-	
+
 	outFile << "saveEliteImage=";
 	if (this->m_outputControlDlg.m_SaveEliteImagesCheck.GetCheck() == BST_CHECKED) { outFile << "true\n"; }
 	else { outFile << "false\n"; }

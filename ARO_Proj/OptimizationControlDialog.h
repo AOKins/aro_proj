@@ -20,7 +20,7 @@ public:
 	// Tool tips to help inform the user about a control
 	CToolTipCtrl * m_mainToolTips;
 
-// Dialog Data
+	// Dialog Data
 	enum { IDD = IDD_OPTIMIZATION_CONTROL };
 
 protected:
@@ -36,10 +36,14 @@ public:
 	CEdit m_binSize;
 	CEdit m_numberBins;
 	CEdit m_targetRadius;
-		// GUI input for maximum number of generations, set to 0 for indefinite
+	// GUI input for maximum number of generations, set to 0 for indefinite
 	CEdit m_maxGenerations;
-		// The maximum amount of time (in seconds) to run the optimization algorithm, set to 0 for indefinite time
+	// The maximum amount of time (in seconds) to run the optimization algorithm, set to 0 for indefinite time
 	CEdit m_maxSeconds;
-		// If toggled, will skip the elite individuals that were copied over
+	// If toggled, will skip the elite individuals that were copied over
 	CButton m_skipEliteReevaluation;
+	// The number of threads to use when evaluating individuals in GA
+	CEdit m_indEvalThreadCount;
+	// The number of threads to use for generating pools
+	CEdit m_PopGenThreadCount;
 };

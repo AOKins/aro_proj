@@ -7,19 +7,15 @@
 #ifndef INDIVIDUAL_H_
 #define INDIVIDUAL_H_
 
-#include <vector>
-
 template <class T>
-class Individual {
-private:
-	// The genome associated with the individual.
-	std::vector<T>* genome_;
+struct Individual {
+	// The genome associated with the individual (pointer array, size given by population).
+	T * genome_;
 
 	// The fitness of the individual, this must be assigned with set_fitness
 	// default value is -1 (an impossible real fitness value, so used to identify non-evualeted)
 	double fitness_;
 
-public:
 	// Constructor, genome is initially null and fitness -1
 	Individual() {
 		this->genome_ = NULL;
@@ -29,26 +25,26 @@ public:
 	// Destructor
 	~Individual() {
 		if (this->genome_ != NULL) {
-			delete this->genome_;
+			delete[] this->genome_;
 		}
 	}
 
 	// Returns the array(genome) associated with the individual.
-	const std::vector<T>* genome() {
+	T * genome() const {
 		return this->genome_;
 	}
 
 	// Returns the fitness associated with the individual.
-	const double fitness() {
+	const double fitness() const {
 		return this->fitness_;
 	}
 
 	// Sets the genome to be associated with the individual.
 	// Input: new_genome - genome to be set to this individual
 	// Output: new_genome is assigned, old genome is deleted
-	void set_genome(const std::vector<T> * new_genome) {
+	void set_genome(T * new_genome) {
 		if (this->genome_ != NULL) {
-			delete this->genome_;
+			delete[] this->genome_;
 		}
 		this->genome_ = new_genome;
 	}
@@ -60,33 +56,25 @@ public:
 		this->fitness_ = fitness;
 	}
 
-	// Overloaded = operator to perform deep copy of genome data
-	template <typename T>
-	Individual<T>& operator=(const Individual<T> &from) {
-		// If they are the same
-		if (this == &from){
-			return *this;
-		}
-		// Copy fitness
-		this->set_fitness(from.fitness());
-		// Deep Copy genome
-			// Create temp to hold copy of equal size
-		std::vector<T> * temp_genome = new std::vector<T>(from.genome_()->size(), 0);
-			// Iterate through to copy each value
-		for (int i = 0; i < from.genome_()->size(); i++) {
-			(*temp_genome)[i] = (*from.genome())[i];
-		}
-			// Set resulting deep copy
-		this->set_genome(temp_genome);
-
-		return *this;
-	}
 }; // ... class Individual
 
 // Comparative operator
 template <typename T>
-bool operator<(const Individual<T> &a, const Individual<T> &b) {
+bool operator<(Individual<T> &a, Individual<T> &b) {
 	return a.fitness() < b.fitness();
+}
+
+// Perform a swap of individuals (their pointers are swapped, not a deep copy)
+template <typename T>
+void swapIndividuals(Individual<T> &a, Individual<T> & b) {
+	// Swap fitness
+	double temp_fit = a.fitness();
+	a.set_fitness(b.fitness());
+	b.set_fitness(temp_fit);
+
+	T * temp_ptr = a.genome();
+	a.genome_ = b.genome();
+	b.genome_ = temp_ptr;
 }
 
 #endif

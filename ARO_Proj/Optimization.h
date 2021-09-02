@@ -26,6 +26,7 @@ protected:
 	MainDialog* dlg;		// The GUI to draw the desired settings from
 	CameraController* cc;	// Interface with camera hardware
 	SLMController* sc;		// Interface with SLM hardware
+
 	//Base algorithm parameters
 	double acceptedSimilarity = .97;  // images considered the same when reach this threshold (has to be less than 1)
 	double maxFitnessValue    = 200;  // max allowed fitness value - when reached exposure is halved (TODO: check this feature)

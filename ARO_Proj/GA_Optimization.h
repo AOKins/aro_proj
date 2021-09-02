@@ -7,6 +7,8 @@
 #include "Optimization.h"
 #include "Population.h"
 
+#include "ThreadPool.h"
+
 #ifndef GA_OPTIMIZATION_H_
 #define GA_OPTIMIZATION_H_
 
@@ -14,23 +16,23 @@ class GA_Optimization : public Optimization {
 protected:
 	// Vector to hold genetic algorithm's populations
 	std::vector<Population<int>*> population;
+	threadPool * myThreadPool_;
 
-	int populationSize;			// Size of the populations being used (number of individuals in a population class)
-	int popCount;				// Number of populations working with (should be equal to number of boards being optimized)
-	int eliteSize;				// Number of elite individuals within the population (should be less than populationSize)
-	int curr_gen;				// Current generation being evaluated (start at 0)
+	int populationSize;	// Size of the populations being used (number of individuals in a population class)
+	int popCount;		// Number of populations working with (should be equal to number of boards being optimized)
+	int eliteSize;		// Number of elite individuals within the population (should be less than populationSize)
+	int curr_gen;		// Current generation being evaluated (start at 0)
+	int indThreadCount;	// Number of threads to use when evaluating individuals
+	int gaPoolThreadCount;	// Number of threads to use when generating the next generation
 
 	// GA specific output file stream
 	std::ofstream timePerGenFile;		// Record time it took to perform each generation during optimization
-
-	// Vector hold threads of running individuals
-	std::vector<std::thread> ind_threads;
 
 	// Mutexes to protect critical sections when multithreading
 	std::mutex hardwareMutex;						// Mutex to protect critical section of accessing SLM and Camera data
 	std::mutex consoleMutex, imageMutex;			// Mutex to protect console output and bestImage values
 	std::mutex tfileMutex, timeVsFitMutex;			// Mutex to protect file i/o
-	std::mutex stopFlagMutex, exposureFlagMutex;	// Mutex to protect important flags 
+	std::mutex exposureFlagMutex;					// Mutex to protect important flag(s)
 	std::mutex slmScalersMutex; // Mutex to protect the usage of the the SLM scalers (which are used in both for hardware and in image output)
 
 	// Method for handling the execution of an individual
@@ -47,9 +49,8 @@ protected:
 public:
 	// Constructor - inherits from base class
 	GA_Optimization(MainDialog* dlg, CameraController* cc, SLMController* sc) : Optimization(dlg, cc, sc) {
-		this->ind_threads.clear();
 	};
-	
+
 	// Run genetic algorithm (used by both SGA and uGA)
 	bool runOptimization();
 };

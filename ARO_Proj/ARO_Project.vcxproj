@@ -291,6 +291,7 @@
     <ClInclude Include="ImageControllerPICam.h" />
     <ClInclude Include="ImageControllerSpinnaker.h" />
     <ClInclude Include="OutputControlDialog.h" />
+    <ClInclude Include="ThreadPool.h" />
     <ClInclude Include="uGA_Population.h" />
     <ClInclude Include="ImageScaler.h" />
     <ClInclude Include="MainDialog.h" />

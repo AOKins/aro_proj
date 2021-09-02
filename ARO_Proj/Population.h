@@ -1,16 +1,15 @@
 ////////////////////
 // Population.h - base class to encapsulate a population in a genetic algorithm and some of the micro-genetic behaviors
-// Last edited: 06/14/2021 by Andrew O'Kins
+// Last edited: 08/24/2021 by Andrew O'Kins
 ////////////////////
 #ifndef POPULATION_H_
 #define POPULATION_H_
 
 #include "Individual.h"
 #include "BetterRandom.h"	// Randomizer in generateRandomImage() & Crossover()
-#include "Utility.h"		// For printLine() & rejoinClear()
+#include "Utility.h"		// For printLine() & rejoinClear() & generateRandomImage()
 
-#include <thread>			// For ind_threads and multithreaded behavior
-#include <vector>
+#include "threadPool.h"
 
 template <class T>
 class Population {
@@ -27,10 +26,16 @@ protected:
 	int genome_length_;
 	// bool to track if multithreading is enabled or not
 	bool multiThread_;
-	// vector for managing the multithreads for individuals used in genetic algorithm
-	std::vector<std::thread> ind_threads;
+
+	// How many threads this population can use
+	int threadCount_;
+
+	// Pointer to thread pool to give jobs for
+	threadPool * myThreadPool_;
+
 	// Array to store results of crossovers to determine if a refresh is needed
 	bool * same_check;
+
 public:
 	// Constructor
 	// Input:
@@ -39,47 +44,46 @@ public:
 	//	elite_size:			 the number of individuals for the population that are kept as elite
 	//	accepted_similarity: precentage of similarity to be counted as same between individuals (default 90%)
 	//  multiThread:		 enable usage of multithreading (default true)
-	Population(int genome_length, int population_size, int elite_size, double accepted_similarity = .9, bool multiThread = true){
+	// _threadCount:		 when multithread is enabled, defines how many threads this population will use
+	//  myThreadPool:		 set the thread pool to be used when multithreading enabled
+	Population(int genome_length, int population_size, int elite_size, double accepted_similarity = .9, bool multiThread = true, int _threadCount = std::thread::hardware_concurrency(), threadPool * myThreadPool = NULL){
 		this->genome_length_ = genome_length;
 		this->accepted_similarity_ = accepted_similarity;
 		this->pop_size_ = population_size;
 		this->elite_size_ = elite_size;
 		this->multiThread_ = multiThread;
-		// Clearing just in case there's something there beforehand
-		this->ind_threads.clear();
+		this->threadCount_ = _threadCount;
+		this->myThreadPool_ = myThreadPool;
+
 		// Check to see if elite size exceeds the population size, currently just gives warning
 		if (this->elite_size_ > this->pop_size_) {
 			Utility::printLine("WARNING: Elite size (" + std::to_string(this->elite_size_) + ") of population exceeding population size (" + std::to_string(this->pop_size_) + ")!");
+		}
+		if (this->multiThread_ == true && this->myThreadPool_ == NULL) {
+			Utility::printLine("ERROR: No thread pool set for population!");
 		}
 
 		this->individuals_ = new Individual<T>[this->pop_size_];
 		this->same_check = new bool[this->pop_size_ - this->elite_size_];
 
-		// initialize images for each individual
-		// Lambda function to ensure that generating random image is done in parallel to speed up process
-		// Input: id - index for individual to be set
-		// Captures
-		//		individuals_ - pointer to array of individuals to store new random genomes in
-		auto randInd = [this](int id) {
-			this->individuals_[id].set_genome(this->GenerateRandomImage());
-		};
-
 		// Using multithreads for initializing each individual
-		for (int i = 0; i < this->pop_size_; i++){
-			if (this->multiThread_)
-				this->ind_threads.push_back(std::thread(randInd, i));
-			else
-				randInd(i);
+		for (int i = 0; i < this->pop_size_; i++) {
+			this->individuals_[i].set_genome(Utility::generateRandomImage<T>(this->genome_length_));
 		}
-		Utility::rejoinClear(this->ind_threads);
 		Utility::printLine("INFO: Population created!");
 	}
 
 	//Destructor - delete individuals and call rejoinClear() to clear ind_threads
 	~Population() {
-		Utility::rejoinClear(this->ind_threads);
 		delete[] this->individuals_;
 		delete[] this->same_check;
+	}
+
+	Individual<T> * getIndividual(int i) {
+		if (i < 0 || i > this->getSize()) {
+			return NULL;
+		}
+		return &this->individuals_[i];
 	}
 
 	// Get number of individuals in population
@@ -92,21 +96,10 @@ public:
 		return this->elite_size_;
 	}
 
-	// Generates a random image using BetterRandom
-	// Output: a randomly generated image that has size of genome_length for Population with each value being from 0 to 255
-	std::vector<T>* GenerateRandomImage() const {
-		static BetterRandom ran(256);
-		std::vector<T> * image = new std::vector<T>(this->genome_length_, 0);
-		for (int j = 0; j < this->genome_length_; j++) {
-			(*image)[j] = (T)ran();
-		} // ... for each pixel in image
-		return image;
-	}
-
 	// Getter for image of individual at inputted index
 	// Input: i - individual at given index (population not guranteed sorted)
 	// Output: the image for the individual
-	std::vector<T>* getGenome(int i) const {
+	T * getGenome(int i) const {
 		return this->individuals_[i].genome();
 	}
 
@@ -115,47 +108,53 @@ public:
 	//	i - individual at given index (population not guranteed sorted)
 	//	fitness - the fitness value to set to individual
 	// Output: individual at index i has its set_fitness() called with fitness as input
-	void setFitness(int i, double fitness) {
+	void setFitness(const int i, double fitness) {
 		this->individuals_[i].set_fitness(fitness);
 	}
 
 	// Gett for fitness of an individual in the population
 	// Input:
 	//	i - individual at index i (population not guranteed sorted)
-	double getFitness(int i) const {
+	const double getFitness(int i) const {
 		return this->individuals_[i].fitness();
 	}
 
-	// Crosses over information between individuals.
+	// Crosses over information between individual genomes
 	// Input:
 	//	a - First individual to be crossed over.
 	//	b - Second individual to be crossed over.
 	//	same_check - boolean will be set to false if the arrays are different.
 	//  useMutation - boolean set if to perform mutation or not, defaults to true (enable).
-	// Output: returns new individual as result of crossover algorithm
-	std::vector<T> * Crossover(const std::vector<T> * a, const std::vector<T> * b, bool& same_check, bool useMutation = true) const {
-		std::vector<T> * temp = new std::vector<T>(this->genome_length_, 0);
+	// Output: returns new genome as result of crossover algorithm
+	T * Crossover(const T * a, const  T * b, bool& same_check, const bool useMutation = true) const {
+		T * temp = new T[this->genome_length_];
 		double same_counter = 0; // counter keeping track of how many indices in the genomes are the same
-		static BetterRandom ran(100);
-		static BetterRandom mut(200);
-		static BetterRandom mutatedValue(256);
-
+		BetterRandom ran(100);
+		BetterRandom mut(200);
+		BetterRandom mutatedValue(256);
+		// Variabales to hold results for easier readiblity or possible adjustments
+		bool choice, mutate;
+		T mutateVal;
 		// For each index in the genome
 		for (int i = 0; i < this->genome_length_; i++) {
+			choice = ran() < 50;
+			mutate = mut() == 0;
+			mutateVal = T(mutatedValue());
+
 			// 50% chance of coming from either parent
-			if (ran() < 50) {
-				(*temp)[i] = (*a)[i];
+			if (choice) {
+				temp[i] = a[i];
 			}
 			else {
-				(*temp)[i] = (*b)[i];
+				temp[i] = b[i];
 			}
 			// if the values at an index are the same, increment the same counter
-			if ((*a)[i] == (*b)[i])	{
+			if (a[i] == b[i])	{
 				same_counter += 1;
 			}
 			// mutation occuring if useMutation and at 0.05% chance
-			if (mut() == 0 && useMutation)	{
-				(*temp)[i] = (T)mutatedValue();
+			if (mutate && useMutation)	{
+				temp[i] = (T)mutateVal;
 			}
 		} // ... End image creation
 
@@ -164,47 +163,30 @@ public:
 		if (same_counter < this->accepted_similarity_) {
 			same_check = false;
 		}
-		else {
-			same_check = true;
-		}
 		return temp;
 	}
 
 	// Sorts an array of individuals
-	//		Currently (August 13 2021) this is using insertion sort and overloaded = operator
+	//		Currently (August 31 2021) this is using selection sort and shallow copies (the pointers get swapped, not the "actual" genome data)
 	// Input:
 	//	to_sort - the individuals to be sorted
 	//	size - the size of the array to_sort
-	// Output: returns sorted pointer array of individuals originating from to_sort
-	Individual<T>* SortIndividuals(Individual<T>* to_sort, int size) {
-		bool found = false;
-		Individual<T> * temp = new Individual<T>[size];
-		DeepCopyIndividual(temp[0], to_sort[0]);
-		for (int i = 1; i < size; i++) {
-			for (int j = 0; j < i; j++)	{
-				if (to_sort[i].fitness() < temp[j].fitness()) {
-					found = true;
-					// insert individual
-					Individual<T> holder1;
-					DeepCopyIndividual(holder1, to_sort[i]);
-					Individual<T> holder2;
-					for (int k = j; k < i; k++)	{
-						DeepCopyIndividual(holder2, temp[k]);
-						DeepCopyIndividual(temp[k], holder1);
-						DeepCopyIndividual(holder1, holder2);
-					}
-					DeepCopyIndividual(temp[i], holder1);
-					break;
+	// Output: the to_sort pointer now points to array of individuals that are sorted
+	void SortIndividuals(Individual<T> * to_sort, int size) {
+		int smallest_index = 0;
+
+		for (int i = 0; i < size - 1; i++) {
+			smallest_index = i;
+
+			for (int j = i + 1; j < size; j++)	{
+				if (to_sort[j].fitness() < to_sort[smallest_index].fitness()) {
+					smallest_index = j;
 				}
 			}
-			if (!found) {
-				DeepCopyIndividual(temp[i], to_sort[i]);
-			}
-			else {
-				found = false;
+			if (smallest_index != i) {
+				swapIndividuals(to_sort[i], to_sort[smallest_index]);
 			}
 		}
-		return temp;
 	}
 
 	// Deep copies the genome & resulting image from one individual to another
@@ -214,10 +196,10 @@ public:
 	// Output: to is contains deep copy of from
 	void DeepCopyIndividual(Individual<T> & to, Individual<T> & from) const {
 		to.set_fitness(from.fitness());
-		std::vector<T> * temp_genome1 = new std::vector<T>(this->genome_length_, 0);
-		std::vector<T> * temp_genome2 = from.genome();
+		T * temp_genome1 = new T[this->genome_length_];
+		T * temp_genome2 = from.genome();
 		for (int i = 0; i < this->genome_length_; i++) {
-			(*temp_genome1)[i] = (*temp_genome2)[i];
+			temp_genome1[i] = temp_genome2[i];
 		}
 		to.set_genome(temp_genome1);
 	}

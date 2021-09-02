@@ -1,6 +1,6 @@
 ////////////////////
 // Utility.h - Define various methods for accessible & repeatable use in a Utility namespace
-// Last edited: 08/11/2021 by Andrew O'Kins
+// Last edited: 09/02/2021 by Andrew O'Kins
 ////////////////////
 
 #ifndef UTILITY_H_
@@ -8,14 +8,13 @@
 
 #include <string>	// output format of getCurDateTime and getCurLocalTime
 #include <vector>	// for seperateByDelim and rejoinClear
-#include <thread>	// for rejoinClear
 
 // Utility namespace to encapsulate the various isolated methods that aren't associated with a particular class
 namespace Utility {
 	// [CONSOLE FEATURES]
 	// On a new line print a message formatted as <[LOCAL TIME]> - [MESSAGE]
 	// if isDebug and this is release build, message ignored
-	const void printLine(const std::string msg = "", bool isDebug = false);
+	const void printLine(std::string msg = "", bool isDebug = false);
 
 	// [TIMING FEATURES]
 	// Return a string of formatted time label with current local date and time
@@ -33,6 +32,19 @@ namespace Utility {
 	// Output: The average intensity within the calculated area
 	const double FindAverageValue(const void *image, const int width, const int height, const int r);
 
+	// Generates a random image using BetterRandom
+	// Input: size - size of the image to make
+	// Output: a randomly generated image with given size and each value being from 0 to 255
+	template <typename T>
+	T* generateRandomImage(int size) {
+		static BetterRandom ran(256);
+		int * image = new T[size];
+		for (int j = 0; j < size; j++) {
+			image[j] = (T)ran();
+		} // ... for each pixel in image
+		return image;
+	}
+
 	// [STRING PROCCESSING]
 	// Separate a string into a vector array, breaks in given character
 	// Input: fullString - string to seperate into parts
@@ -40,12 +52,6 @@ namespace Utility {
 	// Output: a vector of strings that are substrings of the inputted string broken up by the delim input
 	std::vector<std::string> seperateByDelim(std::string fullString, char delim);
 
-	// [MULTITHREADING]
-	// Method to rejoin all the threads in given vector and clean up vector
-	// WARNING: If a thread is indefinitely running (such as running in an infinite loop), this will lock up
-	// Input: myThreads - vector to threads that need to be rejoined
-	// Output: threads is myThreads are rejoined and vector is cleared
-	void rejoinClear(std::vector<std::thread>& myThreads);
 };
 
 #endif
