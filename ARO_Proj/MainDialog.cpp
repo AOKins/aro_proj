@@ -81,7 +81,7 @@ BOOL MainDialog::OnInitDialog() {
 	}
 	freopen_s(&fp, "CONOUT$", "w", stdout);
 	std::cout.clear();
-	
+
 	//[UI SETUP]
 	CDialog::OnInitDialog();
 	SetIcon(m_hIcon, TRUE);
@@ -90,7 +90,7 @@ BOOL MainDialog::OnInitDialog() {
 	//1) https://stackoverflow.com/questions/1044315/setwindowpos-function-not-moving-window
 	//2) https://www.youtube.com/watch?v=WHPNzx4E5rM
 	// - set tab headings
-	LPCTSTR headings[] = {L"Optimization Settings", L"SLM Settings", L"Camera Settings", L"AOI Settings",L"Output Settings"};
+	LPCTSTR headings[] = { L"Optimization Settings", L"SLM Settings", L"Camera Settings", L"AOI Settings", L"Output Settings" };
 	for (int i = 0; i < 5; i++) {
 		m_TabControl.InsertItem(i, headings[i]);
 	}
@@ -103,7 +103,7 @@ BOOL MainDialog::OnInitDialog() {
 
 	m_slmControlDlg.Create(IDD_SLM_CONTROL, &m_TabControl);
 	m_slmControlDlg.SetWindowPos(NULL, rect.top + 5, rect.left + 30, rect.Width() - 10, rect.Height() - 35, SWP_HIDEWINDOW | SWP_NOZORDER);
-	
+
 	m_cameraControlDlg.Create(IDD_CAMERA_CONTROL, &m_TabControl);
 	m_cameraControlDlg.SetWindowPos(NULL, rect.top + 5, rect.left + 30, rect.Width() - 10, rect.Height() - 35, SWP_HIDEWINDOW | SWP_NOZORDER);
 
@@ -116,7 +116,7 @@ BOOL MainDialog::OnInitDialog() {
 	// Setup the tool tip controller for main dialog
 	this->m_mainToolTips = new CToolTipCtrl();
 	this->m_mainToolTips->Create(this);
-	
+
 	this->m_mainToolTips->AddTool(GetDlgItem(IDC_SAVE_SETTINGS), L"Save current configurations to a file");
 	this->m_mainToolTips->AddTool(GetDlgItem(IDC_LOAD_SETTINGS), L"Load a pre-made configuration from a file");
 	this->m_mainToolTips->AddTool(GetDlgItem(IDC_MULTITHREAD_ENABLE), L"Enable the usage of multithreading to perform the GAs faster");
@@ -139,8 +139,8 @@ BOOL MainDialog::OnInitDialog() {
 	// Give a warning message if no boards have been detected
 	if (this->slmCtrl != nullptr && this->slmCtrl->numBoards < 1) {
 		MessageBox((LPCWSTR)L"No SLM has been detected to be connected!",
-				(LPCWSTR)L"No SLM detected!",
-				MB_ICONWARNING | MB_OK);
+			(LPCWSTR)L"No SLM detected!",
+			MB_ICONWARNING | MB_OK);
 	}
 	//Show the default tab (optimizations settings)
 	m_pwndShow = &m_optimizationControlDlg;
@@ -180,6 +180,11 @@ void MainDialog::setDefaultUI() {
 	this->m_optimizationControlDlg.m_minGenerations.SetWindowTextW(_T("0"));
 	this->m_optimizationControlDlg.m_maxGenerations.SetWindowTextW(_T("3000")); // 0 or less indicates indefinite
 
+	// Setting default values to be dependent on hardware
+	CString hardwareThreads = CString(std::to_string(std::thread::hardware_concurrency()).c_str());
+	this->m_optimizationControlDlg.m_indEvalThreadCount.SetWindowTextW(hardwareThreads);
+	this->m_optimizationControlDlg.m_PopGenThreadCount.SetWindowTextW(hardwareThreads);
+
 	this->m_aoiControlDlg.m_leftInput.SetWindowTextW(_T("896"));
 	this->m_aoiControlDlg.m_rightInput.SetWindowTextW(_T("568"));
 	this->m_aoiControlDlg.m_widthInput.SetWindowTextW(_T("64"));
@@ -190,15 +195,15 @@ void MainDialog::setDefaultUI() {
 	this->m_slmControlDlg.OnCbnSelchangeSlmSelect();
 
 	// Output controls
-		// Default to saving images
+	// Default to saving images
 	this->m_outputControlDlg.m_logAllFilesCheck.SetCheck(BST_CHECKED);
-		// Default to displaying camera
+	// Default to displaying camera
 	this->m_outputControlDlg.m_displayCameraCheck.SetCheck(BST_CHECKED);
-		// Default to not displaying SLM
+	// Default to not displaying SLM
 	this->m_outputControlDlg.m_displaySLM.SetCheck(BST_CHECKED);
 	this->m_outputControlDlg.m_OutputLocationField.SetWindowTextW(_T(".\\logs\\"));
 	this->m_outputControlDlg.m_eliteSaveFreq.SetWindowTextW(_T("10"));
-		// Calling methods to disable/enable appropriate fields
+	// Calling methods to disable/enable appropriate fields
 	this->m_outputControlDlg.OnBnClickedLogallFiles();
 	this->m_outputControlDlg.OnBnClickedSaveEliteimage();
 }
@@ -375,28 +380,28 @@ void MainDialog::OnTcnSelchangeTab1(NMHDR *pNMHDR, LRESULT *pResult) {
 	}
 	int tabIndex = m_TabControl.GetCurSel();
 	switch (tabIndex) {
-		case 0:
-			m_optimizationControlDlg.ShowWindow(SW_SHOW);
-			m_pwndShow = &m_optimizationControlDlg;
-			break;
-		case 1:
-			m_slmControlDlg.ShowWindow(SW_SHOW);
-			m_pwndShow = &m_slmControlDlg;
-			break;
-		case 2:
-			m_cameraControlDlg.ShowWindow(SW_SHOW);
-			m_pwndShow = &m_cameraControlDlg;
-			break;
-		case 3:
-			m_aoiControlDlg.ShowWindow(SW_SHOW);
-			m_pwndShow = &m_aoiControlDlg;
-			break;
-		case 4:
-			m_outputControlDlg.ShowWindow(SW_SHOW);
-			m_pwndShow = &m_outputControlDlg;
-			break;
-		default:
-			Utility::printLine("WARNING: Requested to show a tab that shouldn't exist!");
+	case 0:
+		m_optimizationControlDlg.ShowWindow(SW_SHOW);
+		m_pwndShow = &m_optimizationControlDlg;
+		break;
+	case 1:
+		m_slmControlDlg.ShowWindow(SW_SHOW);
+		m_pwndShow = &m_slmControlDlg;
+		break;
+	case 2:
+		m_cameraControlDlg.ShowWindow(SW_SHOW);
+		m_pwndShow = &m_cameraControlDlg;
+		break;
+	case 3:
+		m_aoiControlDlg.ShowWindow(SW_SHOW);
+		m_pwndShow = &m_aoiControlDlg;
+		break;
+	case 4:
+		m_outputControlDlg.ShowWindow(SW_SHOW);
+		m_pwndShow = &m_outputControlDlg;
+		break;
+	default:
+		Utility::printLine("WARNING: Requested to show a tab that shouldn't exist!");
 	}
 	*pResult = 0;
 }
@@ -432,7 +437,7 @@ void MainDialog::OnBnClickedStartStopButton() {
 			MessageBox(
 				(LPCWSTR)L"No SLM has been detected to be optimize! Cancelling start of optimization.",
 				(LPCWSTR)L"No SLM detected!",
-				MB_ICONERROR| MB_OK);
+				MB_ICONERROR | MB_OK);
 			return;
 		}
 		else if (!this->slmCtrl->optimizeAny()) {
@@ -446,7 +451,7 @@ void MainDialog::OnBnClickedStartStopButton() {
 		// Give an error message if no camera
 		if (!this->camCtrl->hasCameras()) {
 			MessageBox(
-				(LPCWSTR)L"No camera has been detected to possibly use! Cancelling action.", 
+				(LPCWSTR)L"No camera has been detected to possibly use! Cancelling action.",
 				(LPCWSTR)L"No camera detected!",
 				MB_ICONERROR | MB_OK);
 			return;
@@ -501,13 +506,16 @@ UINT __cdecl optThreadMethod(LPVOID instance) {
 	return 0;
 }
 
-void MainDialog::OnBnClickedMultiThreadEnable(){
-	if (m_MultiThreadEnable.GetCheck() == BST_CHECKED) {
+void MainDialog::OnBnClickedMultiThreadEnable() {
+	bool thread_enabled = m_MultiThreadEnable.GetCheck() == BST_CHECKED;
+	if (thread_enabled) {
 		Utility::printLine("INFO: Multithreading enabled!");
 	}
 	else {
 		Utility::printLine("INFO: Multithreading disabled!");
 	}
+	this->m_optimizationControlDlg.m_indEvalThreadCount.EnableWindow(thread_enabled);
+	this->m_optimizationControlDlg.m_PopGenThreadCount.EnableWindow(thread_enabled);
 }
 
 // Display About Window as popup from button press
