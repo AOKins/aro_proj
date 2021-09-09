@@ -7,7 +7,7 @@
 #include "Optimization.h"
 #include "Population.h"
 
-#include "ThreadPool.h"
+#include "threadPool.h"
 
 #ifndef GA_OPTIMIZATION_H_
 #define GA_OPTIMIZATION_H_

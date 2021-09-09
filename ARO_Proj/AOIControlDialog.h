@@ -24,7 +24,7 @@ public:
 	// Tool tips to help inform the user about a control
 	CToolTipCtrl * m_mainToolTips;
 
-// Dialog Data
+	// Dialog Data
 	enum { IDD = IDD_AOI_CONTROL };
 
 protected:
@@ -34,21 +34,21 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	// User Input Components //
-		// AOI horizontal offset
+	// AOI horizontal offset
 	CEdit m_leftInput;
-		// AOI vertical offset
+	// AOI vertical offset
 	CEdit m_rightInput;
-		// AOI width
+	// AOI width
 	CEdit m_widthInput;
-		// AOI height
+	// AOI height
 	CEdit m_heightInput;
-		// Button to set max image AOI
+	// Button to set max image AOI
 	CButton m_maxImageSizeBtn;
-		// Button to center the AOI within the camera's full image
+	// Button to center the AOI within the camera's full image
 	CButton m_centerAOIBtn;
 
 	void SetCameraController(CameraController* cc);
-	
+
 	// Set the AOI fields
 	// Input: x - the horizontal offset in pixels
 	//		  y - the vertical offset in pixels

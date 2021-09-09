@@ -29,8 +29,8 @@ protected:
 
 	//Base algorithm parameters
 	double acceptedSimilarity = .97;  // images considered the same when reach this threshold (has to be less than 1)
-	double maxFitnessValue    = 200;  // max allowed fitness value - when reached exposure is halved (TODO: check this feature)
-	double maxGenenerations   = 3000; // max number of generations to perform
+	double maxFitnessValue = 200;  // max allowed fitness value - when reached exposure is halved (TODO: check this feature)
+	double maxGenenerations = 3000; // max number of generations to perform
 
 	//Base algorithm stop conditions
 	double fitnessToStop = 0;
@@ -39,16 +39,16 @@ protected:
 	double genEvalToStop = 0; // minimum number of generations to do
 
 	//Preference-type parameters
-	bool displayCamImage	= true;  // TRUE -> opens a window showing the camera image
-	bool displaySLMImage	= false; // TURE -> opens window showing best for currently being optimized SLM
-	bool logAllFiles		= true;	 // TRUE -> output all logging files to record performance
-	bool saveEliteImages	= false; // TRUE -> save images of the fittest individual of each gen
+	bool displayCamImage = true;  // TRUE -> opens a window showing the camera image
+	bool displaySLMImage = false; // TURE -> opens window showing best for currently being optimized SLM
+	bool logAllFiles = true;	 // TRUE -> output all logging files to record performance
+	bool saveEliteImages = false; // TRUE -> save images of the fittest individual of each gen
 	int  saveEliteFrequency = 10;	 // How often per generation to save elite images if enabled
-	bool saveResultImages   = true;	 // TRUE -> Will save results
+	bool saveResultImages = true;	 // TRUE -> Will save results
 	bool saveParametersPref = true;  // TRUE -> Output parameters used
-	bool saveTimeVSFitness  = true;	 // TRUE -> Output timing performance
+	bool saveTimeVSFitness = true;	 // TRUE -> Output timing performance
 	bool saveExposureShorten = true; // TRUE -> Output when exposure is shortened
-	bool multithreadEnable  = true;  // TRUE -> use multithreading
+	bool multithreadEnable = true;  // TRUE -> use multithreading
 	bool skipEliteReevaluation = false; // TRUE -> Will skip running elite individuals that should already have a fitness value
 
 	//Instance variables (used during optimization process)
@@ -97,8 +97,8 @@ protected:
 	// Save the various setting parameters used in this optimization
 	// Stores the values with formatting in "this->outputFolder/[time]_[optType]_Optimization_Parameters.txt"
 	// Input: time - the current time as a string label
-	void const saveParameters(std::string time);
-	
+	void saveParameters(std::string time);
+
 	// Methods relying on implementation from child classes
 	virtual bool setupInstanceVariables() = 0;		 // Setting up properties used in runOptimization()
 	virtual bool shutdownOptimizationInstance() = 0; // Cleaning up properties as well as final saving for runOptimization()

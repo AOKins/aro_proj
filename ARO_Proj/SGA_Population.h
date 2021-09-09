@@ -115,7 +115,15 @@ public:
 		}
 		else { // Serial
 			// Produce New Individuals
-			genSubGroup(0, 1, this->pop_size_, this->elite_size_);
+			for (int id = 0; id < this->pop_size_; id++) {
+				if (id < (this->pop_size_ - this->elite_size_)) {
+					// Produce New Individuals
+					genInd(id);
+				}
+				else { // Carry Elites
+					this->DeepCopyIndividual(temp[id], pool[id]);
+				}
+			}
 		}
 
 		// Collect the resulting same_check values,

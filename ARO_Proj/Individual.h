@@ -9,7 +9,7 @@
 
 template <class T>
 struct Individual {
-	// The genome associated with the individual (pointer array, size given by population).
+	// The genome associated with the individual.
 	T * genome_;
 
 	// The fitness of the individual, this must be assigned with set_fitness

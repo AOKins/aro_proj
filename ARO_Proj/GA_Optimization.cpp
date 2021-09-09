@@ -145,7 +145,6 @@ bool GA_Optimization::runOptimization() {
 			}
 		} // ... optimization loop
 
-		// Recording how long it took to do the entire optimization process
 		if (this->logAllFiles || this->saveTimeVSFitness) {
 			opt_end = this->timestamp->MicroS_SinceStart();
 			this->timePerGenFile << "\nOverall Time in Microseconds," << opt_end - opt_start << std::endl;

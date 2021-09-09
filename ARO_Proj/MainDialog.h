@@ -52,7 +52,7 @@ public:
 	// Handle process of saving settings, requesting file path/name to save to
 	afx_msg void OnBnClickedSaveSettings();
 
-// DIALOG DATA
+	// DIALOG DATA
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_AROMAIN_DIALOG };
 #endif
@@ -114,7 +114,7 @@ public:
 	CWnd* m_pwndShow;
 	CTabCtrl m_TabControl;
 	afx_msg void OnTcnSelchangeTab1(NMHDR *pNMHDR, LRESULT *pResult);
-	
+
 	// boolean variable accessed by the optimization method to determine if it should prematurely stop or not
 	bool stopFlag = false;
 	// boolean to track if the optimization aglorithm is running or not (used in start/stop button to determine action)

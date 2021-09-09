@@ -21,7 +21,7 @@ public:
 	// Tool tips to help inform the user about a control
 	CToolTipCtrl * m_mainToolTips;
 
-// Dialog Data
+	// Dialog Data
 	enum { IDD = IDD_CAMERA_CONTROL };
 
 protected:

@@ -29,7 +29,7 @@ public:
 
 	// If display is open, window is destroyed
 	~CameraDisplay();
-	
+
 	// Open the window display with set window dimensions (default 240x240)
 	void OpenDisplay(int window_width = 240, int window_height = 240);
 	// Resize the display with set window dimensions
