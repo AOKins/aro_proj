@@ -1,6 +1,6 @@
 ////////////////////
 // Utility.h - Define various methods for accessible & repeatable use in a Utility namespace
-// Last edited: 09/02/2021 by Andrew O'Kins
+// Last edited: 08/11/2021 by Andrew O'Kins
 ////////////////////
 
 #ifndef UTILITY_H_
@@ -8,6 +8,7 @@
 
 #include <string>	// output format of getCurDateTime and getCurLocalTime
 #include <vector>	// for seperateByDelim and rejoinClear
+#include "BetterRandom.h"
 
 // Utility namespace to encapsulate the various isolated methods that aren't associated with a particular class
 namespace Utility {
@@ -34,13 +35,13 @@ namespace Utility {
 
 	// Generates a random image using BetterRandom
 	// Input: size - size of the image to make
+	//		  rng_machine - the RNG object to use for setting random pixel values
 	// Output: a randomly generated image with given size and each value being from 0 to 255
 	template <typename T>
-	T* generateRandomImage(int size) {
-		static BetterRandom ran(256);
+	T* generateRandomImage(int size, BetterRandom * rng_machine) {
 		int * image = new T[size];
 		for (int j = 0; j < size; j++) {
-			image[j] = (T)ran();
+			image[j] = (T)((256 * (*rng_machine)() / RAND_MAX) - 1);
 		} // ... for each pixel in image
 		return image;
 	}

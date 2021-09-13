@@ -43,16 +43,17 @@ public:
 		// Input: i - index for new individual
 		// Captures:
 		//		temp			- pointer to array of individuals to store current new individual at temp[i]
-		//		parent_selector - RNG machine captured by reference
 		//		divisor			- used in proportionate selection
 		//		individuals_	- access population genomes
+		//		this			- access Population instance for both RNG machine and Crossover method
 		// Output: temp[i] is set a new genome using crossover algorithm and mutation enabled
-		auto genInd = [temp, divisor, pool, this](int i) {
-			BetterRandom parent_selector(RAND_MAX);
+		auto genInd = [temp, divisor, pool, this](int i, int threadID) {
+
+			BetterRandom * myRNG = &this->rng_machines[threadID];
 
 			this->same_check[i] = true;
 			// select first parent with fitness proportionate selection and store associated genome into temp_image1
-			double selected = parent_selector() / divisor;
+			double selected = (*myRNG)() / divisor;
 			double temp_sum = pool[0].fitness(); // Recall 0 index has worst fitness
 			int j = 0;
 			while (temp_sum < selected) {
@@ -62,7 +63,7 @@ public:
 			const T * parent1 = pool[j].genome();
 
 			// Select second parent with fitness proportionate selection and store associated genome into temp_image2
-			selected = parent_selector() / divisor;
+			selected = (*myRNG)() / divisor;
 			temp_sum = pool[0].fitness();
 			j = 0;
 			while (temp_sum < selected) {
@@ -72,16 +73,18 @@ public:
 			const T * parent2 = pool[j].genome();
 
 			// perform crossover with mutation
-			temp[i].set_genome(this->Crossover(parent1, parent2, same_check[i], true));
+			temp[i].set_genome(this->Crossover(parent1, parent2, same_check[i], true, myRNG));
 		}; // ... genInd(i)
 
 		// Lambda function for multithreading to perform generation of next pool with fewer given threads
 		// Input: threadID - current thread index
 		//		  numThreads - total number of threads being launched
+		//        pop_size_ - passed in to reduce false sharing, the number of individuals in pool/temp
+		//		  elite_size - passed in to reduce false sharing, the number of elites to carry over
 		// Captures: temp - array of individuals to store results into
-		//			parent_selector - RNG machine for selecting parents (used in genInd) and captured by reference
+		//			pool - array of current individuals to get parents from
 		//			divisor - value used in conjunction with parent_selector to select individual (used in genInd) and captured by reference
-		//			this - pointer to current population instance
+		//			this - pointer to current population instance for instance of DeepCopyIndividual
 		auto genSubGroup = [temp, pool, divisor, genInd, this](const int threadID, const int numThreads, const int pop_size_, const int elite_size_) {
 			int groupSize = pop_size_ / numThreads;
 			int remainder = pop_size_ - groupSize*numThreads;
@@ -99,7 +102,7 @@ public:
 			for (int id = start_index; id < start_index + groupSize && id < pop_size_; id++) {
 				if (id < (pop_size_ - elite_size_)) {
 					// Produce New Individuals
-					genInd(id);
+					genInd(id, threadID);
 				}
 				else { // Carry Elites
 					this->DeepCopyIndividual(temp[id], pool[id]);
@@ -118,7 +121,7 @@ public:
 			for (int id = 0; id < this->pop_size_; id++) {
 				if (id < (this->pop_size_ - this->elite_size_)) {
 					// Produce New Individuals
-					genInd(id);
+					genInd(id, 0);
 				}
 				else { // Carry Elites
 					this->DeepCopyIndividual(temp[id], pool[id]);
@@ -143,7 +146,7 @@ public:
 			//		  pop_size - population size to be randomizing
 			//		  genome_length - size of the individual images to randomly generate with
 			// Captures - temp - array of individuals to store new random genomes within
-			auto randSubGroup = [temp](const int threadID, const int numThreads, int pop_size, int genome_length) {
+			auto randSubGroup = [temp, this](const int threadID, const int numThreads, int pop_size, int genome_length) {
 				int groupSize = (pop_size) / (numThreads);
 				int remainder = (pop_size)-groupSize*numThreads;
 				int start_index = threadID*groupSize;
@@ -157,8 +160,8 @@ public:
 						start_index += remainder;
 					}
 				}
-				for (int id = start_index; id < start_index + groupSize && id < pop_size; id++) {
-					temp[id].set_genome(Utility::generateRandomImage<T>(genome_length));
+				for (int id = start_index; id < start_index + groupSize && id < pop_size / 2; id++) {
+					temp[id].set_genome(Utility::generateRandomImage<T>(genome_length, &this->rng_machines[threadID]));
 				}
 			}; // .. randSubGroup
 
@@ -171,7 +174,7 @@ public:
 			}
 			else {
 				for (int i = 0; i < this->pop_size_ / 2; i++) {
-					temp[i].set_genome(Utility::generateRandomImage<T>(this->genome_length_));
+					temp[i].set_genome(Utility::generateRandomImage<T>(this->genome_length_, this->rng_machines));
 				}
 			}
 		}

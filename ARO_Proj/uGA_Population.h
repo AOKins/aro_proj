@@ -30,16 +30,17 @@ public:
 		// temp for storing new population before storing into this->individuals_
 		Individual<T>* temp = new Individual<T>[this->pop_size_];
 
-		// Lambda function to do assignment in parallel
+		// Lambda function to do crossover and assignment in a more readibly approachable way
 		// Input: indID - index of location to store individual in temp array
 		//		parent1 - index of a parent in sorted_temp
 		//		parent2 - index of the other parent in sorted_temp
+		//	    threadID - the thread running to help access appropriate RNG machine
 		// Captures:
 		//		temp - pointer array to store new individuals
 		//		pool - pointer to array of sorted individuals to draw parents from
 		//		this - pointer to current instance of uGA_Population for accessing Crossover method with mutation disabled
-		auto genInd = [temp, pool, this](int indID, int parent1, int parent2) {
-			temp[indID].set_genome(this->Crossover(pool[parent1].genome(), pool[parent2].genome(), this->same_check[indID], false));
+		auto genInd = [temp, pool, this](int indID, int parent1, int parent2, int threadID) {
+			temp[indID].set_genome(this->Crossover(pool[parent1].genome(), pool[parent2].genome(), this->same_check[indID], false, &this->rng_machines[threadID]));
 		};
 
 		auto genSubGroup = [temp, pool, this, &genInd](const int threadID) {
@@ -59,16 +60,16 @@ public:
 			for (int id = start_index; id < start_index + groupSize && id < this->pop_size_; id++) {
 				switch (id) {
 				case(0) :
-					genInd(0, 4, 3);
+					genInd(0, 4, 3, threadID);
 					break;
 				case(1) :
-					genInd(1, 4, 2);
+					genInd(1, 4, 2, threadID);
 					break;
 				case(2) :
-					genInd(2, 3, 2);
+					genInd(2, 3, 2, threadID);
 					break;
 				case(3) :
-					genInd(3, 3, 2);
+					genInd(3, 3, 2, threadID);
 					break;
 				case(4) :
 					// Keeping current best onto next generation
@@ -82,16 +83,16 @@ public:
 
 		// Crossover generation for new population
 		if (this->multiThread_) {
-			for (int i = 0; i < this->threadCount_ - 1; i++) {
+			for (int i = 0; i < this->threadCount_; i++) {
 				this->myThreadPool_->pushJob(std::bind(genSubGroup, i));
 			}
 			this->myThreadPool_->wait();
 		}
 		else {
-			genInd(0, 4, 3);
-			genInd(1, 4, 2);
-			genInd(2, 3, 2);
-			genInd(3, 3, 2);
+			genInd(0, 4, 3, 0);
+			genInd(1, 4, 2, 0);
+			genInd(2, 3, 2, 0);
+			genInd(3, 3, 2, 0);
 			// Keeping current best onto next generation
 			DeepCopyIndividual(temp[4], this->individuals_[4]);
 		}
@@ -128,7 +129,7 @@ public:
 					}
 				}
 				for (int id = start_index; id < start_index + groupSize && id < (this->pop_size_ - 1); id++) {
-					temp[id].set_genome(Utility::generateRandomImage<T>(this->genome_length_));
+					temp[id].set_genome(Utility::generateRandomImage<T>(this->genome_length_, &this->rng_machines[threadID]));
 				}
 			};
 
@@ -141,7 +142,7 @@ public:
 				this->myThreadPool_->wait();
 			}
 			for (int id = 0; id < this->pop_size_ - 1; id++) {
-				temp[id].set_genome(Utility::generateRandomImage<T>(this->genome_length_));
+				temp[id].set_genome(Utility::generateRandomImage<T>(this->genome_length_, this->rng_machines));
 			}
 		}
 

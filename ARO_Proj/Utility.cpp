@@ -109,16 +109,6 @@ const double Utility::FindAverageValue(const void *image, const int width, const
 
 	rdbl = rloop / area;
 
-	//calculate std. dev.
-	/*for (ll = ymin; ll < ymax; ll++) {
-	for (kk = int(xmin); kk < int(xmax); kk++) {
-	value = m_ary.at<unsigned char>(ll, kk);
-	sloop += pow((value - rdbl), 2);
-	}
-	}
-
-	sdbl = sqrt(sloop / 2500) / 50;
-	*/
 	return rdbl;
 }
 

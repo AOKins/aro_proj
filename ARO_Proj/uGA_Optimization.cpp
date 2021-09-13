@@ -19,7 +19,7 @@ bool uGA_Optimization::setupInstanceVariables() {
 	this->population.clear();
 	for (int i = 0; i < this->popCount; i++) {
 		this->population.push_back(new uGAPopulation<int>(this->cc->numberOfBinsY * this->cc->numberOfBinsX * this->cc->populationDensity,
-			this->populationSize, this->eliteSize, this->acceptedSimilarity, this->multithreadEnable, (this->gaPoolThreadCount / int(this->optBoards.size())), this->myThreadPool_));
+			this->populationSize, this->eliteSize, this->acceptedSimilarity, this->multithreadEnable, this->gaPoolThreadCount, this->myThreadPool_));
 	}
 
 	this->shortenExposureFlag = false; // Set to true by individual if fitness is too high, initially false

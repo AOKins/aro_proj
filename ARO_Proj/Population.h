@@ -1,7 +1,8 @@
 ////////////////////
 // Population.h - base class to encapsulate a population in a genetic algorithm and some of the micro-genetic behaviors
-// Last edited: 08/24/2021 by Andrew O'Kins
+// Last edited: 09/13/2021 by Andrew O'Kins
 ////////////////////
+
 #ifndef POPULATION_H_
 #define POPULATION_H_
 
@@ -36,6 +37,9 @@ protected:
 	// Array to store results of crossovers to determine if a refresh is needed
 	bool * same_check;
 
+	// Pointer (or array if multithreading is used) of random number generator being used
+	BetterRandom * rng_machines;
+
 public:
 	// Constructor
 	// Input:
@@ -59,16 +63,23 @@ public:
 		if (this->elite_size_ > this->pop_size_) {
 			Utility::printLine("WARNING: Elite size (" + std::to_string(this->elite_size_) + ") of population exceeding population size (" + std::to_string(this->pop_size_) + ")!");
 		}
-		if (this->multiThread_ == true && this->myThreadPool_ == NULL) {
-			Utility::printLine("ERROR: No thread pool set for population!");
+		if (this->multiThread_ == true) {
+			// Setting array of RNG machines to use with default cap
+			this->rng_machines = new BetterRandom[this->threadCount_];
+
+			if (this->myThreadPool_ == NULL) {
+				Utility::printLine("ERROR: No thread pool set for population!");
+			}
+		}
+		else {
+			this->rng_machines = new BetterRandom[1];
 		}
 
 		this->individuals_ = new Individual<T>[this->pop_size_];
 		this->same_check = new bool[this->pop_size_ - this->elite_size_];
 
-		// Using multithreads for initializing each individual
 		for (int i = 0; i < this->pop_size_; i++) {
-			this->individuals_[i].set_genome(Utility::generateRandomImage<T>(this->genome_length_));
+			this->individuals_[i].set_genome(Utility::generateRandomImage<T>(this->genome_length_, this->rng_machines));
 		}
 		Utility::printLine("INFO: Population created!");
 	}
@@ -77,6 +88,7 @@ public:
 	~Population() {
 		delete[] this->individuals_;
 		delete[] this->same_check;
+		delete[] this->rng_machines;
 	}
 
 	Individual<T> * getIndividual(int i) {
@@ -126,20 +138,17 @@ public:
 	//	same_check - boolean will be set to false if the arrays are different.
 	//  useMutation - boolean set if to perform mutation or not, defaults to true (enable).
 	// Output: returns new genome as result of crossover algorithm
-	T * Crossover(const T * a, const  T * b, bool& same_check, const bool useMutation = true) const {
+	T * Crossover(const T * a, const  T * b, bool& same_check, const bool useMutation, BetterRandom * rng_machine) const {
 		T * temp = new T[this->genome_length_];
 		double same_counter = 0; // counter keeping track of how many indices in the genomes are the same
-		BetterRandom ran(100);
-		BetterRandom mut(200);
-		BetterRandom mutatedValue(256);
 		// Variabales to hold results for easier readiblity or possible adjustments
 		bool choice, mutate;
 		T mutateVal;
 		// For each index in the genome
 		for (int i = 0; i < this->genome_length_; i++) {
-			choice = ran() < 50;
-			mutate = mut() == 0;
-			mutateVal = T(mutatedValue());
+			// Set booleans
+			choice = ((100 * (*rng_machine)()) / RAND_MAX) < 50;
+			mutate = ((200 * (*rng_machine)()) / RAND_MAX) == 0;
 
 			// 50% chance of coming from either parent
 			if (choice) {
@@ -154,6 +163,8 @@ public:
 			}
 			// mutation occuring if useMutation and at 0.05% chance
 			if (mutate && useMutation)	{
+				// Set mutate value
+				mutateVal = T(((256 * (*rng_machine)()) / RAND_MAX));
 				temp[i] = (T)mutateVal;
 			}
 		} // ... End image creation

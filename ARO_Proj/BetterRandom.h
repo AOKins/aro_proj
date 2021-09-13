@@ -14,11 +14,10 @@ struct BetterRandom {
 	std::mt19937 *mt;
 	std::uniform_int_distribution<int> *dist;
 
-	std::mutex randMutex;
-
 	// Default use max
 	BetterRandom() : BetterRandom(RAND_MAX) {}
 
+	// Constructor with given cap (also used by default)
 	BetterRandom(int cap) {
 		mt = new std::mt19937(rd());
 		dist = new std::uniform_int_distribution<int>(0, cap - 1);
@@ -31,10 +30,7 @@ struct BetterRandom {
 
 	// () operator, use this to get a random number
 	const int operator()() {
-		//std::unique_lock<std::mutex> myLock(this->randMutex, std::defer_lock);
-		//myLock.lock();
 		int result = (*dist)(*mt);
-		//myLock.unlock();
 		return result;
 	}
 };
