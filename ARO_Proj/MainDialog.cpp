@@ -165,6 +165,7 @@ BOOL MainDialog::OnInitDialog() {
 
 // Set the UI to default values
 void MainDialog::setDefaultUI() {
+	this->opt_selection_ = OptType::NONE;
 	// Multithreading enabled by default
 	this->m_MultiThreadEnable.SetCheck(BST_CHECKED);
 	this->m_cameraControlDlg.m_initialExposureTimeInput.SetWindowTextW(_T("2000"));

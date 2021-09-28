@@ -536,7 +536,7 @@ bool CameraController::ConfigureExposureTime() {
 }
 
 bool CameraController::hasCameras() {
-	if (this->camList.GetSize() > 0) {
+	if (this->cam->IsValid() != NULL) {
 		return true;
 	}
 	else {

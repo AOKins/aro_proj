@@ -258,7 +258,7 @@ ImageScaler* Optimization::setupScaler(unsigned char *slmImg, int slmNum = 0) {
 
 // [SAVE/LOAD FEATURES]
 // Output information of the parameters used in the optimization in to logs
-void const Optimization::saveParameters(std::string time) {
+void Optimization::saveParameters(std::string time) {
 	std::ofstream paramFile(this->outputFolder + time + "_" + this->algorithm_name_ + "_Optimization_Parameters.txt");
 	paramFile << "----------------------------------------------------------------" << std::endl;
 	paramFile << "OPTIMIZATION SETTINGS:" << std::endl;

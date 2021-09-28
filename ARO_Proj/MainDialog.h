@@ -79,6 +79,7 @@ public:
 
 	// Enumeration for type of optimizations to select
 	enum OptType {
+		NONE,
 		OPT5,
 		SGA,
 		uGA

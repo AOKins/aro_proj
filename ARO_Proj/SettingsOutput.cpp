@@ -111,6 +111,24 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 	if (name == "" || value == "") {
 		return false;
 	}
+	else if (name == "multithreading") {
+		this->m_MultiThreadEnable.SetCheck(value == "true");
+	}
+	else if (name == "algorithm") {
+		switch (OptType(std::stoi(value))) {
+		case(OptType::OPT5) :
+			this->OnBnClickedOptButton();
+			break;
+		case(OptType::SGA) :
+			this->OnBnClickedSgaButton();
+			break;
+		case(OptType::uGA) :
+			this->OnBnClickedUgaButton();
+			break;
+		}
+
+	}
+
 	// Camera Dialog
 	else if (name == "initialExposureTime")
 		this->m_cameraControlDlg.m_initialExposureTimeInput.SetWindowTextW(valueStr);
@@ -381,6 +399,9 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	outFile << " version" << std::endl;
 
 	// Main Dialog settings
+	outFile << "# Optimization Algorithm" << std::endl;
+	outFile << "algorithm=" << this->opt_selection_ << std::endl;
+
 	outFile << "# Multithreading" << std::endl;
 	outFile << "multiThreading=";
 	if (this->m_MultiThreadEnable.GetCheck() == BST_CHECKED) { outFile << "true" << std::endl; }
