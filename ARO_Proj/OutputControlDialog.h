@@ -1,6 +1,6 @@
 ////////////////////
 // OutputControlDialog.h - dialog for the "Output Settings" tab window
-// Last edited: 08/02/2021 by Andrew O'Kins
+// Last edited: 09/28/2021 by Andrew O'Kins
 ////////////////////
 
 #pragma once
@@ -29,6 +29,8 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 public:
+	void setDefaultUI();
+
 	// User Input Components //
 	// If checked, then when running the optimization produce a live camera display
 	CButton m_displayCameraCheck;

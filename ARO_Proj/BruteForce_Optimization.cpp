@@ -48,9 +48,7 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 
 	// Initialize array for storing slm images
 	int * slmImg = new int[this->cc->numberOfBinsY * this->cc->numberOfBinsX * this->cc->populationDensity];
-
-	int dphi = 16;
-
+	
 	//Initialize array of SLM image with 0s (note that the size of slmImg is dependent on the camera and not SLM!)
 	setBlankSlmImg(slmImg);
 
@@ -66,7 +64,7 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 				int binIndex = (binCol + binRow*this->cc->numberOfBinsX)*this->cc->populationDensity;
 
 				// Find max phase for this bin
-				for (int curBinVal = 0; curBinVal < 256 && !endOpt; curBinVal += dphi) {
+				for (int curBinVal = 0; curBinVal < 256 && !endOpt; curBinVal += this->phaseResolution) {
 					// Abort if stop button was pressed
 					if (dlg->stopFlag == true) {
 						return true;
@@ -106,7 +104,7 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 					double fitness = Utility::FindAverageValue(camImg, curImage->getWidth(), curImage->getHeight(), this->cc->targetRadius);
 
 					//Record current performance to file //Ask what kind of calcualtion is this?
-					double ms = boardID*dphi + curBinVal / dphi;
+					double ms = boardID*this->phaseResolution + curBinVal / this->phaseResolution;
 					if (this->logAllFiles || this->saveTimeVSFitness) {
 						this->timeVsFitnessFile << this->timestamp->MS_SinceStart() << " " << fitness * this->cc->GetExposureRatio() << " " << this->cc->GetExposureRatio() << std::endl;
 						this->tfile << ms << " " << fitness * this->cc->GetExposureRatio() << " " << this->cc->GetExposureRatio() << std::endl;
@@ -185,6 +183,10 @@ bool BruteForce_Optimization::setupInstanceVariables() {
 		this->slmScaledImages[i] = new unsigned char[this->sc->boards[i]->GetArea()];
 		this->scalers.push_back(setupScaler(this->slmScaledImages[i], i));
 	}
+
+	CString path("");
+	dlg->m_cameraControlDlg.m_FramesPerSecond.GetWindowTextW(path);
+	this->phaseResolution = _tstoi(path);
 
 	this->allTimeBestFitness = 0;
 

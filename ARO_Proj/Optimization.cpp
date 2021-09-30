@@ -29,7 +29,7 @@ Optimization::Optimization(MainDialog* dlg, CameraController* cc, SLMController*
 		this->multithreadEnable = false;
 	}
 	// Check if skipping elite
-	if (this->dlg->m_optimizationControlDlg.m_skipEliteReevaluation.GetCheck() == BST_CHECKED) {
+	if (this->dlg->m_ga_ControlDlg.m_skipEliteReevaluation.GetCheck() == BST_CHECKED) {
 		this->skipEliteReevaluation = true;
 	}
 	else {
@@ -45,7 +45,7 @@ bool Optimization::prepareStopConditions() {
 	// Fitness to stop at
 	try	{
 		CString path;
-		this->dlg->m_optimizationControlDlg.m_minFitness.GetWindowTextW(path);
+		this->dlg->m_ga_ControlDlg.m_minFitness.GetWindowTextW(path);
 		if (path.IsEmpty()){
 			throw new std::exception();
 		}
@@ -59,7 +59,7 @@ bool Optimization::prepareStopConditions() {
 	// Time (in sec) to stop at
 	try	{
 		CString path;
-		this->dlg->m_optimizationControlDlg.m_minSeconds.GetWindowTextW(path);
+		this->dlg->m_ga_ControlDlg.m_minSeconds.GetWindowTextW(path);
 		if (path.IsEmpty()) {
 			throw new std::exception();
 		}
@@ -71,7 +71,7 @@ bool Optimization::prepareStopConditions() {
 	}
 	try	{
 		CString path;
-		this->dlg->m_optimizationControlDlg.m_maxSeconds.GetWindowTextW(path);
+		this->dlg->m_ga_ControlDlg.m_maxSeconds.GetWindowTextW(path);
 		if (path.IsEmpty()) {
 			throw new std::exception();
 		}
@@ -84,7 +84,7 @@ bool Optimization::prepareStopConditions() {
 	// Generations evaluations to at least do (minimum)
 	try	{
 		CString path;
-		this->dlg->m_optimizationControlDlg.m_minGenerations.GetWindowTextW(path);
+		this->dlg->m_ga_ControlDlg.m_minGenerations.GetWindowTextW(path);
 		if (path.IsEmpty()) {
 			throw new std::exception();
 		}
@@ -97,7 +97,7 @@ bool Optimization::prepareStopConditions() {
 	// Generations evaluations to stop at (maximum)
 	try	{
 		CString path;
-		this->dlg->m_optimizationControlDlg.m_maxGenerations.GetWindowTextW(path);
+		this->dlg->m_ga_ControlDlg.m_maxGenerations.GetWindowTextW(path);
 		if (path.IsEmpty()) {
 			throw new std::exception();
 		}

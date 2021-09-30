@@ -14,10 +14,10 @@ bool GA_Optimization::runOptimization() {
 		Utility::printLine("INFO: The CPU being used has " + std::to_string(std::thread::hardware_concurrency()) + " logical processors");
 		// Getting how many threads that the tasks will be using
 		CString tempBuff;
-		this->dlg->m_optimizationControlDlg.m_indEvalThreadCount.GetWindowTextW(tempBuff);
+		this->dlg->m_ga_ControlDlg.m_indEvalThreadCount.GetWindowTextW(tempBuff);
 		this->indThreadCount = _tstoi(tempBuff);
 
-		this->dlg->m_optimizationControlDlg.m_PopGenThreadCount.GetWindowTextW(tempBuff);
+		this->dlg->m_ga_ControlDlg.m_PopGenThreadCount.GetWindowTextW(tempBuff);
 		this->gaPoolThreadCount = _tstoi(tempBuff);
 
 		// If the indThreadCount and gaPoolThreadCount are less than what the hardware supports, than we don't need the additional threads to be created in the pool

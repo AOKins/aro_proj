@@ -1,6 +1,6 @@
 ////////////////////
 // AOIControlDIalog.cpp - implemetnation for the "AOI Settings" tab window
-// Last edited: 08/12/2021 by Andrew O'Kins
+// Last edited: 09/28/2021 by Andrew O'Kins
 ////////////////////
 
 #include "stdafx.h"
@@ -156,4 +156,11 @@ void AOIControlDialog::OnBnClickedMaxImageSizeButton() {
 	}
 	// Set with no offsets and full image dimensions
 	SetAOIFeilds(0, 0, finalWidth, finalHeight);
+}
+
+void AOIControlDialog::setDefaultUI() {
+	this->m_leftInput.SetWindowTextW(_T("896"));
+	this->m_rightInput.SetWindowTextW(_T("568"));
+	this->m_widthInput.SetWindowTextW(_T("64"));
+	this->m_heightInput.SetWindowTextW(_T("64"));
 }

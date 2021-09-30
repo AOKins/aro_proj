@@ -90,16 +90,20 @@ BOOL MainDialog::OnInitDialog() {
 	//1) https://stackoverflow.com/questions/1044315/setwindowpos-function-not-moving-window
 	//2) https://www.youtube.com/watch?v=WHPNzx4E5rM
 	// - set tab headings
-	LPCTSTR headings[] = { L"Optimization Settings", L"SLM Settings", L"Camera Settings", L"AOI Settings", L"Output Settings" };
-	for (int i = 0; i < 5; i++) {
+	LPCTSTR headings[] = { L"GA Settings", L"IA Settings", L"SLM Settings", L"Camera Settings", L"AOI Settings", L"Output Settings" };
+	for (int i = 0; i < 6; i++) {
 		m_TabControl.InsertItem(i, headings[i]);
 	}
 	// - set all tab components (Create Dialogs from Templates)
 	CRect rect;
 	m_TabControl.GetClientRect(&rect); //Gets dimensions of the tab control to fit in dialogs inside
 
-	m_optimizationControlDlg.Create(IDD_OPTIMIZATION_CONTROL, &m_TabControl);
-	m_optimizationControlDlg.SetWindowPos(NULL, rect.top + 5, rect.left + 30, rect.Width() - 10, rect.Height() - 35, SWP_SHOWWINDOW | SWP_NOZORDER);
+	// Creating windows to be for the various settings under the tab options
+	m_ga_ControlDlg.Create(IDD_GA_CONTROL, &m_TabControl);
+	m_ga_ControlDlg.SetWindowPos(NULL, rect.top + 5, rect.left + 30, rect.Width() - 10, rect.Height() - 35, SWP_HIDEWINDOW | SWP_NOZORDER);
+
+	m_ia_ControlDlg.Create(IDD_IA_CONTROL, &m_TabControl);
+	m_ia_ControlDlg.SetWindowPos(NULL, rect.top + 5, rect.left + 30, rect.Width() - 10, rect.Height() - 35, SWP_HIDEWINDOW | SWP_NOZORDER);
 
 	m_slmControlDlg.Create(IDD_SLM_CONTROL, &m_TabControl);
 	m_slmControlDlg.SetWindowPos(NULL, rect.top + 5, rect.left + 30, rect.Width() - 10, rect.Height() - 35, SWP_HIDEWINDOW | SWP_NOZORDER);
@@ -112,6 +116,10 @@ BOOL MainDialog::OnInitDialog() {
 
 	m_outputControlDlg.Create(IDD_OUTPUT_CONTROL, &m_TabControl);
 	m_outputControlDlg.SetWindowPos(NULL, rect.top + 5, rect.left + 30, rect.Width() - 10, rect.Height() - 35, SWP_HIDEWINDOW | SWP_NOZORDER);
+
+	// Setting initial shown tab being 
+	this->m_pwndShow = &m_ga_ControlDlg;
+	this->m_pwndShow->ShowWindow(SW_SHOW);
 
 	// Setup the tool tip controller for main dialog
 	this->m_mainToolTips = new CToolTipCtrl();
@@ -134,7 +142,7 @@ BOOL MainDialog::OnInitDialog() {
 	Utility::printLine("INFO: There are " + std::to_string(this->slmCtrl->numBoards) + " boards");
 
 	// - set all default settings
-	setDefaultUI();
+	this->setDefaultUI();
 
 	// Give a warning message if no boards have been detected
 	if (this->slmCtrl != nullptr && this->slmCtrl->numBoards < 1) {
@@ -142,8 +150,6 @@ BOOL MainDialog::OnInitDialog() {
 			(LPCWSTR)L"No SLM detected!",
 			MB_ICONWARNING | MB_OK);
 	}
-	//Show the default tab (optimizations settings)
-	m_pwndShow = &m_optimizationControlDlg;
 
 	this->camCtrl = new CameraController(this);
 	if (this->camCtrl != nullptr) {
@@ -168,45 +174,21 @@ void MainDialog::setDefaultUI() {
 	this->opt_selection_ = OptType::NONE;
 	// Multithreading enabled by default
 	this->m_MultiThreadEnable.SetCheck(BST_CHECKED);
-	this->m_cameraControlDlg.m_initialExposureTimeInput.SetWindowTextW(_T("2000"));
-	this->m_cameraControlDlg.m_FramesPerSecond.SetWindowTextW(_T("200"));
-	this->m_cameraControlDlg.m_gammaValue.SetWindowTextW(_T("1.00"));
+	
+	this->m_cameraControlDlg.setDefaultUI();
 
-	this->m_optimizationControlDlg.m_binSize.SetWindowTextW(_T("16"));
-	this->m_optimizationControlDlg.m_numberBins.SetWindowTextW(_T("32"));
-	this->m_optimizationControlDlg.m_targetRadius.SetWindowTextW(_T("2"));
-	this->m_optimizationControlDlg.m_minFitness.SetWindowTextW(_T("0"));
-	this->m_optimizationControlDlg.m_minSeconds.SetWindowTextW(_T("60"));
-	this->m_optimizationControlDlg.m_maxSeconds.SetWindowTextW(_T("0")); // 0 or less indicates indefinite
-	this->m_optimizationControlDlg.m_minGenerations.SetWindowTextW(_T("0"));
-	this->m_optimizationControlDlg.m_maxGenerations.SetWindowTextW(_T("3000")); // 0 or less indicates indefinite
+	this->m_ga_ControlDlg.setDefaultUI();
 
-	// Setting default values to be dependent on hardware
-	CString hardwareThreads = CString(std::to_string(std::thread::hardware_concurrency()).c_str());
-	this->m_optimizationControlDlg.m_indEvalThreadCount.SetWindowTextW(hardwareThreads);
-	this->m_optimizationControlDlg.m_PopGenThreadCount.SetWindowTextW(hardwareThreads);
+	this->m_ia_ControlDlg.setDefaultUI();
 
-	this->m_aoiControlDlg.m_leftInput.SetWindowTextW(_T("896"));
-	this->m_aoiControlDlg.m_rightInput.SetWindowTextW(_T("568"));
-	this->m_aoiControlDlg.m_widthInput.SetWindowTextW(_T("64"));
-	this->m_aoiControlDlg.m_heightInput.SetWindowTextW(_T("64"));
+	this->m_aoiControlDlg.setDefaultUI();
 
 	//Use slm control reference to set additional settings
 	this->m_slmControlDlg.populateSLMlist(); // Simple method to setup the list of selections
 	this->m_slmControlDlg.OnCbnSelchangeSlmSelect();
 
 	// Output controls
-	// Default to saving images
-	this->m_outputControlDlg.m_logAllFilesCheck.SetCheck(BST_CHECKED);
-	// Default to displaying camera
-	this->m_outputControlDlg.m_displayCameraCheck.SetCheck(BST_CHECKED);
-	// Default to not displaying SLM
-	this->m_outputControlDlg.m_displaySLM.SetCheck(BST_CHECKED);
-	this->m_outputControlDlg.m_OutputLocationField.SetWindowTextW(_T(".\\logs\\"));
-	this->m_outputControlDlg.m_eliteSaveFreq.SetWindowTextW(_T("10"));
-	// Calling methods to disable/enable appropriate fields
-	this->m_outputControlDlg.OnBnClickedLogallFiles();
-	this->m_outputControlDlg.OnBnClickedSaveEliteimage();
+	this->m_outputControlDlg.setDefaultUI();
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -222,8 +204,7 @@ void MainDialog::setDefaultUI() {
 //   Modifications: 
 //
 /////////////////////////////////////////////////////////////////////
-void MainDialog::OnSysCommand(UINT nID, LPARAM lParam)
-{
+void MainDialog::OnSysCommand(UINT nID, LPARAM lParam) {
 	CDialog::OnSysCommand(nID, lParam);
 }
 
@@ -243,7 +224,7 @@ void MainDialog::OnSysCommand(UINT nID, LPARAM lParam)
 //
 /////////////////////////////////////////////////////////////////////////
 void MainDialog::OnPaint() {
-	if (IsIconic()) 	{
+	if (IsIconic()) {
 		CPaintDC dc(this); // device context for painting
 
 		SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
@@ -362,8 +343,8 @@ void MainDialog::OnBnClickedSgaButton() {
 
 //OnBnClickedOptButton: Select the OPT5 Algorithm Button
 void MainDialog::OnBnClickedOptButton() {
-	Utility::printLine("INFO: OPT5 optimization selected");
-	this->opt_selection_ = OptType::OPT5;
+	Utility::printLine("INFO: IA optimization selected");
+	this->opt_selection_ = OptType::IA;
 
 	// Disabling BF (now that it's selected) and enabling other options and start button
 	this->m_OptButton.EnableWindow(false);
@@ -382,28 +363,28 @@ void MainDialog::OnTcnSelchangeTab1(NMHDR *pNMHDR, LRESULT *pResult) {
 	int tabIndex = m_TabControl.GetCurSel();
 	switch (tabIndex) {
 	case 0:
-		m_optimizationControlDlg.ShowWindow(SW_SHOW);
-		m_pwndShow = &m_optimizationControlDlg;
+		m_pwndShow = &m_ga_ControlDlg;
 		break;
 	case 1:
-		m_slmControlDlg.ShowWindow(SW_SHOW);
-		m_pwndShow = &m_slmControlDlg;
+		m_pwndShow = &m_ia_ControlDlg;
 		break;
 	case 2:
-		m_cameraControlDlg.ShowWindow(SW_SHOW);
-		m_pwndShow = &m_cameraControlDlg;
+		m_pwndShow = &m_slmControlDlg;
 		break;
 	case 3:
-		m_aoiControlDlg.ShowWindow(SW_SHOW);
-		m_pwndShow = &m_aoiControlDlg;
+		m_pwndShow = &m_cameraControlDlg;
 		break;
 	case 4:
-		m_outputControlDlg.ShowWindow(SW_SHOW);
+		m_pwndShow = &m_aoiControlDlg;
+		break;
+	case 5:
 		m_pwndShow = &m_outputControlDlg;
 		break;
 	default:
 		Utility::printLine("WARNING: Requested to show a tab that shouldn't exist!");
 	}
+
+	this->m_pwndShow->ShowWindow(SW_SHOW);
 	*pResult = 0;
 }
 
@@ -474,7 +455,7 @@ UINT __cdecl optThreadMethod(LPVOID instance) {
 	dlg->m_StartStopButton.SetWindowTextW(L"STOP");
 
 	// Perform the optimzation operation depending on selection
-	if (dlg->opt_selection_ == dlg->OptType::OPT5) {
+	if (dlg->opt_selection_ == dlg->OptType::IA) {
 		BruteForce_Optimization opt(dlg, dlg->camCtrl, dlg->slmCtrl);
 		dlg->opt_success = opt.runOptimization();
 	}
@@ -515,8 +496,8 @@ void MainDialog::OnBnClickedMultiThreadEnable() {
 	else {
 		Utility::printLine("INFO: Multithreading disabled!");
 	}
-	this->m_optimizationControlDlg.m_indEvalThreadCount.EnableWindow(thread_enabled);
-	this->m_optimizationControlDlg.m_PopGenThreadCount.EnableWindow(thread_enabled);
+	this->m_ga_ControlDlg.m_indEvalThreadCount.EnableWindow(thread_enabled);
+	this->m_ga_ControlDlg.m_PopGenThreadCount.EnableWindow(thread_enabled);
 }
 
 // Display About Window as popup from button press

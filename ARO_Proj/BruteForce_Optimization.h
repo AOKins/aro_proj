@@ -9,6 +9,7 @@
 #include "Optimization.h"
 
 class BruteForce_Optimization : public Optimization {
+	unsigned int phaseResolution;
 	std::ofstream lmaxfile;
 	std::ofstream rtime;
 

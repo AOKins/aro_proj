@@ -1,6 +1,6 @@
 ////////////////////
 // OutputControlDialog.cpp - implementation for "Optimization Settings" tab window
-// Last edited: 08/02/2021 by Andrew O'Kins
+// Last edited: 09/28/2021 by Andrew O'Kins
 ////////////////////
 
 #include "stdafx.h"
@@ -112,4 +112,18 @@ void OutputControlDialog::OnBnClickedLogallFiles() {
 void OutputControlDialog::OnBnClickedSaveEliteimage() {
 	bool enabled = this->m_SaveEliteImagesCheck.GetCheck() == BST_CHECKED || this->m_logAllFilesCheck.GetCheck() == BST_CHECKED;
 	this->m_eliteSaveFreq.EnableWindow(enabled);
+}
+
+void OutputControlDialog::setDefaultUI() {
+	// Default to saving images
+	this->m_logAllFilesCheck.SetCheck(BST_CHECKED);
+	// Default to displaying camera
+	this->m_displayCameraCheck.SetCheck(BST_CHECKED);
+	// Default to not displaying SLM
+	this->m_displaySLM.SetCheck(BST_CHECKED);
+	this->m_OutputLocationField.SetWindowTextW(_T(".\\logs\\"));
+	this->m_eliteSaveFreq.SetWindowTextW(_T("10"));
+	// Calling methods to disable/enable appropriate fields
+	this->OnBnClickedLogallFiles();
+	this->OnBnClickedSaveEliteimage();
 }

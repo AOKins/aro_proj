@@ -116,7 +116,7 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 	}
 	else if (name == "algorithm") {
 		switch (OptType(std::stoi(value))) {
-		case(OptType::OPT5) :
+		case(OptType::IA) :
 			this->OnBnClickedOptButton();
 			break;
 		case(OptType::SGA) :
@@ -126,7 +126,6 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 			this->OnBnClickedUgaButton();
 			break;
 		}
-
 	}
 
 	// Camera Dialog
@@ -145,30 +144,40 @@ bool MainDialog::setValueByName(std::string name, std::string value) {
 		this->m_aoiControlDlg.m_widthInput.SetWindowTextW(valueStr);
 	else if (name == "heightAOI")
 		this->m_aoiControlDlg.m_heightInput.SetWindowTextW(valueStr);
-	// Optimization Dialog
+	// GA Optimization Dialog
 	else if (name == "binSize")
-		this->m_optimizationControlDlg.m_binSize.SetWindowTextW(valueStr);
+		this->m_ga_ControlDlg.m_binSize.SetWindowTextW(valueStr);
 	else if (name == "binNumber")
-		this->m_optimizationControlDlg.m_numberBins.SetWindowTextW(valueStr);
+		this->m_ga_ControlDlg.m_numberBins.SetWindowTextW(valueStr);
 	else if (name == "targetRadius")
-		this->m_optimizationControlDlg.m_targetRadius.SetWindowTextW(valueStr);
+		this->m_ga_ControlDlg.m_targetRadius.SetWindowTextW(valueStr);
 	else if (name == "minFitness")
-		this->m_optimizationControlDlg.m_minFitness.SetWindowTextW(valueStr);
+		this->m_ga_ControlDlg.m_minFitness.SetWindowTextW(valueStr);
 	else if (name == "minSeconds")
-		this->m_optimizationControlDlg.m_minSeconds.SetWindowTextW(valueStr);
+		this->m_ga_ControlDlg.m_minSeconds.SetWindowTextW(valueStr);
 	else if (name == "maxSeconds")
-		this->m_optimizationControlDlg.m_maxSeconds.SetWindowTextW(valueStr);
+		this->m_ga_ControlDlg.m_maxSeconds.SetWindowTextW(valueStr);
 	else if (name == "minGenerations")
-		this->m_optimizationControlDlg.m_minGenerations.SetWindowTextW(valueStr);
+		this->m_ga_ControlDlg.m_minGenerations.SetWindowTextW(valueStr);
 	else if (name == "maxGenerations")
-		this->m_optimizationControlDlg.m_maxGenerations.SetWindowTextW(valueStr);
+		this->m_ga_ControlDlg.m_maxGenerations.SetWindowTextW(valueStr);
 	else if (name == "evalIndividualsThreadCount")
-		this->m_optimizationControlDlg.m_indEvalThreadCount.SetWindowTextW(valueStr);
+		this->m_ga_ControlDlg.m_indEvalThreadCount.SetWindowTextW(valueStr);
 	else if (name == "popGenThreadCount")
-		this->m_optimizationControlDlg.m_PopGenThreadCount.SetWindowTextW(valueStr);
+		this->m_ga_ControlDlg.m_PopGenThreadCount.SetWindowTextW(valueStr);
 	else if (name == "skipEliteReeval") {
-		this->m_optimizationControlDlg.m_skipEliteReevaluation.SetCheck(valueStr == "true");
+		this->m_ga_ControlDlg.m_skipEliteReevaluation.SetCheck(valueStr == "true");
 	}
+	// IA Optimization Dialog
+	else if (name == "ia_binNumber")
+		this->m_ia_ControlDlg.m_numBins.SetWindowTextW(valueStr);
+	else if (name == "ia_binSize")
+		this->m_ia_ControlDlg.m_binSize.SetWindowTextW(valueStr);
+	else if (name == "ia_phaseResolution")
+		this->m_ia_ControlDlg.m_phaseResolution.SetWindowTextW(valueStr);
+	else if (name == "ia_targetRadius")
+		this->m_ia_ControlDlg.m_targetRadius.SetWindowTextW(valueStr);
+
 	// SLM Dialog
 	else if (name == "slmSelect")  {
 		int selectID = std::stoi(value.c_str()) - 1; // Correct from base 1 index to 0 based
@@ -427,30 +436,40 @@ bool MainDialog::saveUItoFile(std::string filePath) {
 	outFile << "heightAOI=" << _tstof(tempBuff) << std::endl;
 
 	// Optimization Dialog settings
-	outFile << "# Optimization Settings" << std::endl;
-	this->m_optimizationControlDlg.m_binSize.GetWindowTextW(tempBuff);
+	outFile << "# Genetic Algorithm Optimization Settings" << std::endl;
+	this->m_ga_ControlDlg.m_binSize.GetWindowTextW(tempBuff);
 	outFile << "binSize=" << _tstof(tempBuff) << std::endl;
-	this->m_optimizationControlDlg.m_numberBins.GetWindowTextW(tempBuff);
+	this->m_ga_ControlDlg.m_numberBins.GetWindowTextW(tempBuff);
 	outFile << "binNumber=" << _tstof(tempBuff) << std::endl;
-	this->m_optimizationControlDlg.m_targetRadius.GetWindowTextW(tempBuff);
+	this->m_ga_ControlDlg.m_targetRadius.GetWindowTextW(tempBuff);
 	outFile << "targetRadius=" << _tstof(tempBuff) << std::endl;
-	this->m_optimizationControlDlg.m_minFitness.GetWindowTextW(tempBuff);
+	this->m_ga_ControlDlg.m_minFitness.GetWindowTextW(tempBuff);
 	outFile << "minFitness=" << _tstof(tempBuff) << std::endl;
-	this->m_optimizationControlDlg.m_minSeconds.GetWindowTextW(tempBuff);
+	this->m_ga_ControlDlg.m_minSeconds.GetWindowTextW(tempBuff);
 	outFile << "minSeconds=" << _tstof(tempBuff) << std::endl;
-	this->m_optimizationControlDlg.m_maxSeconds.GetWindowTextW(tempBuff);
+	this->m_ga_ControlDlg.m_maxSeconds.GetWindowTextW(tempBuff);
 	outFile << "maxSeconds=" << _tstof(tempBuff) << std::endl;
-	this->m_optimizationControlDlg.m_minGenerations.GetWindowTextW(tempBuff);
+	this->m_ga_ControlDlg.m_minGenerations.GetWindowTextW(tempBuff);
 	outFile << "minGenerations=" << _tstof(tempBuff) << std::endl;
-	this->m_optimizationControlDlg.m_maxGenerations.GetWindowTextW(tempBuff);
+	this->m_ga_ControlDlg.m_maxGenerations.GetWindowTextW(tempBuff);
 	outFile << "maxGenerations=" << _tstof(tempBuff) << std::endl;
 	outFile << "skipEliteReeval=";
-	if (this->m_optimizationControlDlg.m_skipEliteReevaluation.GetCheck() == BST_CHECKED) { outFile << "true" << std::endl; }
+	if (this->m_ga_ControlDlg.m_skipEliteReevaluation.GetCheck() == BST_CHECKED) { outFile << "true" << std::endl; }
 	else { outFile << "false" << std::endl; }
-	this->m_optimizationControlDlg.m_indEvalThreadCount.GetWindowTextW(tempBuff);
+	this->m_ga_ControlDlg.m_indEvalThreadCount.GetWindowTextW(tempBuff);
 	outFile << "evalIndividualsThreadCount=" << _tstof(tempBuff) << std::endl;
-	this->m_optimizationControlDlg.m_PopGenThreadCount.GetWindowTextW(tempBuff);
+	this->m_ga_ControlDlg.m_PopGenThreadCount.GetWindowTextW(tempBuff);
 	outFile << "popGenThreadCount=" << _tstof(tempBuff) << std::endl;
+
+	outFile << "# Iterative Algorithm Optimization Settings" << std::endl;
+	this->m_ia_ControlDlg.m_binSize.GetWindowTextW(tempBuff);
+	outFile << "ia_binSize=" << _tstof(tempBuff) << std::endl;
+	this->m_ia_ControlDlg.m_numBins.GetWindowTextW(tempBuff);
+	outFile << "ia_binNumber=" << _tstof(tempBuff) << std::endl;
+	this->m_ia_ControlDlg.m_targetRadius.GetWindowTextW(tempBuff);
+	outFile << "ia_targetRadius=" << _tstof(tempBuff) << std::endl;
+	this->m_ia_ControlDlg.m_phaseResolution.GetWindowTextW(tempBuff);
+	outFile << "ia_phaseResolution=" << _tstof(tempBuff) << std::endl;
 
 	// SLM Dialog settings
 	outFile << "# SLM Configuration Settings" << std::endl;

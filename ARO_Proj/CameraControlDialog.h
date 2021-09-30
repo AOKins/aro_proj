@@ -1,6 +1,6 @@
 ////////////////////
 // CameraControlDialog.h - dialog for the "Camera Settings" tab window
-// Last edited: 08/02/2021 by Andrew O'Kins
+// Last edited: 09/28/2021 by Andrew O'Kins
 ////////////////////
 
 #pragma once
@@ -30,6 +30,8 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 public:
+	void setDefaultUI();
+
 	// User Input Components //
 	// Exposure setting in microseconds (us)
 	CEdit m_initialExposureTimeInput;

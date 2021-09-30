@@ -309,7 +309,12 @@ bool CameraController::UpdateImageParameters() {
 	// Number of image bins X and Y (ASK: if actually need to be thesame)
 	try	{
 		CString path("");
-		dlg->m_optimizationControlDlg.m_numberBins.GetWindowTextW(path);
+		if (this->dlg->opt_selection_ == MainDialog::OptType::IA) {
+			dlg->m_ia_ControlDlg.m_numBins.GetWindowTextW(path);
+		}
+		else {
+			dlg->m_ga_ControlDlg.m_numberBins.GetWindowTextW(path);
+		}
 		if (path.IsEmpty()) throw new std::exception();
 		numberOfBinsX = _tstoi(path);
 		numberOfBinsY = numberOfBinsX; // Number of bins in Y direction is equal to in X direction (square)
@@ -321,7 +326,12 @@ bool CameraController::UpdateImageParameters() {
 	//Size of bins X and Y (ASK: if actually thesame xy? and isn't stating the # of bins already determine size?)
 	try	{
 		CString path("");
-		dlg->m_optimizationControlDlg.m_binSize.GetWindowTextW(path);
+		if (this->dlg->opt_selection_ == MainDialog::OptType::IA) {
+			dlg->m_ia_ControlDlg.m_binSize.GetWindowTextW(path);
+		}
+		else {
+			dlg->m_ga_ControlDlg.m_binSize.GetWindowTextW(path);
+		}
 		if (path.IsEmpty()) throw new std::exception();
 		binSizeX = _tstoi(path);
 		binSizeY = binSizeX; // Square shape in size
@@ -333,7 +343,12 @@ bool CameraController::UpdateImageParameters() {
 	// Integration/target radius
 	try	{
 		CString path("");
-		dlg->m_optimizationControlDlg.m_targetRadius.GetWindowTextW(path);
+		if (this->dlg->opt_selection_ == MainDialog::OptType::IA) {
+			dlg->m_ia_ControlDlg.m_targetRadius.GetWindowTextW(path);
+		}
+		else {
+			dlg->m_ga_ControlDlg.m_targetRadius.GetWindowTextW(path);
+		}
 		if (path.IsEmpty()) throw new std::exception();
 		targetRadius = _tstoi(path);
 	}

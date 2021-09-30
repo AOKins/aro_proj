@@ -33,6 +33,8 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 public:
+	void setDefaultUI();
+
 	// User Input Components //
 	// AOI horizontal offset
 	CEdit m_leftInput;

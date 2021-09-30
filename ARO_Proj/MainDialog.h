@@ -12,7 +12,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "OptimizationControlDialog.h"
+#include "GA_ControlDialog.h"
+#include "IA_ControlDialog.h"
 #include "SLMControlDialog.h"
 #include "CameraControlDialog.h"
 #include "AOIControlDialog.h"
@@ -80,7 +81,7 @@ public:
 	// Enumeration for type of optimizations to select
 	enum OptType {
 		NONE,
-		OPT5,
+		IA,
 		SGA,
 		uGA
 	};
@@ -106,7 +107,10 @@ public:
 	afx_msg void OnBnClickedStartStopButton();
 
 	// Sub dialogs
-	OptimizationControlDialog m_optimizationControlDlg;
+		// Optimization settings when a GA is chosen
+	GA_ControlDialog  m_ga_ControlDlg;
+		// Optimization settings when IA is chosen
+	IA_ControlDialog m_ia_ControlDlg;
 	SLMControlDialog m_slmControlDlg;
 	CameraControlDialog m_cameraControlDlg;
 	AOIControlDialog m_aoiControlDlg;

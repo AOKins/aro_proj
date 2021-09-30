@@ -1,6 +1,6 @@
 ////////////////////
 // CameraControlDialog.cpp - implementation for camera settings tab window
-// Last edited: 07/08/2021 by Andrew O'Kins
+// Last edited: 09/28/2021 by Andrew O'Kins
 ////////////////////
 
 #include "stdafx.h"
@@ -43,4 +43,11 @@ BOOL CameraControlDialog::PreTranslateMessage(MSG* pMsg) {
 		this->m_mainToolTips->RelayEvent(pMsg);
 	}
 	return CDialog::PreTranslateMessage(pMsg);
+}
+
+
+void CameraControlDialog::setDefaultUI() {
+	this->m_initialExposureTimeInput.SetWindowTextW(_T("2000"));
+	this->m_FramesPerSecond.SetWindowTextW(_T("200"));
+	this->m_gammaValue.SetWindowTextW(_T("1.00"));
 }

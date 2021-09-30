@@ -288,6 +288,7 @@
     <ClInclude Include="CameraControllerPICam.h" />
     <ClInclude Include="CameraControllerSpinnaker.h" />
     <ClInclude Include="GA_Optimization.h" />
+    <ClInclude Include="IA_ControlDialog.h" />
     <ClInclude Include="ImageControllerPICam.h" />
     <ClInclude Include="ImageControllerSpinnaker.h" />
     <ClInclude Include="OutputControlDialog.h" />
@@ -300,7 +301,7 @@
     <ClInclude Include="cdib.h" />
     <ClInclude Include="Individual.h" />
     <ClInclude Include="Optimization.h" />
-    <ClInclude Include="OptimizationControlDialog.h" />
+    <ClInclude Include="GA_ControlDialog.h" />
     <ClInclude Include="Population.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SGA_Optimization.h" />
@@ -322,12 +323,13 @@
     <ClCompile Include="CameraControlDialog.cpp" />
     <ClCompile Include="CameraControllerPICam.cpp" />
     <ClCompile Include="CameraControllerSpinnaker.cpp" />
+    <ClCompile Include="IA_ControlDialog.cpp" />
     <ClCompile Include="ImageScaler.cpp" />
     <ClCompile Include="MainDialog.cpp" />
     <ClCompile Include="CameraDisplay.cpp" />
     <ClCompile Include="cdib.cpp" />
     <ClCompile Include="Optimization.cpp" />
-    <ClCompile Include="OptimizationControlDialog.cpp" />
+    <ClCompile Include="GA_ControlDialog.cpp" />
     <ClCompile Include="OutputControlDialog.cpp" />
     <ClCompile Include="SettingsOutput.cpp" />
     <ClCompile Include="SGA_Optimization.cpp" />
