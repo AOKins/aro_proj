@@ -302,17 +302,13 @@ bool CameraController::UpdateConnectedCameraInfo() {
 		int camAmount = this->camList.GetSize();
 		if (camAmount <= 0)	{
 			Utility::printLine("ERROR: No cameras avaliable!");
-			return false;
-		}
-		else {
-			Utility::printLine("INFO: There are " + std::to_string(camAmount) + " camera(s) avaliable!");
-		}
-		//Check if more than one camera
-		if (camAmount > 1)	{
 			//clear camera list before releasing system
 			camList.Clear();
 			system->ReleaseInstance();
-			Utility::printLine("WARNING: only 1 camera has to be connected, but you have " + std::to_string(camAmount));
+			return false;
+		}
+		else {
+			Utility::printLine("INFO: There are " + std::to_string(camAmount) + " camera(s) avaliable! Using camera at index 0!");
 		}
 
 		//Get camera reference
@@ -321,9 +317,9 @@ bool CameraController::UpdateConnectedCameraInfo() {
 			Utility::printLine("ERROR: Retrieved Camera not Valid!");
 			return false;
 		}
-		else
+		else {
 			Utility::printLine("INFO: Retrieved Camera is Valid!");
-
+		}
 		//Initialize camera
 		try {
 			cam->Init();
@@ -332,12 +328,14 @@ bool CameraController::UpdateConnectedCameraInfo() {
 			Utility::printLine("ERROR: Spinnaker failure in initialization - " + std::string(e.what()));
 			return false;
 		}
+		// Checking to make sure it was initialized
 		if (!cam->IsInitialized())	{
 			Utility::printLine("ERROR: Retrieved Camera could not be initialized!");
 			return false;
 		}
-		else
+		else {
 			Utility::printLine("INFO: Retrieved Camera was initialized!");
+		}
 	}
 	catch (Spinnaker::Exception &e)	{
 		Utility::printLine("ERROR: " + std::string(e.what()));
