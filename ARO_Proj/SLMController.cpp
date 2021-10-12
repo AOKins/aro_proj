@@ -94,7 +94,7 @@ bool SLMController::AssignLUTFile(int boardIdx, std::string path) {
 
 	//Write LUT file to the board
 	try {
-		if (!this->blink_sdk->Load_LUT_file(boardIdx + 1, LUT_file)) {
+		if (!this->blink_sdk->Load_LUT_file(this->boards[boardIdx]->board_id, LUT_file)) {
 			Utility::printLine("INFO: Failed to Load LUT file: " + std::string(LUT_file));
 			return false;
 		}
@@ -172,7 +172,7 @@ bool SLMController::optimizeAny() {
 }
 
 bool SLMController::slmCtrlReady() {
-	if (blink_sdk == NULL || blink_sdk == nullptr) {
+	if (blink_sdk == nullptr) {
 		return false;
 	}
 	//TODO: add more conditions
@@ -221,7 +221,7 @@ void SLMController::setBoardPowerALL(bool isOn) {
 // Output: SLM is turned on/off accordingly
 void SLMController::setBoardPower(int boardID, bool isOn) {
 	if (blink_sdk != NULL) {
-		blink_sdk->SLM_power(boardID+1, isOn);
+		blink_sdk->SLM_power(this->boards[boardID]->board_id, isOn);
 		this->boards[boardID]->setPower(isOn);
 	}
 	else {
