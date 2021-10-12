@@ -20,7 +20,7 @@ class BruteForce_Optimization : public Optimization {
 public:
 	// Constructor - inherits from base class
 	BruteForce_Optimization(MainDialog* dlg, CameraController* cc, SLMController* sc) : Optimization(dlg, cc, sc) {
-		this->algorithm_name_ = "OPT5";
+		this->algorithm_name_ = "IA";
 	};
 
 	// Method for executing the optimization
