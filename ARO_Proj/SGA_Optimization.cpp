@@ -79,7 +79,7 @@ bool SGA_Optimization::shutdownOptimizationInstance() {
 	std::string curTime = Utility::getCurDateTime();
 
 	// Only save images if not aborting (successful results)
-	if (this->dlg->stopFlag == false && this->saveResultImages) {
+	if (this->dlg->stopFlag == false && (this->logAllFiles || this->saveTimeVSFitness)) {
 		// Get elite info
 		unsigned char* eliteImage = this->bestImage->getRawData();
 		int imgHeight = this->bestImage->getHeight();
