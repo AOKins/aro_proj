@@ -52,7 +52,7 @@ bool BruteForce_Optimization::runIndividual(int boardID) {
 	//Initialize array of SLM image with 0s (note that the size of slmImg is dependent on the camera and not SLM!)
 	setBlankSlmImg(slmImg);
 
-	bool endOpt;
+	bool endOpt = false;
 	try {
 		// Iterate through columns
 		for (int binCol = 0; binCol < this->cc->numberOfBinsX && !endOpt; binCol++) {
